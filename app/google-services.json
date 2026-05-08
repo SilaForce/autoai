@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "373996874067",
+    "project_id": "autoai-f3828",
+    "storage_bucket": "autoai-f3828.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:373996874067:android:fddc67bd09a4e86a5899a6",
+        "android_client_info": {
+          "package_name": "com.example.autoai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASfnNyaEcosfe3YuC-iEgwq5Drq53xF6I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
