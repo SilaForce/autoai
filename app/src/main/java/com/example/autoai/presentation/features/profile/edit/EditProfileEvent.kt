@@ -10,7 +10,9 @@ sealed interface EditProfileEvent {
     data object OnDeleteAccountClick : EditProfileEvent
     data object OnDeleteConfirmed : EditProfileEvent
     data object OnDeleteDismissed : EditProfileEvent
+    data object OnBackClicked : EditProfileEvent
     data object OnChangeAvatarClick : EditProfileEvent
+    data class OnImageSelected(val imageBytes: ByteArray) : EditProfileEvent
 }
 
 sealed interface EditProfileSideEffect {

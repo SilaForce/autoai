@@ -99,11 +99,15 @@ class AuthRepository(
 
     override suspend fun updateUser(user: User): AppResult<User> {
         return safeFirebaseCall {
-            val updates = mapOf(
+            val updates = mutableMapOf<String, Any>(
                 "name" to user.name,
                 "username" to user.username,
                 "phoneNumber" to user.phoneNumber,
             )
+
+            user.profilePictureUrl?.let { url ->
+                updates["profilePictureUrl"] = url
+             }
 
             firestore.collection(USERS_COLLECTION)
                 .document(user.id)

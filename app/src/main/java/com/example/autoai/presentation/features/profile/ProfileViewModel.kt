@@ -85,6 +85,9 @@ class ProfileViewModel(
                     plan = if (user.isPremium) "Premium" else "Free",
                     vehicleCount = vehicleCount,
                     totalCostCount = totalCostCount,
+                    username = user.username,
+                    phoneNumber = user.phoneNumber ?: "",
+                    profilePictureUrl = user.profilePictureUrl
                 )
             }
         }

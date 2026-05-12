@@ -6,6 +6,7 @@ import com.example.domain.model.app.DataError
 fun DataError.asUiText(): UiText = when (this) {
     // Local
     DataError.Local.ValidationError    -> UiText.StringResource(R.string.error_invalid_email)
+    DataError.Local.InvalidInput -> UiText.StringResource(R.string.error_invalid_input)
     DataError.Local.NotFound           -> UiText.StringResource(R.string.error_account_not_found)
     DataError.Local.DiskFull,
     DataError.Local.PermissionDenied,

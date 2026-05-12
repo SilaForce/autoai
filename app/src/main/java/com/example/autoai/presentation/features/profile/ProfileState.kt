@@ -9,4 +9,7 @@ data class ProfileState(
     val plan: String = "",
     val vehicleCount: Int = 0,
     val totalCostCount: Int = 0,
+    val username: String = "",
+    val phoneNumber: String = "",
+    val profilePictureUrl : String? = null
 )

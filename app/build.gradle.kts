@@ -65,6 +65,9 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
 
+    // Coil
+    implementation(libs.coil.compose)
+
     // Compose
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.splashscreen)

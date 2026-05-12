@@ -41,4 +41,5 @@ val domainModule = module {
     factoryOf(::GetRemindersUseCase)
     factoryOf(::AddReminderUseCase)
     factoryOf(::SendMessageUseCase)
+    // factoryOf(::UploadProfilePictureUseCase)
 }

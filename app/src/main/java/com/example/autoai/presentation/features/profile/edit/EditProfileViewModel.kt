@@ -3,6 +3,7 @@ package com.example.autoai.presentation.features.profile.edit
 import androidx.lifecycle.viewModelScope
 import com.example.autoai.R
 import com.example.autoai.base.BaseViewModel
+import com.example.autoai.presentation.util.ImageUtils
 import com.example.autoai.presentation.util.UiText
 import com.example.autoai.presentation.util.asUiText
 import com.example.domain.model.app.onFailure
@@ -44,16 +45,24 @@ class EditProfileViewModel(
             EditProfileEvent.OnDeleteDismissed ->
                 setState { it.copy(showDeleteConfirmDialog = false) }
 
+            EditProfileEvent.OnBackClicked -> navigateBack()
+
             EditProfileEvent.OnChangeAvatarClick ->
                 emitSideEffect(
                     EditProfileSideEffect.ShowMessage(
                         UiText.StringResource(R.string.edit_profile_avatar_coming_soon)
                     )
                 )
+
+            is EditProfileEvent.OnImageSelected ->
+                setState { it.copy(selectedProfilePicture = event.imageBytes) }
+
         }
     }
 
-    // ─── Private ─────────────────────────────────────────────────────────────
+    private fun navigateBack() {
+        emitSideEffect(EditProfileSideEffect.NavigateBack)
+    }
 
     private fun loadCurrentUser() {
         setState { it.copy(isLoading = true) }
@@ -63,11 +72,13 @@ class EditProfileViewModel(
                     setState {
                         it.copy(
                             isLoading = false,
+                            userId = user.id,
                             username = user.username,
                             fullName = user.name,
                             email = user.email,
                             phoneNumber = user.phoneNumber,
                             userInitial = user.name.firstOrNull()?.uppercaseChar()?.toString() ?: "",
+                            profilePictureUrl = user.profilePictureUrl
                         )
                     }
                 }
@@ -80,6 +91,7 @@ class EditProfileViewModel(
 
     private fun saveProfile() {
         val current = state.value
+
         if (current.fullName.isBlank()) {
             setState {
                 it.copy(fullNameError = UiText.StringResource(R.string.edit_profile_error_name_empty))
@@ -88,27 +100,48 @@ class EditProfileViewModel(
         }
 
         setState { it.copy(isSaving = true, fullNameError = null) }
+
         viewModelScope.launch {
-            updateUserUseCase(
-                UpdateUserParams(
-                    name = current.fullName,
-                    username = current.username,
-                    phoneNumber = current.phoneNumber,
-                )
-            )
-                .onSuccess {
-                    setState { it.copy(isSaving = false) }
-                    emitSideEffect(
-                        EditProfileSideEffect.ShowMessage(
-                            UiText.StringResource(R.string.edit_profile_save_success)
-                        )
+
+            if (current.selectedProfilePicture != null) {
+                // 1. Kompresujemo sliku i pretvaramo je u String pomoću našeg novog alata
+                val base64Image = ImageUtils.compressAndEncodeToBase64(current.selectedProfilePicture)
+
+                // 2. Šaljemo taj tekst pravo u postojeći UpdateUserUseCase
+                updateUserUseCase(
+                    UpdateUserParams(
+                        name = current.fullName,
+                        username = current.username,
+                        phoneNumber = current.phoneNumber,
+                        profilePictureUrl = base64Image // Ovdje sada ide naš Base64 string!
                     )
+                ).onSuccess {
+                    setState { it.copy(isSaving = false) }
+                    emitSideEffect(EditProfileSideEffect.ShowMessage(UiText.StringResource(R.string.edit_profile_save_success)))
                     emitSideEffect(EditProfileSideEffect.NavigateBack)
-                }
-                .onFailure { error ->
+                }.onFailure { error ->
                     setState { it.copy(isSaving = false) }
                     emitSideEffect(EditProfileSideEffect.ShowMessage(error.asUiText()))
                 }
+            } else {
+                updateUserUseCase(
+                    UpdateUserParams(
+                        name = current.fullName,
+                        username = current.username,
+                        phoneNumber = current.phoneNumber,
+                        profilePictureUrl = current.profilePictureUrl
+                    )
+                )
+                    .onSuccess {
+                        setState { it.copy(isSaving = false) }
+                        emitSideEffect(EditProfileSideEffect.ShowMessage(UiText.StringResource(R.string.edit_profile_save_success)))
+                        emitSideEffect(EditProfileSideEffect.NavigateBack)
+                    }
+                    .onFailure { error ->
+                        setState { it.copy(isSaving = false) }
+                        emitSideEffect(EditProfileSideEffect.ShowMessage(error.asUiText()))
+                    }
+            }
         }
     }
 

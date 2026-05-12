@@ -12,6 +12,7 @@ data class UpdateUserParams(
     val name: String,
     val username: String,
     val phoneNumber: String,
+    val profilePictureUrl: String? = null
 )
 
 class UpdateUserUseCase(
@@ -21,7 +22,7 @@ class UpdateUserUseCase(
 
     override suspend fun execute(params: UpdateUserParams): AppResult<User> {
         if (params.name.isBlank()) {
-            return AppResult.Failure(DataError.Local.ValidationError)
+            return AppResult.Failure(DataError.Local.InvalidInput)
         }
 
         return repository.getCurrentUser().andThen { currentUser ->
@@ -29,6 +30,7 @@ class UpdateUserUseCase(
                 name = params.name.trim(),
                 username = params.username.trim(),
                 phoneNumber = params.phoneNumber.trim(),
+                profilePictureUrl = params.profilePictureUrl ?: currentUser.profilePictureUrl
             )
             repository.updateUser(updatedUser)
         }

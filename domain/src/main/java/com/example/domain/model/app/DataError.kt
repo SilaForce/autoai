@@ -13,9 +13,11 @@ sealed interface DataError {
 
     sealed interface Local : DataError {
         data object DiskFull : Local
+        data object InvalidInput : Local
         data object PermissionDenied : Local
         data object NotFound : Local
         data object Unknown : Local
+
         data object ValidationError: Local
     }
 }
