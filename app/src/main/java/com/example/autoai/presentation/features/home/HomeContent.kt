@@ -15,7 +15,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.LocalGasStation
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.QueryStats
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -71,13 +75,26 @@ fun HomeContent(
                     ) {
                         Spacer(modifier = Modifier.height(28.dp))
 
-                        // ── Greeting ───────────────────────────────────────
-                        Text(
-                            text = stringResource(AppStrings.Home.greetingRes, state.userName),
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = CharcoalGray,
-                        )
+                        // ── Greeting + profile icon ────────────────────────
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = stringResource(AppStrings.Home.greetingRes, state.userName),
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = CharcoalGray,
+                            )
+                            IconButton(onClick = { onEvent(HomeEvent.OnProfileClicked) }) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Person,
+                                    contentDescription = "Profil",
+                                    tint = CharcoalGray,
+                                )
+                            }
+                        }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
@@ -96,7 +113,6 @@ fun HomeContent(
                             } else {
                                 AppStrings.Home.noActiveVehicleSubtitle
                             },
-                            isActive = state.hasActiveVehicle,
                             onClick = { onEvent(HomeEvent.OnVehicleClicked) },
                         )
 
@@ -117,8 +133,8 @@ fun HomeContent(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             ActionCard(
-                                label = AppStrings.Home.actionFuel,
-                                icon = Icons.Outlined.LocalGasStation,
+                                label = AppStrings.Costs.tabStatistics,
+                                icon = Icons.Outlined.QueryStats,
                                 modifier = Modifier.weight(1f),
                                 onClick = { onEvent(HomeEvent.OnFuelClicked) },
                             )

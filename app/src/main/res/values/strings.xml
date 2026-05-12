@@ -129,6 +129,37 @@
     <string name="reminders_ok">OK</string>
     <string name="reminders_cancel">Cancel</string>
 
+    <string name="profile_title">Profil</string>
+    <string name="profile_edit_button">Uredi profil</string>
+    <string name="profile_vehicles_label">Vozila</string>
+    <string name="profile_entered_costs_label">Uneseni troškovi</string>
+    <string name="profile_account_info_title">Informacije o nalogu</string>
+    <string name="profile_member_since_label">Član od</string>
+    <string name="profile_plan_label">Plan</string>
+    <string name="profile_plan_free">Besplatno</string>
+    <string name="profile_plan_premium">Premium</string>
+    <string name="profile_error_content_description">Error icon</string>
+
+    <string name="edit_profile_title">Uredi profil</string>
+    <string name="edit_profile_change_avatar">Promijeni profilnu sliku</string>
+    <string name="edit_profile_username_label">Korisničko ime</string>
+    <string name="edit_profile_fullname_label">Ime i prezime</string>
+    <string name="edit_profile_email_label">Email adresa</string>
+    <string name="edit_profile_phone_label">Broj telefona</string>
+    <string name="edit_profile_save_button">Spremi promjene</string>
+    <string name="edit_profile_save_success">Profil uspješno ažuriran</string>
+    <string name="edit_profile_delete_account">Obriši nalog</string>
+    <string name="edit_profile_delete_confirm_title">Potvrdi brisanje</string>
+    <string name="edit_profile_delete_confirm_message">Ova radnja je nepovratna. Svi vaši podaci će biti obrisani.</string>
+    <string name="edit_profile_delete_confirm_button">Obriši</string>
+    <string name="edit_profile_cancel">Odustani</string>
+    <string name="edit_profile_email_readonly_note">Email adresa se ne može promijeniti</string>
+    <string name="edit_profile_avatar_coming_soon">Promjena profilne slike uskoro dostupna</string>
+    <string name="edit_profile_section_profile">Profilni podaci</string>
+    <string name="edit_profile_section_contact">Kontakt</string>
+    <string name="edit_profile_danger_zone">Opasna zona</string>
+    <string name="edit_profile_error_name_empty">Ime i prezime ne smije biti prazno</string>
+
     <string name="onboarding_skip">Skip</string>
     <string name="onboarding_next">Next</string>
     <string name="onboarding_get_started">Get Started</string>

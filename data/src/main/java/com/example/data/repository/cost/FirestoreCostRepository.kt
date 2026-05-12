@@ -60,9 +60,37 @@ class FirestoreCostRepository(
         }
     }
 
+    override suspend fun getCostsByUserId(userId: String): AppResult<List<Cost>> {
+        return safeFirebaseCall {
+            firestore.collection(COSTS_COLLECTION)
+                .whereEqualTo(FIELD_USER_ID, userId)
+                .get()
+                .await()
+        }.andThen { querySnapshot ->
+            val costs = mutableListOf<Cost>()
+
+            for (document in querySnapshot.documents) {
+                val dto = document.toObject(CostDto::class.java)
+                    ?.let { currentDto ->
+                        if (currentDto.id.isBlank()) currentDto.copy(id = document.id)
+                        else currentDto
+                    }
+                    ?: return@andThen AppResult.Failure(DataError.Network.Serialization)
+
+                when (val costResult = dto.toCost()) {
+                    is AppResult.Success -> costs.add(costResult.data)
+                    is AppResult.Failure -> return@andThen AppResult.Failure(costResult.error)
+                }
+            }
+
+            AppResult.Success(costs)
+        }
+    }
+
     private companion object {
         const val COSTS_COLLECTION = "costs"
         const val FIELD_VEHICLE_ID = "vehicleId"
+        const val FIELD_USER_ID = "userId"
         const val FIELD_DATE_MILLIS = "dateMillis"
     }
 }

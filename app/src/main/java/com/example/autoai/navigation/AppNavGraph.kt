@@ -11,6 +11,8 @@ import com.example.autoai.presentation.features.costs.CostsScreen
 import com.example.autoai.presentation.features.garage.add.AddVehicleScreen
 import com.example.autoai.presentation.features.garage.GarageScreen
 import com.example.autoai.presentation.features.home.HomeScreen
+import com.example.autoai.presentation.features.profile.ProfileScreen
+import com.example.autoai.presentation.features.profile.edit.EditProfileScreen
 import com.example.autoai.presentation.features.reminder.ReminderScreen
 import org.koin.compose.koinInject
 
@@ -46,6 +48,19 @@ fun AppNavGraph(
         }
         composable<Route.AiChat> {
             AiChatScreen()
+        }
+        composable<Route.Profile> {
+            ProfileScreen()
+        }
+        composable<Route.EditProfile> {
+            EditProfileScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToAuth = {
+                    navController.navigate(Route.AuthGraph) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+            )
         }
     }
 

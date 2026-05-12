@@ -11,6 +11,8 @@ import com.example.autoai.presentation.features.garage.add.AddVehicleViewModel
 import com.example.autoai.presentation.features.garage.GarageViewModel
 import com.example.autoai.presentation.features.home.HomeViewModel
 import com.example.autoai.presentation.features.onboarding.OnboardingViewModel
+import com.example.autoai.presentation.features.profile.ProfileViewModel
+import com.example.autoai.presentation.features.profile.edit.EditProfileViewModel
 import com.example.autoai.presentation.features.reminder.ReminderViewModel
 import com.example.autoai.presentation.features.splash.SplashViewModel
 import com.example.domain.dispatcher.DispatcherProvider
@@ -35,4 +37,6 @@ val koinModule = module {
     viewModelOf(::SplashViewModel)
     viewModelOf(::ReminderViewModel)
     viewModelOf(::AiChatViewModel)
+    viewModelOf(::ProfileViewModel)
+    viewModelOf(::EditProfileViewModel)
 }

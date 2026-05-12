@@ -40,7 +40,9 @@ class HomeViewModel(
             HomeEvent.OnFuelClicked,
             HomeEvent.OnServiceClicked -> navigator.navigateTo(Route.Costs)
 
-            HomeEvent.OnAiClicked -> { /* TODO: navigate to AI Chat */ }
+            HomeEvent.OnAiClicked -> { navigator.navigateTo(Route.AiChat) }
+
+            HomeEvent.OnProfileClicked -> navigator.navigateTo(Route.Profile)
 
             is HomeEvent.OnNavItemSelected -> handleBottomNavigation(event.item)
         }

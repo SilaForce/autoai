@@ -9,4 +9,6 @@ interface IAuthRepository {
     suspend fun register(name: String, email: String, password: String): AppResult<User>
     suspend fun login(email: String, password: String): AppResult<User>
     suspend fun getCurrentUser(): AppResult<User>
+    suspend fun updateUser(user: User): AppResult<User>
+    suspend fun deleteUser(): AppResult<Unit>
 }

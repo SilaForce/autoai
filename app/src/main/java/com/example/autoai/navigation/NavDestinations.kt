@@ -28,4 +28,6 @@ sealed interface Route {
         @Serializable data object Profile : Route
 
         @Serializable data object Help : Route
+
+        @Serializable data object EditProfile : Route
 }

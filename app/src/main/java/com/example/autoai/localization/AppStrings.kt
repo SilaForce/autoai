@@ -590,6 +590,66 @@ object AppStrings {
         val noActiveVehicleSubtitle: String @Composable @ReadOnlyComposable get() = stringResource(noActiveVehicleSubtitleRes)
     }
 
+    object Profile {
+        @StringRes val titleRes = R.string.profile_title
+        @StringRes val editButtonRes = R.string.profile_edit_button
+        @StringRes val vehiclesLabelRes = R.string.profile_vehicles_label
+        @StringRes val enteredCostsLabelRes = R.string.profile_entered_costs_label
+        @StringRes val accountInfoTitleRes = R.string.profile_account_info_title
+        @StringRes val memberSinceLabelRes = R.string.profile_member_since_label
+        @StringRes val planLabelRes = R.string.profile_plan_label
+
+        val title: String @Composable @ReadOnlyComposable get() = stringResource(titleRes)
+        val editButton: String @Composable @ReadOnlyComposable get() = stringResource(editButtonRes)
+        val vehiclesLabel: String @Composable @ReadOnlyComposable get() = stringResource(vehiclesLabelRes)
+        val enteredCostsLabel: String @Composable @ReadOnlyComposable get() = stringResource(enteredCostsLabelRes)
+        val accountInfoTitle: String @Composable @ReadOnlyComposable get() = stringResource(accountInfoTitleRes)
+        val memberSinceLabel: String @Composable @ReadOnlyComposable get() = stringResource(memberSinceLabelRes)
+        val planLabel: String @Composable @ReadOnlyComposable get() = stringResource(planLabelRes)
+    }
+
+    object EditProfile {
+        @StringRes val titleRes = R.string.edit_profile_title
+        @StringRes val changeAvatarRes = R.string.edit_profile_change_avatar
+        @StringRes val usernameLabelRes = R.string.edit_profile_username_label
+        @StringRes val fullNameLabelRes = R.string.edit_profile_fullname_label
+        @StringRes val emailLabelRes = R.string.edit_profile_email_label
+        @StringRes val phoneLabelRes = R.string.edit_profile_phone_label
+        @StringRes val saveButtonRes = R.string.edit_profile_save_button
+        @StringRes val saveSuccessRes = R.string.edit_profile_save_success
+        @StringRes val deleteAccountRes = R.string.edit_profile_delete_account
+        @StringRes val deleteConfirmTitleRes = R.string.edit_profile_delete_confirm_title
+        @StringRes val deleteConfirmMessageRes = R.string.edit_profile_delete_confirm_message
+        @StringRes val deleteConfirmButtonRes = R.string.edit_profile_delete_confirm_button
+        @StringRes val cancelRes = R.string.edit_profile_cancel
+        @StringRes val emailReadonlyNoteRes = R.string.edit_profile_email_readonly_note
+        @StringRes val avatarComingSoonRes = R.string.edit_profile_avatar_coming_soon
+        @StringRes val sectionProfileRes = R.string.edit_profile_section_profile
+        @StringRes val sectionContactRes = R.string.edit_profile_section_contact
+        @StringRes val dangerZoneRes = R.string.edit_profile_danger_zone
+        @StringRes val errorNameEmptyRes = R.string.edit_profile_error_name_empty
+
+        val title: String @Composable @ReadOnlyComposable get() = stringResource(titleRes)
+        val changeAvatar: String @Composable @ReadOnlyComposable get() = stringResource(changeAvatarRes)
+        val usernameLabel: String @Composable @ReadOnlyComposable get() = stringResource(usernameLabelRes)
+        val fullNameLabel: String @Composable @ReadOnlyComposable get() = stringResource(fullNameLabelRes)
+        val emailLabel: String @Composable @ReadOnlyComposable get() = stringResource(emailLabelRes)
+        val phoneLabel: String @Composable @ReadOnlyComposable get() = stringResource(phoneLabelRes)
+        val saveButton: String @Composable @ReadOnlyComposable get() = stringResource(saveButtonRes)
+        val saveSuccess: String @Composable @ReadOnlyComposable get() = stringResource(saveSuccessRes)
+        val deleteAccount: String @Composable @ReadOnlyComposable get() = stringResource(deleteAccountRes)
+        val deleteConfirmTitle: String @Composable @ReadOnlyComposable get() = stringResource(deleteConfirmTitleRes)
+        val deleteConfirmMessage: String @Composable @ReadOnlyComposable get() = stringResource(deleteConfirmMessageRes)
+        val deleteConfirmButton: String @Composable @ReadOnlyComposable get() = stringResource(deleteConfirmButtonRes)
+        val cancel: String @Composable @ReadOnlyComposable get() = stringResource(cancelRes)
+        val emailReadonlyNote: String @Composable @ReadOnlyComposable get() = stringResource(emailReadonlyNoteRes)
+        val avatarComingSoon: String @Composable @ReadOnlyComposable get() = stringResource(avatarComingSoonRes)
+        val sectionProfile: String @Composable @ReadOnlyComposable get() = stringResource(sectionProfileRes)
+        val sectionContact: String @Composable @ReadOnlyComposable get() = stringResource(sectionContactRes)
+        val dangerZone: String @Composable @ReadOnlyComposable get() = stringResource(dangerZoneRes)
+        val errorNameEmpty: String @Composable @ReadOnlyComposable get() = stringResource(errorNameEmptyRes)
+    }
+
     object Onboarding {
         @StringRes
         val skipRes = R.string.onboarding_skip

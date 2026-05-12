@@ -8,6 +8,7 @@ sealed interface HomeEvent {
     data object OnFuelClicked : HomeEvent
     data object OnServiceClicked : HomeEvent
     data object OnAiClicked : HomeEvent
+    data object OnProfileClicked : HomeEvent
     data class OnNavItemSelected(val item: BottomNavItem) : HomeEvent
     data object OnScreenResumed : HomeEvent
 }

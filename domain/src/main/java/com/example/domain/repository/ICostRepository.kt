@@ -6,5 +6,6 @@ import com.example.domain.model.cost.Cost
 interface ICostRepository {
     suspend fun addCost(cost: Cost): AppResult<Cost>
     suspend fun getCosts(vehicleId: String): AppResult<List<Cost>>
+    suspend fun getCostsByUserId(userId: String): AppResult<List<Cost>>
 }
 

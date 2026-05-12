@@ -62,6 +62,8 @@ class AuthRepository(
             User(
                 id = firebaseUser.uid,
                 name = snapshot.getString("name") ?: "",
+                username = snapshot.getString("username") ?: "",
+                phoneNumber = snapshot.getString("phoneNumber") ?: "",
                 email = firebaseUser.email ?: email,
                 profilePictureUrl = snapshot.getString("profilePictureUrl"),
                 isPremium = snapshot.getBoolean("isPremium") ?: false,
@@ -84,6 +86,8 @@ class AuthRepository(
             User(
                 id = firebaseUser.uid,
                 name = snapshot.getString("name") ?: "",
+                username = snapshot.getString("username") ?: "",
+                phoneNumber = snapshot.getString("phoneNumber") ?: "",
                 email = firebaseUser.email ?: "",
                 profilePictureUrl = snapshot.getString("profilePictureUrl"),
                 isPremium = snapshot.getBoolean("isPremium") ?: false,
@@ -91,5 +95,40 @@ class AuthRepository(
                 createdAt = snapshot.getLong("createdAt") ?: System.currentTimeMillis(),
             )
         }
+    }
+
+    override suspend fun updateUser(user: User): AppResult<User> {
+        return safeFirebaseCall {
+            val updates = mapOf(
+                "name" to user.name,
+                "username" to user.username,
+                "phoneNumber" to user.phoneNumber,
+            )
+
+            firestore.collection(USERS_COLLECTION)
+                .document(user.id)
+                .update(updates)
+                .await()
+
+            user
+        }
+    }
+
+    override suspend fun deleteUser(): AppResult<Unit> {
+        val firebaseUser = firebaseAuth.currentUser
+            ?: return AppResult.Failure(DataError.Network.Unauthorized)
+
+        return safeFirebaseCall {
+            firestore.collection(USERS_COLLECTION)
+                .document(firebaseUser.uid)
+                .delete()
+                .await()
+
+            firebaseUser.delete().await()
+        }
+    }
+
+    private companion object {
+        const val USERS_COLLECTION = "users"
     }
 }
