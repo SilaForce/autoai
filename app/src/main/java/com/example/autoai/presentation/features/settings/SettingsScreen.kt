@@ -1,4 +1,4 @@
-package com.example.autoai.presentation.features.profile.edit
+package com.example.autoai.presentation.features.settings
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -10,24 +10,27 @@ import com.example.autoai.presentation.util.ObserveAsEvents
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun EditProfileScreen(
-    viewModel: EditProfileViewModel = koinViewModel(),
+fun SettingsScreen(
+    viewModel: SettingsViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
     ObserveAsEvents(viewModel.sideEffects) { effect ->
         when (effect) {
-            is EditProfileSideEffect.ShowMessage ->
-                snackbarHostState.showSnackbar(effect.message.asString(context))
+            is SettingsSideEffect.ShowError -> {
+                snackbarHostState.showSnackbar(
+                    message = effect.message.asString(context)
+                )
+            }
         }
     }
 
-    EditProfileContent(
+    SettingsContent(
         state = state,
         snackbarHostState = snackbarHostState,
-        onEvent = viewModel::onEvent,
+        onEvent = viewModel::onEvent
     )
 }
-

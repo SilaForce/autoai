@@ -16,8 +16,6 @@ sealed interface EditProfileEvent {
 }
 
 sealed interface EditProfileSideEffect {
-    data object NavigateBack : EditProfileSideEffect
-    data object NavigateToAuth : EditProfileSideEffect
     data class ShowMessage(val message: UiText) : EditProfileSideEffect
 }
 

@@ -11,4 +11,5 @@ interface IAuthRepository {
     suspend fun getCurrentUser(): AppResult<User>
     suspend fun updateUser(user: User): AppResult<User>
     suspend fun deleteUser(): AppResult<Unit>
+    suspend fun logout(): AppResult<Unit>
 }

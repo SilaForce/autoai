@@ -524,6 +524,24 @@ object AppStrings {
         val cancel: String @Composable @ReadOnlyComposable get() = stringResource(cancelRes)
     }
 
+    object Settings {
+        @StringRes val title = R.string.settings_title
+        @StringRes val notifications = R.string.settings_notifications
+        @StringRes val darkMode = R.string.settings_dark_mode
+        @StringRes val language = R.string.settings_language
+        @StringRes val privacyPolicy = R.string.settings_privacy_policy
+        @StringRes val logout = R.string.settings_logout
+        @StringRes val comingSoon = R.string.settings_coming_soon
+
+        val titleStr: String @Composable @ReadOnlyComposable get() = stringResource(title)
+        val notificationsStr: String @Composable @ReadOnlyComposable get() = stringResource(notifications)
+        val darkModeStr: String @Composable @ReadOnlyComposable get() = stringResource(darkMode)
+        val languageStr: String @Composable @ReadOnlyComposable get() = stringResource(language)
+        val privacyPolicyStr: String @Composable @ReadOnlyComposable get() = stringResource(privacyPolicy)
+        val logoutStr: String @Composable @ReadOnlyComposable get() = stringResource(logout)
+        val comingSoonStr: String @Composable @ReadOnlyComposable get() = stringResource(comingSoon)
+    }
+
     object Chat {
         @StringRes val titleRes = R.string.chat_title
         @StringRes val subtitleRes = R.string.chat_subtitle

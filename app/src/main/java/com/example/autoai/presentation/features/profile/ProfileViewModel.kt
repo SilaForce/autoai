@@ -36,11 +36,9 @@ class ProfileViewModel(
         when (event) {
             ProfileEvent.OnEditProfileClick -> navigator.navigateTo(Route.EditProfile)
             ProfileEvent.OnRetry -> loadProfile()
+                ProfileEvent.OnSettingsClick -> navigator.navigateTo(Route.Settings)
         }
     }
-
-    // ─── Loading ─────────────────────────────────────────────────────────────
-
     private fun loadProfile() {
         setState { it.copy(isLoading = true) }
 
@@ -92,8 +90,6 @@ class ProfileViewModel(
             }
         }
     }
-
-    // ─── Helpers ─────────────────────────────────────────────────────────────
 
     private fun Long.formatMemberSince(): String {
         val formatter = SimpleDateFormat("MMMM yyyy", Locale.getDefault())

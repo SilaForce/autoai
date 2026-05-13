@@ -26,7 +26,6 @@ fun AddVehicleScreen(
                 snackbarHostState.showSnackbar(effect.message.asString(context))
             }
 
-
             AddVehicleSideEffect.NavigateBack -> navigator.navigateBack()
         }
     }

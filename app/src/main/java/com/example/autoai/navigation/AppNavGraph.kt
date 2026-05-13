@@ -14,6 +14,7 @@ import com.example.autoai.presentation.features.home.HomeScreen
 import com.example.autoai.presentation.features.profile.ProfileScreen
 import com.example.autoai.presentation.features.profile.edit.EditProfileScreen
 import com.example.autoai.presentation.features.reminder.ReminderScreen
+import com.example.autoai.presentation.features.settings.SettingsScreen
 import org.koin.compose.koinInject
 
 @Composable
@@ -53,14 +54,10 @@ fun AppNavGraph(
             ProfileScreen()
         }
         composable<Route.EditProfile> {
-            EditProfileScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToAuth = {
-                    navController.navigate(Route.AuthGraph) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
-            )
+            EditProfileScreen()
+        }
+        composable<Route.Settings> {
+            SettingsScreen()
         }
     }
 

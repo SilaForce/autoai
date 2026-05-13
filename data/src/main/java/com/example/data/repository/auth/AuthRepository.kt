@@ -132,6 +132,12 @@ class AuthRepository(
         }
     }
 
+    override suspend fun logout(): AppResult<Unit> {
+        return safeFirebaseCall {
+            firebaseAuth.signOut()
+        }
+    }
+
     private companion object {
         const val USERS_COLLECTION = "users"
     }

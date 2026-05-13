@@ -11,9 +11,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -56,13 +61,30 @@ fun ProfileContent(
             ) {
                 Spacer(modifier = Modifier.height(28.dp))
 
-                // ── Screen title ───────────────────────────────────────────
-                Text(
-                    text = AppStrings.Profile.title,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = CharcoalGray,
-                )
+                // ── Screen title & Settings ────────────────────────────────
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween // Gura naslov lijevo, a ikonicu desno
+                ) {
+                    Text(
+                        text = AppStrings.Profile.title,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = CharcoalGray,
+                    )
+
+                    IconButton(
+                        onClick = { onEvent(ProfileEvent.OnSettingsClick) }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Settings,
+                            contentDescription = "Postavke",
+                            tint = CharcoalGray,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(20.dp))
 

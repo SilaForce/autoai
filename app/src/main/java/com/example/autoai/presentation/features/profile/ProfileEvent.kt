@@ -5,6 +5,7 @@ import com.example.autoai.presentation.util.UiText
 sealed interface ProfileEvent {
     data object OnEditProfileClick : ProfileEvent
     data object OnRetry : ProfileEvent
+    data object OnSettingsClick : ProfileEvent
 }
 
 sealed interface ProfileSideEffect {

@@ -14,6 +14,7 @@ import com.example.autoai.presentation.features.onboarding.OnboardingViewModel
 import com.example.autoai.presentation.features.profile.ProfileViewModel
 import com.example.autoai.presentation.features.profile.edit.EditProfileViewModel
 import com.example.autoai.presentation.features.reminder.ReminderViewModel
+import com.example.autoai.presentation.features.settings.SettingsViewModel
 import com.example.autoai.presentation.features.splash.SplashViewModel
 import com.example.domain.dispatcher.DispatcherProvider
 import org.koin.core.module.dsl.singleOf
@@ -22,7 +23,6 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val koinModule = module {
-
 
     singleOf(::DefaultDispatcherProvider) bind DispatcherProvider::class
     singleOf(::AppNavigator) bind IAppNavigator::class
@@ -39,4 +39,5 @@ val koinModule = module {
     viewModelOf(::AiChatViewModel)
     viewModelOf(::ProfileViewModel)
     viewModelOf(::EditProfileViewModel)
+    viewModelOf(::SettingsViewModel)
 }

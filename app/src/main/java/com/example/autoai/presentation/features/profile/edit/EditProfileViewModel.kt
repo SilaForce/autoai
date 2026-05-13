@@ -3,6 +3,8 @@ package com.example.autoai.presentation.features.profile.edit
 import androidx.lifecycle.viewModelScope
 import com.example.autoai.R
 import com.example.autoai.base.BaseViewModel
+import com.example.autoai.navigation.IAppNavigator
+import com.example.autoai.navigation.Route
 import com.example.autoai.presentation.util.ImageUtils
 import com.example.autoai.presentation.util.UiText
 import com.example.autoai.presentation.util.asUiText
@@ -18,6 +20,7 @@ class EditProfileViewModel(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val updateUserUseCase: UpdateUserUseCase,
     private val deleteUserUseCase: DeleteUserUseCase,
+    private val navigator: IAppNavigator
 ) : BaseViewModel<EditProfileState, EditProfileEvent, EditProfileSideEffect>(EditProfileState()) {
 
     init {
@@ -61,7 +64,7 @@ class EditProfileViewModel(
     }
 
     private fun navigateBack() {
-        emitSideEffect(EditProfileSideEffect.NavigateBack)
+     navigator.navigateBack()
     }
 
     private fun loadCurrentUser() {
@@ -118,7 +121,7 @@ class EditProfileViewModel(
                 ).onSuccess {
                     setState { it.copy(isSaving = false) }
                     emitSideEffect(EditProfileSideEffect.ShowMessage(UiText.StringResource(R.string.edit_profile_save_success)))
-                    emitSideEffect(EditProfileSideEffect.NavigateBack)
+                    navigator.navigateBack()
                 }.onFailure { error ->
                     setState { it.copy(isSaving = false) }
                     emitSideEffect(EditProfileSideEffect.ShowMessage(error.asUiText()))
@@ -135,7 +138,7 @@ class EditProfileViewModel(
                     .onSuccess {
                         setState { it.copy(isSaving = false) }
                         emitSideEffect(EditProfileSideEffect.ShowMessage(UiText.StringResource(R.string.edit_profile_save_success)))
-                        emitSideEffect(EditProfileSideEffect.NavigateBack)
+                        navigator.navigateBack()
                     }
                     .onFailure { error ->
                         setState { it.copy(isSaving = false) }
@@ -151,7 +154,11 @@ class EditProfileViewModel(
             deleteUserUseCase(Unit)
                 .onSuccess {
                     setState { it.copy(isDeleting = false) }
-                    emitSideEffect(EditProfileSideEffect.NavigateToAuth)
+                    navigator.navigateTo(
+                        destination = Route.AuthGraph,
+                        popUpTo = 0,
+                        inclusive = true
+                    )
                 }
                 .onFailure { error ->
                     setState { it.copy(isDeleting = false) }
