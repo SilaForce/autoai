@@ -40,8 +40,7 @@ import com.example.autoai.presentation.components.BottomNavigationBar
 import com.example.autoai.presentation.components.MonthlyCostCard
 import com.example.autoai.presentation.components.VehicleCard
 import com.example.autoai.presentation.theme.AutoAITheme
-import com.example.autoai.presentation.theme.CharcoalGray
-import com.example.autoai.presentation.theme.OffWhiteBg
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun HomeContent(
@@ -51,7 +50,7 @@ fun HomeContent(
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-            containerColor = OffWhiteBg,
+            containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
                 BottomNavigationBar(
                     selectedItem = state.selectedNavItem,
@@ -85,13 +84,13 @@ fun HomeContent(
                                 text = stringResource(AppStrings.Home.greetingRes, state.userName),
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = CharcoalGray,
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                             IconButton(onClick = { onEvent(HomeEvent.OnProfileClicked) }) {
                                 Icon(
                                     imageVector = Icons.Outlined.Person,
                                     contentDescription = "Profil",
-                                    tint = CharcoalGray,
+                                    tint = MaterialTheme.colorScheme.onSurface,
                                 )
                             }
                         }

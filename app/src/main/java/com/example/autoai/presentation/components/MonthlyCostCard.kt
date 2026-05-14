@@ -18,8 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.autoai.presentation.theme.CharcoalGray
-import com.example.autoai.presentation.theme.PureWhite
+import androidx.compose.material3.MaterialTheme
 import com.example.autoai.presentation.theme.VerdantGreen
 
 @Composable
@@ -32,7 +31,7 @@ fun MonthlyCostCard(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = PureWhite,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 4.dp,
         tonalElevation = 0.dp,
     ) {
@@ -40,7 +39,7 @@ fun MonthlyCostCard(
             Text(
                 text = label,
                 fontSize = 13.sp,
-                color = CharcoalGray.copy(alpha = 0.6f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.Bottom) {
@@ -55,7 +54,7 @@ fun MonthlyCostCard(
                     text = currency,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
-                    color = CharcoalGray,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = 6.dp)
                 )
             }

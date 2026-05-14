@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,10 +23,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.autoai.presentation.theme.CharcoalGray
-import com.example.autoai.presentation.theme.OffWhiteBg
-import com.example.autoai.presentation.theme.PureWhite
-import com.example.autoai.presentation.theme.SubtleBorder
 
 @Composable
 fun SettingsItemCard(
@@ -33,19 +30,21 @@ fun SettingsItemCard(
     title: String,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    iconBackgroundColor: Color = OffWhiteBg,
-    iconColor: Color = CharcoalGray,
-    titleColor: Color = CharcoalGray,
+    iconBackgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    iconColor: Color = MaterialTheme.colorScheme.onSurface,
+    titleColor: Color = MaterialTheme.colorScheme.onSurface,
     trailingContent: (@Composable () -> Unit)? = null
 ) {
+    val defaultOnSurface = MaterialTheme.colorScheme.onSurface
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
             .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = PureWhite),
-        border = androidx.compose.foundation.BorderStroke(1.dp, SubtleBorder),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
@@ -72,7 +71,7 @@ fun SettingsItemCard(
             Text(
                 text = title,
                 fontSize = 16.sp,
-                fontWeight = if (titleColor != CharcoalGray) FontWeight.SemiBold else FontWeight.Medium,
+                fontWeight = if (titleColor != defaultOnSurface) FontWeight.SemiBold else FontWeight.Medium,
                 color = titleColor,
                 modifier = Modifier.weight(1f)
             )

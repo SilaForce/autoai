@@ -31,8 +31,7 @@ import com.example.autoai.presentation.components.AutoAiTextField
 import com.example.autoai.presentation.components.MainButton
 import com.example.autoai.presentation.features.auth.components.AuthTab
 import com.example.autoai.presentation.features.auth.components.AuthToggle
-import com.example.autoai.presentation.theme.CharcoalGray
-import com.example.autoai.presentation.theme.PureWhite
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun RegisterContent(
@@ -52,7 +51,7 @@ fun RegisterContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(PureWhite)
+            .background(MaterialTheme.colorScheme.background)
             .systemBarsPadding()
             .imePadding() // 3. Magija za izbjegavanje tastature!
     ) {
@@ -87,7 +86,7 @@ fun RegisterContent(
                 text = AppStrings.Auth.garageTitle,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = CharcoalGray
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(32.dp))

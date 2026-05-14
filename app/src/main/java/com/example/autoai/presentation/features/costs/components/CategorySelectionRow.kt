@@ -22,8 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.autoai.localization.AppStrings
 import com.example.autoai.presentation.features.costs.toIcon
-import com.example.autoai.presentation.theme.CharcoalGray
-import com.example.autoai.presentation.theme.SubtleBorder
+import androidx.compose.material3.MaterialTheme
 import com.example.autoai.presentation.theme.VerdantGreen
 import com.example.domain.model.cost.CostCategory
 
@@ -50,10 +49,10 @@ fun CategorySelectionRow(
                 onClick = { onCategorySelected(category) },
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(16.dp),
-                color = if (isSelected) Color(0xFFE8F5E9) else Color(0xFFF5F5F5),
+                color = if (isSelected) Color(0xFFE8F5E9) else MaterialTheme.colorScheme.surfaceVariant,
                 border = BorderStroke(
                     width = if (isSelected) 1.5.dp else 1.dp,
-                    color = if (isSelected) VerdantGreen else SubtleBorder,
+                    color = if (isSelected) VerdantGreen else MaterialTheme.colorScheme.outlineVariant,
                 ),
             ) {
                 Column(
@@ -63,7 +62,7 @@ fun CategorySelectionRow(
                     Icon(
                         imageVector = category.toIcon(),
                         contentDescription = label,
-                        tint = if (isSelected) VerdantGreen else CharcoalGray.copy(alpha = 0.6f),
+                        tint = if (isSelected) VerdantGreen else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         modifier = Modifier.size(24.dp),
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -71,7 +70,7 @@ fun CategorySelectionRow(
                         text = label,
                         fontSize = 11.sp,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                        color = if (isSelected) VerdantGreen else CharcoalGray.copy(alpha = 0.7f),
+                        color = if (isSelected) VerdantGreen else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     )
                 }
             }

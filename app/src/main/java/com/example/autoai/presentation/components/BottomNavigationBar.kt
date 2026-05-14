@@ -20,7 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.autoai.R
-import com.example.autoai.presentation.theme.PureWhite
+import androidx.compose.material3.MaterialTheme
 import com.example.autoai.presentation.theme.VerdantGreen
 
 enum class BottomNavItem(
@@ -42,7 +42,7 @@ fun BottomNavigationBar(
 ) {
     NavigationBar(
         modifier = modifier,
-        containerColor = PureWhite,
+        containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp,
     ) {
         BottomNavItem.entries.forEach { item ->

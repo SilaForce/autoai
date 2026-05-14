@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.autoai.presentation.theme.CharcoalGray
+import androidx.compose.material3.MaterialTheme
 import com.example.autoai.presentation.theme.VerdantGreen
 
 // 1. Data klasa koja drži podatke za jedan slajd
@@ -65,7 +65,7 @@ fun OnboardingPageContent(
             text = page.title,
             fontSize = 28.sp, // Velik i jasan naslov
             fontWeight = FontWeight.Bold,
-            color = CharcoalGray,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
         )
 
@@ -75,7 +75,7 @@ fun OnboardingPageContent(
         Text(
             text = page.description,
             fontSize = 16.sp,
-            color = CharcoalGray.copy(alpha = 0.6f), // Malo prozirna siva za opis
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 32.dp), // Da tekst ne ide skroz do ivice ekrana
             lineHeight = 24.sp

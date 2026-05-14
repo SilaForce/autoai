@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.autoai.presentation.theme.CharcoalGray
+import androidx.compose.material3.MaterialTheme
 import com.example.autoai.presentation.theme.VerdantGreen
 
 @Composable
@@ -27,7 +27,7 @@ fun PageIndicator(
     currentPage: Int,
     modifier: Modifier = Modifier,
     selectedColor: Color = VerdantGreen,
-    unselectedColor: Color = CharcoalGray.copy(alpha = 0.2f) // Blaga siva za neaktivne
+    unselectedColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
 ) {
     Row(
         modifier = modifier,

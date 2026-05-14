@@ -56,6 +56,9 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.storage)
 
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
+
     // Coil
     implementation(libs.coil.compose)
 

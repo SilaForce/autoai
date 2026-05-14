@@ -21,8 +21,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.autoai.presentation.theme.CharcoalGray
-import com.example.autoai.presentation.theme.PureWhite
 import com.example.autoai.presentation.theme.VerdantGreen
 
 @Composable
@@ -33,9 +31,9 @@ fun MainButton(
     enabled: Boolean = true,
     trailingIcon: ImageVector? = null,
     containerColor: Color = VerdantGreen,
-    contentColor: Color = PureWhite,
-    disabledContainerColor: Color = CharcoalGray.copy(alpha = 0.12f),
-    disabledContentColor: Color = CharcoalGray.copy(alpha = 0.38f),
+    contentColor: Color = MaterialTheme.colorScheme.onPrimary,
+    disabledContainerColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+    disabledContentColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
     border: BorderStroke? = null,
     shape: Shape = RoundedCornerShape(16.dp),
     textStyle: TextStyle = TextStyle(

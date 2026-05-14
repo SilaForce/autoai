@@ -19,6 +19,7 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -35,8 +36,6 @@ import com.example.autoai.presentation.features.profile.components.AccountInfoCa
 import com.example.autoai.presentation.features.profile.components.StatCard
 import com.example.autoai.presentation.features.profile.components.UserHeaderCard
 import com.example.autoai.presentation.theme.AutoAITheme
-import com.example.autoai.presentation.theme.CharcoalGray
-import com.example.autoai.presentation.theme.OffWhiteBg
 
 @Composable
 fun ProfileContent(
@@ -55,23 +54,22 @@ fun ProfileContent(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(OffWhiteBg)
+                    .background(MaterialTheme.colorScheme.background)
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp),
             ) {
                 Spacer(modifier = Modifier.height(28.dp))
 
-                // ── Screen title & Settings ────────────────────────────────
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween // Gura naslov lijevo, a ikonicu desno
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = AppStrings.Profile.title,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
-                        color = CharcoalGray,
+                        color = MaterialTheme.colorScheme.onBackground,
                     )
 
                     IconButton(
@@ -80,7 +78,7 @@ fun ProfileContent(
                         Icon(
                             imageVector = Icons.Outlined.Settings,
                             contentDescription = "Postavke",
-                            tint = CharcoalGray,
+                            tint = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.size(28.dp)
                         )
                     }
@@ -91,7 +89,7 @@ fun ProfileContent(
                 // ── User header card ───────────────────────────────────────
                 UserHeaderCard(
                     userInitial = state.userInitial,
-                    fullName = state.userName, // Preimenovali smo parametar zbog jasnoće
+                    fullName = state.userName,
                     username = state.username,
                     userEmail = state.userEmail,
                     phoneNumber = state.phoneNumber,

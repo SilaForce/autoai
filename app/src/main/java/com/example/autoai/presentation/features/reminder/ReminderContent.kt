@@ -23,9 +23,6 @@ import com.example.autoai.presentation.components.BottomNavigationBar
 import com.example.autoai.presentation.components.MainButton
 import com.example.autoai.presentation.features.reminder.components.ReminderCard
 import com.example.autoai.presentation.theme.AutoAITheme
-import com.example.autoai.presentation.theme.CharcoalGray
-import com.example.autoai.presentation.theme.OffWhiteBg
-import com.example.autoai.presentation.theme.PureWhite
 import com.example.autoai.presentation.theme.VerdantGreen
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -42,7 +39,7 @@ fun ReminderContent(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-            containerColor = OffWhiteBg,
+            containerColor = MaterialTheme.colorScheme.background,
             floatingActionButton = {
                 // Skrivamo FAB ako nema vozila, da ga ne bi zbunilo
                 if (!state.hasNoActiveVehicle && !state.isLoading) {
@@ -50,7 +47,7 @@ fun ReminderContent(
                         onClick = { onEvent(ReminderEvent.OnAddReminderClicked) },
                         shape = CircleShape,
                         containerColor = VerdantGreen,
-                        contentColor = PureWhite
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Add,
@@ -78,7 +75,7 @@ fun ReminderContent(
                     text = AppStrings.Reminders.title,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
-                    color = CharcoalGray
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -94,13 +91,13 @@ fun ReminderContent(
                                 text = AppStrings.Home.noActiveVehicleTitle,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = CharcoalGray
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = AppStrings.Home.noActiveVehicleSubtitle,
                                 fontSize = 14.sp,
-                                color = CharcoalGray.copy(alpha = 0.55f)
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
                             )
                         }
                     }
@@ -108,14 +105,14 @@ fun ReminderContent(
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
                             text = AppStrings.Reminders.emptyTitle,
-                            color = CharcoalGray.copy(alpha = 0.5f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         )
                     }
                 } else {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = PureWhite),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                     ) {
                         LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
@@ -137,7 +134,7 @@ fun ReminderContent(
             ModalBottomSheet(
                 onDismissRequest = { onEvent(ReminderEvent.OnAddSheetDismissed) },
                 sheetState = sheetState,
-                containerColor = PureWhite
+                containerColor = MaterialTheme.colorScheme.surface
             ) {
                 AddReminderSheet(state, onEvent)
             }
@@ -172,7 +169,7 @@ private fun AddReminderSheet(
             text = AppStrings.Reminders.addSheetTitle,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = CharcoalGray,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
         Spacer(modifier = Modifier.height(24.dp))
@@ -225,7 +222,7 @@ private fun AddReminderSheet(
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    Text(text = AppStrings.Reminders.cancel, color = CharcoalGray)
+                    Text(text = AppStrings.Reminders.cancel, color = MaterialTheme.colorScheme.onSurface)
                 }
             }
         ) {

@@ -32,8 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.autoai.localization.AppStrings
-import com.example.autoai.presentation.theme.CharcoalGray
-import com.example.autoai.presentation.theme.PureWhite
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun AutoAiTextField(
@@ -54,7 +53,7 @@ fun AutoAiTextField(
             text = label,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
-            color = CharcoalGray
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -110,11 +109,11 @@ fun AutoAiTextField(
                 } else null,
 
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = PureWhite,
-                    unfocusedContainerColor = PureWhite,
-                    focusedBorderColor = CharcoalGray,
-                    unfocusedBorderColor = Color.LightGray.copy(alpha = 0.5f),
-                    cursorColor = CharcoalGray
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    cursorColor = MaterialTheme.colorScheme.onSurface
                 )
             )
 

@@ -33,8 +33,7 @@ import com.example.autoai.presentation.components.BottomNavigationBar
 import com.example.autoai.presentation.components.MainButton
 import com.example.autoai.presentation.components.VehicleCard
 import com.example.autoai.presentation.theme.AutoAITheme
-import com.example.autoai.presentation.theme.CharcoalGray
-import com.example.autoai.presentation.theme.OffWhiteBg
+import androidx.compose.material3.MaterialTheme
 import com.example.autoai.presentation.util.UiText
 
 @Composable
@@ -45,7 +44,7 @@ fun GarageContent(
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-            containerColor = OffWhiteBg,
+            containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
                 BottomNavigationBar(
                     selectedItem = state.selectedNavItem,
@@ -102,13 +101,13 @@ fun GarageContent(
                                 text = AppStrings.Garage.title,
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = CharcoalGray,
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = AppStrings.Garage.subtitle,
                                 fontSize = 15.sp,
-                                color = CharcoalGray.copy(alpha = 0.65f),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
                             )
                         }
 
@@ -124,13 +123,13 @@ fun GarageContent(
                                         text = AppStrings.Garage.emptyTitle,
                                         fontSize = 20.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = CharcoalGray,
+                                        color = MaterialTheme.colorScheme.onSurface,
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
                                         text = AppStrings.Garage.emptyDescription,
                                         fontSize = 14.sp,
-                                        color = CharcoalGray.copy(alpha = 0.65f),
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
                                     )
                                     Spacer(modifier = Modifier.height(24.dp))
                                     MainButton(

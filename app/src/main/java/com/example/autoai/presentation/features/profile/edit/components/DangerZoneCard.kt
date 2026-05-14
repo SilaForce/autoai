@@ -12,6 +12,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -21,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.autoai.localization.AppStrings
 import com.example.autoai.presentation.theme.DangerRed
-import com.example.autoai.presentation.theme.PureWhite
 
 @Composable
 fun DangerZoneCard(
@@ -31,7 +31,7 @@ fun DangerZoneCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = PureWhite),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = BorderStroke(1.dp, DangerRed.copy(alpha = 0.3f)),
     ) {
@@ -79,4 +79,3 @@ fun DangerZoneCard(
         }
     }
 }
-

@@ -1,5 +1,6 @@
 package com.example.data.repository.cost
 
+import android.util.Log
 import com.example.data.datasource.remote.util.safeFirebaseCall
 import com.example.data.mapper.toCost
 import com.example.data.mapper.toCostDto
@@ -30,9 +31,6 @@ class FirestoreCostRepository(
     }
 
     override suspend fun getCosts(vehicleId: String): AppResult<List<Cost>> {
-        // NOTE: This query requires a Firestore composite index on (vehicleId ASC, dateMillis DESC).
-        // When you first run this query, Logcat will print a direct link to create the index
-        // in the Firebase Console — click it once and the index will be built automatically.
         return safeFirebaseCall {
             firestore.collection(COSTS_COLLECTION)
                 .whereEqualTo(FIELD_VEHICLE_ID, vehicleId)
@@ -75,11 +73,17 @@ class FirestoreCostRepository(
                         if (currentDto.id.isBlank()) currentDto.copy(id = document.id)
                         else currentDto
                     }
-                    ?: return@andThen AppResult.Failure(DataError.Network.Serialization)
+
+                if (dto == null) {
+                    Log.w("FirestoreCostRepository", "Skipping malformed cost document: ${document.id}")
+                    continue
+                }
 
                 when (val costResult = dto.toCost()) {
                     is AppResult.Success -> costs.add(costResult.data)
-                    is AppResult.Failure -> return@andThen AppResult.Failure(costResult.error)
+                    is AppResult.Failure -> {
+                        Log.w("FirestoreCostRepository", "Skipping cost document with mapping error: ${document.id}")
+                    }
                 }
             }
 

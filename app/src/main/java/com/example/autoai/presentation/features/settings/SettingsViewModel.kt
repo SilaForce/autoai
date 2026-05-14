@@ -8,22 +8,45 @@ import com.example.autoai.navigation.Route
 import com.example.autoai.presentation.util.asUiText
 import com.example.domain.model.app.onFailure
 import com.example.domain.model.app.onSuccess
+import com.example.domain.repository.IPreferencesRepository
 import com.example.domain.usecase.user.LogoutUseCase
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
-private val logoutUseCase: LogoutUseCase,
-    private val navigator: IAppNavigator
+    private val logoutUseCase: LogoutUseCase,
+    private val navigator: IAppNavigator,
+    private val preferencesRepository: IPreferencesRepository
 ): BaseViewModel<SettingsState, SettingsEvent, SettingsSideEffect>(SettingsState()) {
+
+    init {
+        observePreferences()
+    }
+
+    private fun observePreferences() {
+        viewModelScope.launch {
+            preferencesRepository.isDarkModeEnabled.collect { enabled ->
+                setState { it.copy(isDarkModeEnabled = enabled) }
+            }
+        }
+        viewModelScope.launch {
+            preferencesRepository.isNotificationsEnabled.collect { enabled ->
+                setState { it.copy(notificationsEnabled = enabled) }
+            }
+        }
+    }
 
     override fun onEvent(event: SettingsEvent) {
         when(event){
             is SettingsEvent.OnToggleDarkMode -> {
-                setState { it.copy(isDarkModeEnabled = event.isEnabled) }
+                viewModelScope.launch {
+                    preferencesRepository.setDarkModeEnabled(event.isEnabled)
+                }
             }
 
             is SettingsEvent.OnToggleNotifications -> {
-                setState { it.copy(notificationsEnabled = event.isEnabled) }
+                viewModelScope.launch {
+                    preferencesRepository.setNotificationsEnabled(event.isEnabled)
+                }
             }
 
             is SettingsEvent.OnBackClicked -> navigateBack()

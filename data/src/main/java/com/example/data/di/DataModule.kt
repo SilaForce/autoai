@@ -3,11 +3,13 @@ package com.example.data.di
 import com.example.data.repository.auth.AuthRepository
 import com.example.data.repository.chat.GeminiChatRepository
 import com.example.data.repository.cost.FirestoreCostRepository
+import com.example.data.repository.preferences.PreferencesRepository
 import com.example.data.repository.reminder.FirestoreReminderRepository
 import com.example.data.repository.vehicle.FirestoreVehicleRepository
 import com.example.domain.repository.IAiChatRepository
 import com.example.domain.repository.IAuthRepository
 import com.example.domain.repository.ICostRepository
+import com.example.domain.repository.IPreferencesRepository
 import com.example.domain.repository.IRemindersRepository
 import com.example.domain.repository.IStorageRepository
 import com.example.domain.repository.IVehicleRepository
@@ -31,5 +33,6 @@ val dataModule = module {
     singleOf(::FirestoreCostRepository) bind ICostRepository::class
     singleOf(::FirestoreReminderRepository) bind IRemindersRepository::class
     singleOf(::GeminiChatRepository) bind IAiChatRepository::class
+    singleOf(::PreferencesRepository) bind IPreferencesRepository::class
     // singleOf(::StorageRepository) bind IStorageRepository::class
 }

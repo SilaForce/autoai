@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.autoai.presentation.theme.CharcoalGray
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun CostHistoryCard(
@@ -36,13 +36,13 @@ fun CostHistoryCard(
         Box(
             modifier = Modifier
                 .size(44.dp)
-                .background(color = Color(0xFFF0F0F0), shape = CircleShape),
+                .background(color = MaterialTheme.colorScheme.surfaceVariant, shape = CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = categoryIcon,
                 contentDescription = null,
-                tint = CharcoalGray.copy(alpha = 0.7f),
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 modifier = Modifier.size(22.dp),
             )
         }
@@ -54,12 +54,12 @@ fun CostHistoryCard(
                 text = title,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = CharcoalGray,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 text = subtitle,
                 fontSize = 12.sp,
-                color = CharcoalGray.copy(alpha = 0.55f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
             )
         }
 
@@ -69,7 +69,7 @@ fun CostHistoryCard(
             text = amount,
             fontSize = 15.sp,
             fontWeight = FontWeight.SemiBold,
-            color = CharcoalGray,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }

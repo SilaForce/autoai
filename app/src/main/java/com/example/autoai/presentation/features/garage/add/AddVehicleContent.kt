@@ -1,5 +1,6 @@
 package com.example.autoai.presentation.features.garage.add
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,7 +43,7 @@ import com.example.autoai.presentation.components.MainButton
 import com.example.autoai.presentation.features.garage.add.components.FuelTypeSelector
 import com.example.autoai.presentation.features.garage.add.components.YearPickerDialog
 import com.example.autoai.presentation.theme.AutoAITheme
-import com.example.autoai.presentation.theme.CharcoalGray
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun AddVehicleContent(
@@ -63,6 +64,7 @@ fun AddVehicleContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .systemBarsPadding()
             .imePadding(),
     ) {
@@ -89,7 +91,7 @@ fun AddVehicleContent(
                     text = AppStrings.AddVehicle.title,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = CharcoalGray,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
 
@@ -98,7 +100,7 @@ fun AddVehicleContent(
             Text(
                 text = AppStrings.AddVehicle.subtitle,
                 fontSize = 15.sp,
-                color = CharcoalGray.copy(alpha = 0.65f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -138,7 +140,7 @@ fun AddVehicleContent(
                 text = AppStrings.AddVehicle.fuelTypeLabel,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = CharcoalGray,
+                color = MaterialTheme.colorScheme.onSurface,
             )
 
             Spacer(modifier = Modifier.height(8.dp))

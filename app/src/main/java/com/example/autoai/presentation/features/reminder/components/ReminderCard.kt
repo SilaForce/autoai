@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.autoai.presentation.features.reminder.ReminderItemUi
-import com.example.autoai.presentation.theme.CharcoalGray
+import androidx.compose.material3.MaterialTheme
 import com.example.autoai.presentation.theme.SoftAmber
 import com.example.autoai.presentation.theme.VerdantGreen
 
@@ -32,7 +32,7 @@ fun ReminderCard(
 ) {
     // Određivanje boja na osnovu hitnosti
     val dotColor = if (item.isUrgent) SoftAmber else VerdantGreen
-    val dateColor = if (item.isUrgent) SoftAmber else CharcoalGray.copy(alpha = 0.6f)
+    val dateColor = if (item.isUrgent) SoftAmber else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
@@ -56,7 +56,7 @@ fun ReminderCard(
                 text = item.title,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
-                color = CharcoalGray,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
             )
 
@@ -71,6 +71,6 @@ fun ReminderCard(
             )
         }
 
-        HorizontalDivider(color = Color(0xFFF0F0F0))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     }
 }

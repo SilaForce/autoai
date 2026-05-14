@@ -24,12 +24,9 @@ import com.example.autoai.presentation.features.profile.edit.components.AvatarSe
 import com.example.autoai.presentation.features.profile.edit.components.DangerZoneCard
 import com.example.autoai.presentation.features.profile.edit.components.SectionCard
 import com.example.autoai.presentation.theme.AutoAITheme
-import com.example.autoai.presentation.theme.CharcoalGray
 import com.example.autoai.presentation.theme.DangerRed
-import com.example.autoai.presentation.theme.OffWhiteBg
-import com.example.autoai.presentation.theme.PureWhite
-import com.example.autoai.presentation.theme.SubtleBorder
 import com.example.autoai.presentation.theme.VerdantGreen
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileContent(
@@ -58,7 +55,7 @@ fun EditProfileContent(
                     Text(
                         text = AppStrings.EditProfile.title,
                         fontWeight = FontWeight.SemiBold,
-                        color = CharcoalGray,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 },
                 navigationIcon = {
@@ -66,11 +63,13 @@ fun EditProfileContent(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = AppStrings.Common.back,
-                            tint = CharcoalGray,
+                            tint = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = OffWhiteBg),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                ),
             )
         },
         snackbarHost = {
@@ -79,7 +78,7 @@ fun EditProfileContent(
                 modifier = Modifier.padding(top = 8.dp),
             )
         },
-        containerColor = OffWhiteBg,
+        containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -108,7 +107,6 @@ fun EditProfileContent(
                         profilePictureUrl = state.profilePictureUrl,
                         selectedProfilePicture = state.selectedProfilePicture,
                         onAvatarClick = {
-                            // 2. Pokrećemo Picker i tražimo samo slike
                             photoPickerLauncher.launch(
                                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                             )
@@ -153,15 +151,15 @@ fun EditProfileContent(
                             enabled = false,
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                disabledTextColor = CharcoalGray.copy(alpha = 0.5f),
-                                disabledBorderColor = SubtleBorder,
-                                disabledLabelColor = CharcoalGray.copy(alpha = 0.4f),
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                             ),
                             supportingText = {
                                 Text(
                                     text = AppStrings.EditProfile.emailReadonlyNote,
                                     fontSize = 11.sp,
-                                    color = CharcoalGray.copy(alpha = 0.45f),
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
                                 )
                             },
                         )
@@ -191,7 +189,7 @@ fun EditProfileContent(
                         if (state.isSaving) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(22.dp),
-                                color = PureWhite,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 strokeWidth = 2.dp,
                             )
                         } else {
@@ -199,7 +197,7 @@ fun EditProfileContent(
                                 text = AppStrings.EditProfile.saveButton,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = PureWhite,
+                                color = MaterialTheme.colorScheme.onPrimary,
                             )
                         }
                     }
@@ -222,13 +220,13 @@ fun EditProfileContent(
                         Text(
                             text = AppStrings.EditProfile.deleteConfirmTitle,
                             fontWeight = FontWeight.SemiBold,
-                            color = CharcoalGray,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     },
                     text = {
                         Text(
                             text = AppStrings.EditProfile.deleteConfirmMessage,
-                            color = CharcoalGray.copy(alpha = 0.7f),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                         )
                     },
                     confirmButton = {
@@ -244,11 +242,11 @@ fun EditProfileContent(
                         TextButton(onClick = { onEvent(EditProfileEvent.OnDeleteDismissed) }) {
                             Text(
                                 text = AppStrings.EditProfile.cancel,
-                                color = CharcoalGray,
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     },
-                    containerColor = PureWhite,
+                    containerColor = MaterialTheme.colorScheme.surface,
                 )
             }
         }

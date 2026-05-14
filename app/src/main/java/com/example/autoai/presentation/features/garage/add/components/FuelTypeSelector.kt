@@ -12,8 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.autoai.presentation.features.garage.add.FuelTypeOptionUi
-import com.example.autoai.presentation.theme.CharcoalGray
-import com.example.autoai.presentation.theme.PureWhite
+import androidx.compose.material3.MaterialTheme
 import com.example.autoai.presentation.theme.VerdantGreen
 import com.example.domain.model.vehicle.FuelType
 
@@ -41,14 +40,14 @@ fun FuelTypeSelector(
                 },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = VerdantGreen,
-                    selectedLabelColor = PureWhite,
-                    containerColor = PureWhite,
-                    labelColor = CharcoalGray,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    labelColor = MaterialTheme.colorScheme.onSurface,
                 ),
                 border = FilterChipDefaults.filterChipBorder(
                     enabled = true,
                     selected = option.isSelected,
-                    borderColor = if (option.isSelected) VerdantGreen else CharcoalGray.copy(alpha = 0.18f),
+                    borderColor = if (option.isSelected) VerdantGreen else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f),
                     selectedBorderColor = VerdantGreen,
                 ),
             )

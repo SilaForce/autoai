@@ -28,8 +28,7 @@ import com.example.autoai.presentation.components.MainButton
 import com.example.autoai.presentation.features.onboarding.components.PageIndicator
 import com.example.autoai.presentation.features.onboarding.components.OnboardingPage
 import com.example.autoai.presentation.features.onboarding.components.OnboardingPageContent
-import com.example.autoai.presentation.theme.CharcoalGray
-import com.example.autoai.presentation.theme.PureWhite
+import androidx.compose.material3.MaterialTheme
 import kotlinx.coroutines.launch
 
 
@@ -62,7 +61,7 @@ fun OnboardingContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(PureWhite)
+            .background(MaterialTheme.colorScheme.background)
             .systemBarsPadding()
             .padding(horizontal = 24.dp, vertical = 16.dp)
     ) {
@@ -74,7 +73,7 @@ fun OnboardingContent(
             TextButton(onClick = { onEvent(OnboardingEvent.OnSkipClicked) }) {
                 Text(
                     text = AppStrings.Onboarding.skip,
-                    color = CharcoalGray.copy(alpha = 0.6f),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     fontSize = 14.sp
                 )
             }

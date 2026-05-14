@@ -21,9 +21,6 @@ import androidx.compose.ui.unit.sp
 import com.example.autoai.localization.AppStrings
 import com.example.autoai.presentation.components.BottomNavigationBar
 import com.example.autoai.presentation.features.chat.components.ChatMessageItem
-import com.example.autoai.presentation.theme.CharcoalGray
-import com.example.autoai.presentation.theme.OffWhiteBg
-import com.example.autoai.presentation.theme.PureWhite
 import com.example.autoai.presentation.theme.VerdantGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,13 +41,13 @@ fun AiChatContent(
     }
 
     Scaffold(
-        containerColor = OffWhiteBg,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             Column {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(PureWhite)
+                        .background(MaterialTheme.colorScheme.surface)
                         .padding(horizontal = 20.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -65,11 +62,11 @@ fun AiChatContent(
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
-                        Text(text = AppStrings.Chat.title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = CharcoalGray)
-                        Text(text = AppStrings.Chat.subtitle, fontSize = 12.sp, color = CharcoalGray.copy(alpha = 0.6f))
+                        Text(text = AppStrings.Chat.title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Text(text = AppStrings.Chat.subtitle, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                     }
                 }
-                HorizontalDivider(color = Color(0xFFE5E7EB))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             }
         },
         bottomBar = {
@@ -103,7 +100,7 @@ fun AiChatContent(
                         Text(
                             text = "AI kuca...",
                             fontSize = 12.sp,
-                            color = CharcoalGray.copy(alpha = 0.5f),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                             modifier = Modifier.padding(start = 40.dp, top = 8.dp)
                         )
                     }
@@ -112,7 +109,7 @@ fun AiChatContent(
 
             // Input polje na dnu
             Surface(
-                color = OffWhiteBg,
+                color = MaterialTheme.colorScheme.background,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
@@ -125,12 +122,12 @@ fun AiChatContent(
                     OutlinedTextField(
                         value = state.inputText,
                         onValueChange = { onEvent(AiChatEvent.OnInputChanged(it)) },
-                        placeholder = { Text(AppStrings.Chat.placeholder, color = CharcoalGray.copy(alpha = 0.5f)) },
+                        placeholder = { Text(AppStrings.Chat.placeholder, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(50),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = PureWhite,
-                            unfocusedContainerColor = PureWhite,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                             focusedBorderColor = VerdantGreen,
                             unfocusedBorderColor = Color.Transparent
                         ),
@@ -143,13 +140,13 @@ fun AiChatContent(
                         onClick = { onEvent(AiChatEvent.OnSendMessageClicked) },
                         modifier = Modifier
                             .size(48.dp)
-                            .background(Color(0xFFF3F4F6), CircleShape),
+                            .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
                         enabled = state.inputText.isNotBlank() && !state.isAiTyping
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Send,
                             contentDescription = AppStrings.Chat.sendDescription,
-                            tint = if (state.inputText.isNotBlank()) VerdantGreen else CharcoalGray.copy(alpha = 0.3f)
+                            tint = if (state.inputText.isNotBlank()) VerdantGreen else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                         )
                     }
                 }

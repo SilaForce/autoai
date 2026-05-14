@@ -25,8 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.autoai.localization.AppStrings
-import com.example.autoai.presentation.theme.CharcoalGray
-import com.example.autoai.presentation.theme.PureWhite
+import androidx.compose.material3.MaterialTheme
 
 // Definišemo stanja koja toggle može imati
 enum class AuthTab {
@@ -43,7 +42,7 @@ fun AuthToggle(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color(0xFFF5F5F5), RoundedCornerShape(50)) // Svijetlo siva pozadina
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50))
             .padding(4.dp) // Razmak između ivice kontejnera i unutrašnjih tabova
     ) {
         // Tab za Prijavu
@@ -73,7 +72,7 @@ private fun AuthTabItem(
 ) {
     // Animacije za boju i sjenku (daju "premium" osjećaj prebacivanja)
     val backgroundColor by animateColorAsState(
-        targetValue = if (isSelected) PureWhite else Color.Transparent,
+        targetValue = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent,
         label = "BgColorAnimation"
     )
     val shadowElevation by animateDpAsState(
@@ -95,7 +94,7 @@ private fun AuthTabItem(
     ) {
         Text(
             text = text,
-            color = if (isSelected) CharcoalGray else Color.Gray,
+            color = if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Gray,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
             fontSize = 15.sp
         )

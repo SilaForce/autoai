@@ -3,13 +3,13 @@ package com.example.autoai.presentation.features.profile.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.example.autoai.presentation.theme.CharcoalGray
 
 @Composable
 fun InfoRow(
@@ -24,13 +24,13 @@ fun InfoRow(
         Text(
             text = label,
             fontSize = 14.sp,
-            color = CharcoalGray.copy(alpha = 0.6f),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
         )
         Text(
             text = value,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
-            color = CharcoalGray,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }

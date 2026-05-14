@@ -20,9 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.autoai.localization.AppStrings
-import com.example.autoai.presentation.theme.CharcoalGray
 import com.example.autoai.presentation.theme.PureWhite
-import com.example.autoai.presentation.theme.SubtleBorder
 import com.example.autoai.presentation.theme.VerdantGreen
 import com.example.autoai.presentation.util.ImageUtils
 
@@ -39,9 +37,9 @@ fun UserHeaderCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = PureWhite),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = BorderStroke(1.dp, SubtleBorder),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Column(
             modifier = Modifier
@@ -89,7 +87,7 @@ fun UserHeaderCard(
                         text = fullName.ifBlank { "Korisnik" },
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = CharcoalGray,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -101,7 +99,7 @@ fun UserHeaderCard(
                         text = displayUsername,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        color = VerdantGreen.copy(alpha = 0.8f), // Zelenkasta za @username daje lijep akcenat
+                        color = VerdantGreen.copy(alpha = 0.8f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -120,14 +118,14 @@ fun UserHeaderCard(
                     Icon(
                         imageVector = Icons.Outlined.Email,
                         contentDescription = null,
-                        tint = CharcoalGray.copy(alpha = 0.5f),
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = userEmail,
                         fontSize = 14.sp,
-                        color = CharcoalGray.copy(alpha = 0.7f),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     )
                 }
 
@@ -137,14 +135,14 @@ fun UserHeaderCard(
                         Icon(
                             imageVector = Icons.Outlined.Phone,
                             contentDescription = null,
-                            tint = CharcoalGray.copy(alpha = 0.5f),
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = phoneNumber,
                             fontSize = 14.sp,
-                            color = CharcoalGray.copy(alpha = 0.7f),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                         )
                     }
                 }
@@ -157,11 +155,11 @@ fun UserHeaderCard(
                 onClick = onEditClick,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, SubtleBorder)
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
             ) {
                 Text(
                     text = AppStrings.Profile.editButton,
-                    color = CharcoalGray,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold
                 )
             }

@@ -33,8 +33,7 @@ import com.example.autoai.presentation.components.AutoAiTextField
 import com.example.autoai.presentation.components.MainButton
 import com.example.autoai.presentation.features.auth.components.AuthTab
 import com.example.autoai.presentation.features.auth.components.AuthToggle
-import com.example.autoai.presentation.theme.CharcoalGray
-import com.example.autoai.presentation.theme.PureWhite
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun LoginContent(
@@ -51,7 +50,7 @@ fun LoginContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(PureWhite)
+            .background(MaterialTheme.colorScheme.background)
             .systemBarsPadding()
             .imePadding()
     ) {
@@ -86,7 +85,7 @@ fun LoginContent(
                 text = AppStrings.Auth.garageTitle,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = CharcoalGray
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -130,8 +129,8 @@ fun LoginContent(
                 Text(
                     text = AppStrings.Auth.forgotPassword,
                     fontSize = 13.sp,
-                    color = CharcoalGray.copy(alpha = 0.6f),
-                    textAlign = TextAlign.End
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    textAlign = TextAlign.End,
                 )
             }
 

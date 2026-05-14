@@ -14,7 +14,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.autoai.presentation.features.chat.ChatMessageUi
-import com.example.autoai.presentation.theme.CharcoalGray
+import androidx.compose.material3.MaterialTheme
 import com.example.autoai.presentation.theme.PureWhite
 import com.example.autoai.presentation.theme.VerdantGreen
 
@@ -35,7 +35,7 @@ fun ChatMessageItem(message: ChatMessageUi) {
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(CharcoalGray.copy(alpha = 0.1f)),
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
                 Text("🤖", fontSize = 16.sp) // Privremeni emoji dok ne ubaciš ikonu
@@ -50,8 +50,8 @@ fun ChatMessageItem(message: ChatMessageUi) {
                 RoundedCornerShape(20.dp, 20.dp, 20.dp, 4.dp)
             },
             colors = CardDefaults.cardColors(
-                containerColor = if (isUser) VerdantGreen else PureWhite,
-                contentColor = if (isUser) PureWhite else CharcoalGray
+                containerColor = if (isUser) VerdantGreen else MaterialTheme.colorScheme.surface,
+                contentColor = if (isUser) PureWhite else MaterialTheme.colorScheme.onSurface
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = if (isUser) 0.dp else 1.dp),
             modifier = Modifier.widthIn(max = 280.dp)
@@ -66,7 +66,7 @@ fun ChatMessageItem(message: ChatMessageUi) {
                 Text(
                     text = message.formattedTime,
                     fontSize = 10.sp,
-                    color = if (isUser) PureWhite.copy(alpha = 0.7f) else CharcoalGray.copy(alpha = 0.5f),
+                    color = if (isUser) PureWhite.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                     modifier = Modifier.align(Alignment.End)
                 )
             }

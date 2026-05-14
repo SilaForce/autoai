@@ -18,6 +18,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -32,9 +33,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.autoai.localization.AppStrings
 import com.example.autoai.presentation.features.settings.components.SettingsItemCard
-import com.example.autoai.presentation.theme.CharcoalGray
-import com.example.autoai.presentation.theme.OffWhiteBg
-import com.example.autoai.presentation.theme.PureWhite
 import com.example.autoai.presentation.theme.VerdantGreen
 import com.example.autoai.presentation.theme.WarningOrange
 import com.example.autoai.presentation.theme.WarningOrangeBg
@@ -53,7 +51,7 @@ fun SettingsContent(
                     Text(
                         text = AppStrings.Settings.titleStr,
                         fontWeight = FontWeight.SemiBold,
-                        color = CharcoalGray
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 },
                 navigationIcon = {
@@ -61,15 +59,17 @@ fun SettingsContent(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Nazad",
-                            tint = CharcoalGray
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = OffWhiteBg)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = OffWhiteBg
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -86,7 +86,7 @@ fun SettingsContent(
                         checked = state.notificationsEnabled,
                         onCheckedChange = { onEvent(SettingsEvent.OnToggleNotifications(it)) },
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = PureWhite,
+                            checkedThumbColor = MaterialTheme.colorScheme.surface,
                             checkedTrackColor = VerdantGreen
                         )
                     )
@@ -101,7 +101,7 @@ fun SettingsContent(
                         checked = state.isDarkModeEnabled,
                         onCheckedChange = { onEvent(SettingsEvent.OnToggleDarkMode(it)) },
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = PureWhite,
+                            checkedThumbColor = MaterialTheme.colorScheme.surface,
                             checkedTrackColor = VerdantGreen
                         )
                     )
@@ -116,7 +116,7 @@ fun SettingsContent(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = null,
-                        tint = CharcoalGray.copy(alpha = 0.5f)
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
                 }
             )
@@ -129,7 +129,7 @@ fun SettingsContent(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = null,
-                        tint = CharcoalGray.copy(alpha = 0.5f)
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
                 }
             )

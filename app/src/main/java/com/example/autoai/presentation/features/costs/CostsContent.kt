@@ -24,6 +24,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -50,9 +51,6 @@ import com.example.autoai.presentation.features.costs.components.CategorySelecti
 import com.example.autoai.presentation.features.costs.components.CostHistoryCard
 import com.example.autoai.presentation.features.costs.components.CostProgressBar
 import com.example.autoai.presentation.theme.AutoAITheme
-import com.example.autoai.presentation.theme.CharcoalGray
-import com.example.autoai.presentation.theme.OffWhiteBg
-import com.example.autoai.presentation.theme.PureWhite
 import com.example.autoai.presentation.theme.VerdantGreen
 import com.example.domain.model.cost.CostCategory
 
@@ -67,13 +65,13 @@ fun CostsContent(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-            containerColor = OffWhiteBg,
+            containerColor = MaterialTheme.colorScheme.background,
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = { onEvent(CostsEvent.OnAddCostClicked) },
                     shape = CircleShape,
                     containerColor = VerdantGreen,
-                    contentColor = PureWhite,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Add,
@@ -100,7 +98,7 @@ fun CostsContent(
                     text = AppStrings.Costs.title,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
-                    color = CharcoalGray,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -123,13 +121,13 @@ fun CostsContent(
                                 text = AppStrings.Costs.noActiveVehicleTitle,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = CharcoalGray,
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = AppStrings.Costs.noActiveVehicleSubtitle,
                                 fontSize = 14.sp,
-                                color = CharcoalGray.copy(alpha = 0.55f),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
                             )
                         }
                     }
@@ -151,7 +149,7 @@ fun CostsContent(
             ModalBottomSheet(
                 onDismissRequest = { onEvent(CostsEvent.OnAddSheetDismissed) },
                 sheetState = sheetState,
-                containerColor = PureWhite,
+                containerColor = MaterialTheme.colorScheme.surface,
             ) {
                 AddCostSheetContent(state = state, onEvent = onEvent)
             }
@@ -170,7 +168,7 @@ private fun CostsTabRow(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(50),
-        color = Color(0xFFEEEEEE),
+        color = MaterialTheme.colorScheme.surfaceVariant,
     ) {
         Row(modifier = Modifier.padding(4.dp)) {
             CostsTab.entries.forEach { tab ->
@@ -183,14 +181,14 @@ private fun CostsTabRow(
                     onClick = { onTabSelected(tab) },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(50),
-                    color = if (isSelected) PureWhite else Color.Transparent,
+                    color = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent,
                 ) {
                     Text(
                         text = label,
                         modifier = Modifier.padding(vertical = 10.dp),
                         fontSize = 14.sp,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                        color = if (isSelected) CharcoalGray else CharcoalGray.copy(alpha = 0.5f),
+                        color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     )
                 }
@@ -213,13 +211,13 @@ private fun HistoryTab(
                     text = AppStrings.Costs.emptyTitle,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = CharcoalGray,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = AppStrings.Costs.emptyDescription,
                     fontSize = 14.sp,
-                    color = CharcoalGray.copy(alpha = 0.55f),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
                 )
             }
         }
@@ -227,7 +225,7 @@ private fun HistoryTab(
         Card(
             modifier = modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = PureWhite),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         ) {
             LazyColumn(
@@ -244,7 +242,7 @@ private fun HistoryTab(
                         categoryIcon = item.categoryIcon,
                     )
                     if (index < state.history.lastIndex) {
-                        HorizontalDivider(color = Color(0xFFF0F0F0))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     }
                 }
             }
@@ -266,21 +264,21 @@ private fun StatisticsTab(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = PureWhite),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Text(
                     text = AppStrings.Costs.statsTotalLabel,
                     fontSize = 13.sp,
-                    color = CharcoalGray.copy(alpha = 0.55f),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = stats?.totalAmount ?: "0 KM",
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
-                    color = CharcoalGray,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
         }
@@ -290,7 +288,7 @@ private fun StatisticsTab(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = PureWhite),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
@@ -298,7 +296,7 @@ private fun StatisticsTab(
                         text = AppStrings.Costs.statsByCategoryLabel,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = CharcoalGray,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -311,13 +309,13 @@ private fun StatisticsTab(
                             Text(
                                 text = breakdown.categoryName,
                                 fontSize = 14.sp,
-                                color = CharcoalGray.copy(alpha = 0.7f),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             )
                             Text(
                                 text = breakdown.amount,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = CharcoalGray,
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                         Spacer(modifier = Modifier.height(6.dp))
@@ -346,7 +344,7 @@ private fun AddCostSheetContent(
             text = AppStrings.Costs.addSheetTitle,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = CharcoalGray,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.align(Alignment.CenterHorizontally),
         )
 
@@ -356,7 +354,7 @@ private fun AddCostSheetContent(
             text = AppStrings.Costs.categoryLabel,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
-            color = CharcoalGray,
+            color = MaterialTheme.colorScheme.onSurface,
         )
 
         Spacer(modifier = Modifier.height(10.dp))
