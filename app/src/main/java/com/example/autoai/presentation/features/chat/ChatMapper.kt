@@ -14,6 +14,6 @@ fun ChatMessage.toUiModel(): ChatMessageUi {
         text = text,
         isFromUser = role == MessageRole.USER,
         formattedTime = timeFormatter().format(Date(timestamp)),
-        imageBytes = imageBytes
+        images = images
     )
 }

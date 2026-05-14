@@ -12,5 +12,5 @@ data class ChatMessage(
     val text: String,
     val role: MessageRole,
     val timestamp: Long = System.currentTimeMillis(),
-    val imageBytes: ByteArray? = null
+    val images: List<ByteArray> = emptyList()
 )

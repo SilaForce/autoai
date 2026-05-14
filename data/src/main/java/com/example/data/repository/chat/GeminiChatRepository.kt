@@ -23,7 +23,7 @@ companion object {
         prompt: String,
         history: List<ChatMessage>,
         systemInstruction: String,
-        imageBytes: ByteArray?
+        images: List<ByteArray>
     ): AppResult<String> {
         val apiKey = BuildConfig.GEMINI_API_KEY.trim()
         val modelName = DEFAULT_MODEL
@@ -43,10 +43,12 @@ companion object {
 
         return safeGenerativeAiCall {
             val chatSession = generativeModel.startChat(history = geminiHistory)
-            val response = if (imageBytes != null) {
-                val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+            val response = if (images.isNotEmpty()) {
                 chatSession.sendMessage(content {
-                    image(bitmap)
+                    images.forEach { bytes ->
+                        val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                        image(bitmap)
+                    }
                     text(prompt)
                 })
             } else {
@@ -63,11 +65,11 @@ companion object {
 
         return sanitizedHistory.map { message ->
             content(role = if (message.role == MessageRole.USER) "user" else "model") {
-                if (message.imageBytes != null) {
-                    val bitmap = BitmapFactory.decodeByteArray(message.imageBytes, 0, message.imageBytes!!.size)
+                message.images.forEach { bytes ->
+                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                     image(bitmap)
                 }
-                    text(message.text)
+                text(message.text)
             }
         }
     }

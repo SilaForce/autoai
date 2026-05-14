@@ -59,16 +59,19 @@ fun ChatMessageItem(message: ChatMessageUi) {
             modifier = Modifier.widthIn(max = 280.dp)
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
-                if(message.imageBytes != null) {
-                    AsyncImage(
-                        model = message.imageBytes,
-                        contentDescription = null,
-                        contentScale = ContentScale.FillWidth,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp)),
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+                if (message.images.isNotEmpty()) {
+                    message.images.forEach { imageBytes ->
+                        AsyncImage(
+                            model = imageBytes,
+                            contentDescription = null,
+                            contentScale = ContentScale.FillWidth,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp)),
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
                 }
                 Text(
                     text = message.text,

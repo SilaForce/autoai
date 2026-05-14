@@ -1,5 +1,7 @@
 package com.example.autoai.presentation.features.chat
 
+import android.Manifest
+import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,12 +29,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import com.example.autoai.localization.AppStrings
 import com.example.autoai.presentation.components.BottomNavigationBar
 import com.example.autoai.presentation.features.chat.components.ChatMessageItem
 import com.example.autoai.presentation.theme.AutoAITheme
 import com.example.autoai.presentation.theme.VerdantGreen
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,6 +57,40 @@ fun AiChatContent(
             }
         }
     )
+
+    // ── Camera capture ────────────────────────────────────────────
+    val cameraImageUri = remember {
+        val cameraDir = File(context.cacheDir, "camera_images").apply { mkdirs() }
+        val imageFile = File(cameraDir, "chat_photo.jpg")
+        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", imageFile)
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture(),
+        onResult = { success ->
+            if (success) {
+                val bytes = context.contentResolver.openInputStream(cameraImageUri)?.use { it.readBytes() }
+                if (bytes != null) onEvent(AiChatEvent.OnImageSelected(bytes))
+            }
+        }
+    )
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { granted ->
+            if (granted) {
+                cameraLauncher.launch(cameraImageUri)
+            }
+        }
+    )
+
+    fun launchCamera() {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            cameraLauncher.launch(cameraImageUri)
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
 
     LaunchedEffect(state.messages.size) {
         if (state.messages.isNotEmpty()) {
@@ -121,36 +161,40 @@ fun AiChatContent(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column {
-                        // ── Image preview ─────────────────────────────
-                        if (state.selectedImage != null) {
-                            Box(
-                                modifier = Modifier
-                                    .padding(start = 16.dp, end = 16.dp, top = 8.dp)
+                        // ── Image previews ────────────────────────────
+                        if (state.selectedImages.isNotEmpty()) {
+                            Row(
+                                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
-                                AsyncImage(
-                                    model = state.selectedImage,
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(72.dp)
-                                        .clip(RoundedCornerShape(12.dp)),
-                                    contentScale = ContentScale.Crop
-                                )
-                                IconButton(
-                                    onClick = { onEvent(AiChatEvent.OnClearImageClicked) },
-                                    modifier = Modifier
-                                        .align(Alignment.TopEnd)
-                                        .size(24.dp)
-                                        .background(
-                                            MaterialTheme.colorScheme.surface,
-                                            CircleShape
+                                state.selectedImages.forEachIndexed { index, imageBytes ->
+                                    Box {
+                                        AsyncImage(
+                                            model = imageBytes,
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .size(72.dp)
+                                                .clip(RoundedCornerShape(12.dp)),
+                                            contentScale = ContentScale.Crop
                                         )
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Close,
-                                        contentDescription = "Clear image",
-                                        modifier = Modifier.size(16.dp),
-                                        tint = MaterialTheme.colorScheme.onSurface
-                                    )
+                                        IconButton(
+                                            onClick = { onEvent(AiChatEvent.OnRemoveImage(index)) },
+                                            modifier = Modifier
+                                                .align(Alignment.TopEnd)
+                                                .size(24.dp)
+                                                .background(
+                                                    MaterialTheme.colorScheme.surface,
+                                                    CircleShape
+                                                )
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Remove image",
+                                                modifier = Modifier.size(16.dp),
+                                                tint = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -161,6 +205,7 @@ fun AiChatContent(
                                 .padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            // Gallery button
                             IconButton(
                                 onClick = {
                                     photoPickerLauncher.launch(
@@ -171,6 +216,15 @@ fun AiChatContent(
                                 Icon(
                                     imageVector = Icons.Outlined.PhotoLibrary,
                                     contentDescription = "Pick image",
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+
+                            // Camera button
+                            IconButton(onClick = { launchCamera() }) {
+                                Icon(
+                                    imageVector = Icons.Outlined.CameraAlt,
+                                    contentDescription = "Take photo",
                                     tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
                             }

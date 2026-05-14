@@ -11,7 +11,7 @@ data class SendMessageParams(
     val prompt: String,
     val history: List<ChatMessage>,
     val systemInstruction: String,
-    val imageBytes: ByteArray? = null
+    val images: List<ByteArray> = emptyList()
 )
 
 class SendMessageUseCase(
@@ -29,7 +29,7 @@ class SendMessageUseCase(
             prompt = params.prompt.trim(),
             history = params.history,
             systemInstruction = params.systemInstruction,
-            imageBytes = params.imageBytes
+            images = params.images
         )
     }
 }

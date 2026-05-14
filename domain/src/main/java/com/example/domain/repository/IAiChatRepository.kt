@@ -8,6 +8,6 @@ interface IAiChatRepository {
         prompt: String,
         history: List<ChatMessage>,
         systemInstruction: String,
-        imageBytes: ByteArray? = null,
+        images: List<ByteArray> = emptyList(),
         ): AppResult<String>
 }

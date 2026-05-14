@@ -5,6 +5,7 @@ import com.example.autoai.base.BaseViewModel
 import com.example.autoai.navigation.IAppNavigator
 import com.example.autoai.navigation.Route
 import com.example.autoai.presentation.components.BottomNavItem
+import com.example.autoai.presentation.util.ImageUtils
 import com.example.autoai.presentation.util.asUiText
 import com.example.domain.model.app.onFailure
 import com.example.domain.model.app.onSuccess
@@ -41,8 +42,19 @@ class AiChatViewModel(
             is AiChatEvent.OnInputChanged -> setState { it.copy(inputText = event.value) }
             AiChatEvent.OnSendMessageClicked -> sendMessage()
             is AiChatEvent.OnNavItemSelected -> handleBottomNavigation(event.item)
-            is AiChatEvent.OnImageSelected -> setState { it.copy(selectedImage = event.imageBytes) }
-            AiChatEvent.OnClearImageClicked -> setState { it.copy(selectedImage = null) }
+            is AiChatEvent.OnImageSelected -> {
+                val compressed = ImageUtils.compressForAi(event.imageBytes) ?: event.imageBytes
+                setState { currentState ->
+                    if (currentState.selectedImages.size < 3) {
+                        currentState.copy(selectedImages = currentState.selectedImages + compressed)
+                    } else {
+                        currentState
+                    }
+                }
+            }
+            is AiChatEvent.OnRemoveImage -> {
+                setState { it.copy(selectedImages = it.selectedImages.toMutableList().apply { removeAt(event.index) }) }
+            }
         }
     }
 
@@ -52,13 +64,34 @@ class AiChatViewModel(
                 getVehiclesUseCase(GetVehiclesParams(user.id)).onSuccess { vehicles ->
                     val activeVehicle = vehicles.firstOrNull { it.isActive }
                     if (activeVehicle != null) {
-                        // Ovdje pravimo tajnu instrukciju!
                         systemInstruction = """
-                            You are an expert auto mechanic. 
-                            The user you are talking to currently drives a: 
-                            ${activeVehicle.make} ${activeVehicle.model} (${activeVehicle.year}), Fuel type: ${activeVehicle.fuelType}. 
-                            Always keep this specific vehicle in mind when giving advice. 
-                            Provide short, clear, and professional answers. Respond in the same language the user writes in.
+                            You are an expert auto mechanic and vehicle diagnostics assistant.
+
+                            The user currently drives: ${activeVehicle.make} ${activeVehicle.model} (${activeVehicle.year}), Fuel type: ${activeVehicle.fuelType}.
+                            Always tailor your answers to this specific vehicle (correct parts, known issues, compatible fluids, etc.).
+
+                            When the user sends a photo:
+                            - First describe what you see (the part, its condition, any visible damage or wear).
+                            - Then give your diagnosis and recommendation.
+                            - If the image is unclear, ask the user for a better angle.
+
+                            Safety:
+                            - If the issue involves brakes, tires, steering, suspension, or any safety-critical system, start your answer with "⚠️ SAFETY:" and strongly recommend professional inspection.
+                            - Never suggest the user ignore a potential safety issue.
+
+                            Cost estimates:
+                            - When relevant, provide a rough price range for parts and labor (e.g. "Parts: 50-80 EUR, Labor: 30-60 EUR").
+                            - Clarify that prices vary by region and workshop.
+
+                            DIY guidance:
+                            - For simple maintenance tasks (oil top-up, bulb replacement, filter change, etc.), offer numbered step-by-step instructions.
+                            - Always list the tools needed before the steps.
+                            - If a repair requires lifting the car, special tools, or carries risk, recommend a professional instead.
+
+                            General rules:
+                            - Keep answers concise and well-structured. Use bullet points or numbered lists.
+                            - Respond in the same language the user writes in.
+                            - If you are unsure about something, say so honestly rather than guessing.
                         """.trimIndent()
                     }
                 }
@@ -67,13 +100,13 @@ class AiChatViewModel(
     }
 
     private fun sendMessage() {
-        val image = state.value.selectedImage
+        val images = state.value.selectedImages
         val prompt = state.value.inputText.trim()
         if (prompt.isBlank() || state.value.isAiTyping) return
 
-        setState { it.copy(inputText = "", isAiTyping = true, selectedImage = null) }
+        setState { it.copy(inputText = "", isAiTyping = true, selectedImages = emptyList()) }
 
-        val userMessage = ChatMessage(text = prompt, role = MessageRole.USER, imageBytes = image)
+        val userMessage = ChatMessage(text = prompt, role = MessageRole.USER, images = images)
 
         // 3. We take a snapshot of the current API history BEFORE adding the new message
         val previousApiHistory = apiChatHistory.toList()
@@ -87,7 +120,7 @@ class AiChatViewModel(
                     prompt = prompt,
                     history = previousApiHistory, // Sending the clean history!
                     systemInstruction = systemInstruction,
-                    imageBytes = image
+                    images = images
                 )
             ).onSuccess { aiReply ->
                 addMessageToApiAndUi(ChatMessage(text = aiReply, role = MessageRole.AI))
