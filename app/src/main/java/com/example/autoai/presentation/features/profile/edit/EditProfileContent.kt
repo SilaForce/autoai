@@ -3,13 +3,38 @@ package com.example.autoai.presentation.features.profile.edit
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -27,7 +52,6 @@ import com.example.autoai.presentation.theme.AutoAITheme
 import com.example.autoai.presentation.theme.DangerRed
 import com.example.autoai.presentation.theme.VerdantGreen
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileContent(
     state: EditProfileState,
@@ -48,17 +72,33 @@ fun EditProfileContent(
         }
     )
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = AppStrings.EditProfile.title,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                },
-                navigationIcon = {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .imePadding(),
+    ) {
+        if (state.isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.Center),
+                color = VerdantGreen,
+            )
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 14.dp),
+            ) {
+                Spacer(modifier = Modifier.height(28.dp))
+
+                // ── Header ────────────────────────────────────────────
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     IconButton(onClick = { onEvent(EditProfileEvent.OnBackClicked) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -66,190 +106,178 @@ fun EditProfileContent(
                             tint = MaterialTheme.colorScheme.onSurface,
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                ),
-            )
-        },
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.padding(top = 8.dp),
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background,
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .imePadding(),
-        ) {
-            if (state.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = VerdantGreen,
-                )
-            } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    Spacer(modifier = Modifier.height(8.dp))
 
-                    // ── Avatar section ─────────────────────────────────────
-                    AvatarSection(
-                        userInitial = state.userInitial,
-                        profilePictureUrl = state.profilePictureUrl,
-                        selectedProfilePicture = state.selectedProfilePicture,
-                        onAvatarClick = {
-                            photoPickerLauncher.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    Text(
+                        text = AppStrings.EditProfile.title,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // ── Avatar section ────────────────────────────────────
+                AvatarSection(
+                    userInitial = state.userInitial,
+                    profilePictureUrl = state.profilePictureUrl,
+                    selectedProfilePicture = state.selectedProfilePicture,
+                    onAvatarClick = {
+                        photoPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // ── Profile info card ─────────────────────────────────
+                SectionCard(title = AppStrings.EditProfile.sectionProfile) {
+                    OutlinedTextField(
+                        value = state.username,
+                        onValueChange = { onEvent(EditProfileEvent.OnUsernameChange(it)) },
+                        label = { Text(AppStrings.EditProfile.usernameLabel) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = state.fullName,
+                        onValueChange = { onEvent(EditProfileEvent.OnFullNameChange(it)) },
+                        label = { Text(AppStrings.EditProfile.fullNameLabel) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        isError = state.fullNameError != null,
+                        supportingText = state.fullNameError?.let {
+                            { Text(it.asString(), color = DangerRed) }
+                        },
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // ── Contact card ──────────────────────────────────────
+                SectionCard(title = AppStrings.EditProfile.sectionContact) {
+                    OutlinedTextField(
+                        value = state.email,
+                        onValueChange = {},
+                        label = { Text(AppStrings.EditProfile.emailLabel) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        enabled = false,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                            disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        ),
+                        supportingText = {
+                            Text(
+                                text = AppStrings.EditProfile.emailReadonlyNote,
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
                             )
                         },
                     )
 
-                    // ── Profile info card ──────────────────────────────────
-                    SectionCard(title = AppStrings.EditProfile.sectionProfile) {
-                        OutlinedTextField(
-                            value = state.username,
-                            onValueChange = { onEvent(EditProfileEvent.OnUsernameChange(it)) },
-                            label = { Text(AppStrings.EditProfile.usernameLabel) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                        )
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        OutlinedTextField(
-                            value = state.fullName,
-                            onValueChange = { onEvent(EditProfileEvent.OnFullNameChange(it)) },
-                            label = { Text(AppStrings.EditProfile.fullNameLabel) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                            isError = state.fullNameError != null,
-                            supportingText = state.fullNameError?.let {
-                                { Text(it.asString(), color = DangerRed) }
-                            },
-                        )
-                    }
-
-                    // ── Contact card ───────────────────────────────────────
-                    SectionCard(title = AppStrings.EditProfile.sectionContact) {
-                        OutlinedTextField(
-                            value = state.email,
-                            onValueChange = {},
-                            label = { Text(AppStrings.EditProfile.emailLabel) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            enabled = false,
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                                disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                                disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                            ),
-                            supportingText = {
-                                Text(
-                                    text = AppStrings.EditProfile.emailReadonlyNote,
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
-                                )
-                            },
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        OutlinedTextField(
-                            value = state.phoneNumber,
-                            onValueChange = { onEvent(EditProfileEvent.OnPhoneChange(it)) },
-                            label = { Text(AppStrings.EditProfile.phoneLabel) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                        )
-                    }
-
-                    // ── Save button ────────────────────────────────────────
-                    Button(
-                        onClick = { onEvent(EditProfileEvent.OnSaveClick) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = VerdantGreen),
-                        enabled = !state.isSaving && !state.isDeleting,
-                    ) {
-                        if (state.isSaving) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(22.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                strokeWidth = 2.dp,
-                            )
-                        } else {
-                            Text(
-                                text = AppStrings.EditProfile.saveButton,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onPrimary,
-                            )
-                        }
-                    }
-
-                    // ── Danger zone card ───────────────────────────────────
-                    DangerZoneCard(
-                        isDeleting = state.isDeleting,
-                        onDeleteClick = { onEvent(EditProfileEvent.OnDeleteAccountClick) },
+                    OutlinedTextField(
+                        value = state.phoneNumber,
+                        onValueChange = { onEvent(EditProfileEvent.OnPhoneChange(it)) },
+                        label = { Text(AppStrings.EditProfile.phoneLabel) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
                     )
-
-                    Spacer(modifier = Modifier.height(24.dp))
                 }
-            }
 
-            // ── Delete confirmation dialog ──────────────────────────────
-            if (state.showDeleteConfirmDialog) {
-                AlertDialog(
-                    onDismissRequest = { onEvent(EditProfileEvent.OnDeleteDismissed) },
-                    title = {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // ── Save button ───────────────────────────────────────
+                Button(
+                    onClick = { onEvent(EditProfileEvent.OnSaveClick) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = VerdantGreen),
+                    enabled = !state.isSaving && !state.isDeleting,
+                ) {
+                    if (state.isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(22.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp,
+                        )
+                    } else {
                         Text(
-                            text = AppStrings.EditProfile.deleteConfirmTitle,
+                            text = AppStrings.EditProfile.saveButton,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = MaterialTheme.colorScheme.onPrimary,
                         )
-                    },
-                    text = {
-                        Text(
-                            text = AppStrings.EditProfile.deleteConfirmMessage,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        )
-                    },
-                    confirmButton = {
-                        TextButton(onClick = { onEvent(EditProfileEvent.OnDeleteConfirmed) }) {
-                            Text(
-                                text = AppStrings.EditProfile.deleteConfirmButton,
-                                color = DangerRed,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { onEvent(EditProfileEvent.OnDeleteDismissed) }) {
-                            Text(
-                                text = AppStrings.EditProfile.cancel,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                    },
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // ── Danger zone card ──────────────────────────────────
+                DangerZoneCard(
+                    isDeleting = state.isDeleting,
+                    onDeleteClick = { onEvent(EditProfileEvent.OnDeleteAccountClick) },
                 )
+
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
+
+        // ── Delete confirmation dialog ──────────────────────────────
+        if (state.showDeleteConfirmDialog) {
+            AlertDialog(
+                onDismissRequest = { onEvent(EditProfileEvent.OnDeleteDismissed) },
+                title = {
+                    Text(
+                        text = AppStrings.EditProfile.deleteConfirmTitle,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                },
+                text = {
+                    Text(
+                        text = AppStrings.EditProfile.deleteConfirmMessage,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = { onEvent(EditProfileEvent.OnDeleteConfirmed) }) {
+                        Text(
+                            text = AppStrings.EditProfile.deleteConfirmButton,
+                            color = DangerRed,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { onEvent(EditProfileEvent.OnDeleteDismissed) }) {
+                        Text(
+                            text = AppStrings.EditProfile.cancel,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.surface,
+            )
+        }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
     }
 }
 

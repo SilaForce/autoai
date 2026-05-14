@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -30,7 +31,7 @@ fun SectionCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(12.dp),
         ) {
             Text(
                 text = title,
@@ -40,6 +41,16 @@ fun SectionCard(
                 modifier = Modifier.padding(bottom = 12.dp),
             )
             content()
+        }
+    }
+}
+
+@Composable
+@Preview
+fun SectionCardPreview() {
+    MaterialTheme {
+        SectionCard(title = "Account Information") {
+            Text("This is the content of the section.")
         }
     }
 }

@@ -7,6 +7,7 @@ interface IAiChatRepository {
     suspend fun sendMessage(
         prompt: String,
         history: List<ChatMessage>,
-        systemInstruction: String
-    ): AppResult<String>
+        systemInstruction: String,
+        imageBytes: ByteArray? = null,
+        ): AppResult<String>
 }

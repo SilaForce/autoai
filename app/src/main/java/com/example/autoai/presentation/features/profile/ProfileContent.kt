@@ -10,11 +10,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -35,6 +37,7 @@ import com.example.autoai.localization.AppStrings
 import com.example.autoai.presentation.features.profile.components.AccountInfoCard
 import com.example.autoai.presentation.features.profile.components.StatCard
 import com.example.autoai.presentation.features.profile.components.UserHeaderCard
+import com.example.autoai.presentation.features.settings.SettingsEvent
 import com.example.autoai.presentation.theme.AutoAITheme
 
 @Composable
@@ -46,6 +49,7 @@ fun ProfileContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .imePadding(),
     ) {
         if (state.isLoading) {
@@ -56,7 +60,7 @@ fun ProfileContent(
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp),
+                    .padding(horizontal = 14.dp),
             ) {
                 Spacer(modifier = Modifier.height(28.dp))
 
@@ -65,13 +69,25 @@ fun ProfileContent(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    )  {
+                    IconButton(onClick = { onEvent(ProfileEvent.OnBackClick) }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
                     Text(
                         text = AppStrings.Profile.title,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground,
                     )
-
+                    }
                     IconButton(
                         onClick = { onEvent(ProfileEvent.OnSettingsClick) }
                     ) {

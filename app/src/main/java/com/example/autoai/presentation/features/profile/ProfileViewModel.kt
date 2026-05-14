@@ -36,7 +36,8 @@ class ProfileViewModel(
         when (event) {
             ProfileEvent.OnEditProfileClick -> navigator.navigateTo(Route.EditProfile)
             ProfileEvent.OnRetry -> loadProfile()
-                ProfileEvent.OnSettingsClick -> navigator.navigateTo(Route.Settings)
+            ProfileEvent.OnSettingsClick -> navigator.navigateTo(Route.Settings)
+            ProfileEvent.OnBackClick -> navigateBack()
         }
     }
     private fun loadProfile() {
@@ -89,6 +90,10 @@ class ProfileViewModel(
                 )
             }
         }
+    }
+
+    private fun navigateBack() {
+        navigator.navigateBack()
     }
 
     private fun Long.formatMemberSince(): String {

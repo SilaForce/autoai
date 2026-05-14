@@ -1,5 +1,7 @@
 package com.example.data.repository.chat
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import com.example.data.BuildConfig
 import com.example.data.datasource.remote.util.safeGenerativeAiCall
 import com.example.domain.model.app.AppResult
@@ -20,7 +22,8 @@ companion object {
     override suspend fun sendMessage(
         prompt: String,
         history: List<ChatMessage>,
-        systemInstruction: String
+        systemInstruction: String,
+        imageBytes: ByteArray?
     ): AppResult<String> {
         val apiKey = BuildConfig.GEMINI_API_KEY.trim()
         val modelName = DEFAULT_MODEL
@@ -40,7 +43,15 @@ companion object {
 
         return safeGenerativeAiCall {
             val chatSession = generativeModel.startChat(history = geminiHistory)
-            val response = chatSession.sendMessage(prompt)
+            val response = if (imageBytes != null) {
+                val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                chatSession.sendMessage(content {
+                    image(bitmap)
+                    text(prompt)
+                })
+            } else {
+                chatSession.sendMessage(prompt)
+            }
             response.text ?: ""
         }
     }
@@ -52,7 +63,11 @@ companion object {
 
         return sanitizedHistory.map { message ->
             content(role = if (message.role == MessageRole.USER) "user" else "model") {
-                text(message.text)
+                if (message.imageBytes != null) {
+                    val bitmap = BitmapFactory.decodeByteArray(message.imageBytes, 0, message.imageBytes!!.size)
+                    image(bitmap)
+                }
+                    text(message.text)
             }
         }
     }

@@ -17,6 +17,8 @@ import com.example.autoai.presentation.features.chat.ChatMessageUi
 import androidx.compose.material3.MaterialTheme
 import com.example.autoai.presentation.theme.PureWhite
 import com.example.autoai.presentation.theme.VerdantGreen
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun ChatMessageItem(message: ChatMessageUi) {
@@ -57,6 +59,17 @@ fun ChatMessageItem(message: ChatMessageUi) {
             modifier = Modifier.widthIn(max = 280.dp)
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
+                if(message.imageBytes != null) {
+                    AsyncImage(
+                        model = message.imageBytes,
+                        contentDescription = null,
+                        contentScale = ContentScale.FillWidth,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp)),
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
                 Text(
                     text = message.text,
                     fontSize = 15.sp,

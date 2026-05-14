@@ -11,5 +11,6 @@ data class ChatMessage(
     val id: String = UUID.randomUUID().toString(),
     val text: String,
     val role: MessageRole,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val imageBytes: ByteArray? = null
 )

@@ -4,5 +4,6 @@ data class ChatMessageUi(
     val id: String,
     val text: String,
     val isFromUser: Boolean,
-    val formattedTime: String
+    val formattedTime: String,
+    val imageBytes: ByteArray? = null
 )

@@ -1,6 +1,7 @@
 package com.example.autoai.presentation.features.garage.add
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -71,25 +72,26 @@ fun AddVehicleContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = 14.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 IconButton(onClick = { onEvent(AddVehicleEvent.OnBackClicked) }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                         contentDescription = AppStrings.Common.back,
+                        tint = MaterialTheme.colorScheme.onSurface,
                     )
                 }
 
                 Text(
                     text = AppStrings.AddVehicle.title,
-                    fontSize = 24.sp,
+                    fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                 )

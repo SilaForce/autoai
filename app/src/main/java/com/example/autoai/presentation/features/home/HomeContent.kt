@@ -72,9 +72,8 @@ fun HomeContent(
                             .padding(horizontal = 20.dp)
                             .verticalScroll(rememberScrollState()),
                     ) {
-                        Spacer(modifier = Modifier.height(28.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                        // ── Greeting + profile icon ────────────────────────
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,

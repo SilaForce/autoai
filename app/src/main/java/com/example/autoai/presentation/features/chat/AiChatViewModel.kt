@@ -32,7 +32,6 @@ class AiChatViewModel(
     init {
         buildSystemInstruction()
 
-        // 2. We add the welcome message DIRECTLY to the UI state, NOT to the API history.
         val welcomeMessage = ChatMessage(text = "Dobar dan! Ja sam tvoj lični AI mehaničar. Kako ti mogu pomoći danas?", role = MessageRole.AI)
         setState { it.copy(messages = listOf(welcomeMessage.toUiModel())) }
     }
@@ -42,6 +41,8 @@ class AiChatViewModel(
             is AiChatEvent.OnInputChanged -> setState { it.copy(inputText = event.value) }
             AiChatEvent.OnSendMessageClicked -> sendMessage()
             is AiChatEvent.OnNavItemSelected -> handleBottomNavigation(event.item)
+            is AiChatEvent.OnImageSelected -> setState { it.copy(selectedImage = event.imageBytes) }
+            AiChatEvent.OnClearImageClicked -> setState { it.copy(selectedImage = null) }
         }
     }
 
@@ -66,12 +67,13 @@ class AiChatViewModel(
     }
 
     private fun sendMessage() {
+        val image = state.value.selectedImage
         val prompt = state.value.inputText.trim()
         if (prompt.isBlank() || state.value.isAiTyping) return
 
-        setState { it.copy(inputText = "", isAiTyping = true) }
+        setState { it.copy(inputText = "", isAiTyping = true, selectedImage = null) }
 
-        val userMessage = ChatMessage(text = prompt, role = MessageRole.USER)
+        val userMessage = ChatMessage(text = prompt, role = MessageRole.USER, imageBytes = image)
 
         // 3. We take a snapshot of the current API history BEFORE adding the new message
         val previousApiHistory = apiChatHistory.toList()
@@ -84,7 +86,8 @@ class AiChatViewModel(
                 SendMessageParams(
                     prompt = prompt,
                     history = previousApiHistory, // Sending the clean history!
-                    systemInstruction = systemInstruction
+                    systemInstruction = systemInstruction,
+                    imageBytes = image
                 )
             ).onSuccess { aiReply ->
                 addMessageToApiAndUi(ChatMessage(text = aiReply, role = MessageRole.AI))

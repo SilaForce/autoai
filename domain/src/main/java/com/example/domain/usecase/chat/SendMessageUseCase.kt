@@ -10,7 +10,8 @@ import kotlinx.coroutines.CoroutineDispatcher
 data class SendMessageParams(
     val prompt: String,
     val history: List<ChatMessage>,
-    val systemInstruction: String
+    val systemInstruction: String,
+    val imageBytes: ByteArray? = null
 )
 
 class SendMessageUseCase(
@@ -27,7 +28,8 @@ class SendMessageUseCase(
         return repository.sendMessage(
             prompt = params.prompt.trim(),
             history = params.history,
-            systemInstruction = params.systemInstruction
+            systemInstruction = params.systemInstruction,
+            imageBytes = params.imageBytes
         )
     }
 }

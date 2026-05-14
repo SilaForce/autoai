@@ -13,6 +13,7 @@ fun ChatMessage.toUiModel(): ChatMessageUi {
         id = id,
         text = text,
         isFromUser = role == MessageRole.USER,
-        formattedTime = timeFormatter().format(Date(timestamp))
+        formattedTime = timeFormatter().format(Date(timestamp)),
+        imageBytes = imageBytes
     )
 }

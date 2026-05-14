@@ -6,6 +6,8 @@ sealed interface ProfileEvent {
     data object OnEditProfileClick : ProfileEvent
     data object OnRetry : ProfileEvent
     data object OnSettingsClick : ProfileEvent
+
+    data object OnBackClick : ProfileEvent
 }
 
 sealed interface ProfileSideEffect {
