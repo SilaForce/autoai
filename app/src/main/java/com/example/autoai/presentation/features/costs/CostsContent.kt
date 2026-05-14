@@ -250,8 +250,6 @@ private fun HistoryTab(
     }
 }
 
-// ─── Statistics Tab ───────────────────────────────────────────────────────────
-
 @Composable
 private fun StatisticsTab(
     state: CostsState,
