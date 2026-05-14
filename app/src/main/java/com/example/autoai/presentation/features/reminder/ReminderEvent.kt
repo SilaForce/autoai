@@ -12,4 +12,9 @@ sealed interface ReminderEvent {
 
     data object OnSaveReminderClicked : ReminderEvent
     data class OnNavItemSelected(val item: BottomNavItem) : ReminderEvent
+
+    // Reminder management
+    data class OnToggleCompleted(val reminder: ReminderItemUi) : ReminderEvent
+    data class OnEditClicked(val reminder: ReminderItemUi) : ReminderEvent
+    data class OnDeleteClicked(val reminderId: String) : ReminderEvent
 }

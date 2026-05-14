@@ -1,10 +1,14 @@
 package com.example.autoai.presentation.features.reminder
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -13,18 +17,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.autoai.localization.AppStrings // <-- OBAVEZAN IMPORT
+import com.example.autoai.localization.AppStrings
 import com.example.autoai.presentation.components.AutoAiTextField
-import com.example.autoai.presentation.components.BottomNavItem
 import com.example.autoai.presentation.components.BottomNavigationBar
 import com.example.autoai.presentation.components.MainButton
 import com.example.autoai.presentation.features.reminder.components.ReminderCard
-import com.example.autoai.presentation.theme.AutoAITheme
 import com.example.autoai.presentation.theme.VerdantGreen
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -39,11 +39,22 @@ fun ReminderContent(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    // ── Notification permission (Android 13+) ─────────────────────
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { /* granted or denied — no action needed */ }
+    )
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             floatingActionButton = {
-                // Skrivamo FAB ako nema vozila, da ga ne bi zbunilo
                 if (!state.hasNoActiveVehicle && !state.isLoading) {
                     FloatingActionButton(
                         onClick = { onEvent(ReminderEvent.OnAddReminderClicked) },
@@ -117,9 +128,17 @@ fun ReminderContent(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                     ) {
-                        LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
-                            items(state.reminders) { item ->
-                                ReminderCard(item = item)
+                        LazyColumn(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            items(
+                                items = state.reminders,
+                                key = { it.id }
+                            ) { item ->
+                                ReminderCard(
+                                    item = item,
+                                    onToggleCompleted = { onEvent(ReminderEvent.OnToggleCompleted(item)) },
+                                    onEditClicked = { onEvent(ReminderEvent.OnEditClicked(item)) },
+                                    onDeleteClicked = { onEvent(ReminderEvent.OnDeleteClicked(item.id)) },
+                                )
                             }
                         }
                     }
@@ -150,16 +169,17 @@ private fun AddReminderSheet(
     state: ReminderState,
     onEvent: (ReminderEvent) -> Unit
 ) {
-    // Lokalni UI state za prikaz DatePicker dialoga
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = state.dueDateMillis ?: System.currentTimeMillis()
     )
 
-    // Formatiranje datuma za polje unosa
     val dateString = state.dueDateMillis?.let {
         SimpleDateFormat("dd. MM. yyyy.", Locale.getDefault()).format(Date(it))
     } ?: ""
+
+    val sheetTitle = if (state.editingReminderId != null) "Edit Reminder" else AppStrings.Reminders.addSheetTitle
+    val buttonText = if (state.editingReminderId != null) "Save Changes" else AppStrings.Reminders.saveButton
 
     Column(
         modifier = Modifier
@@ -169,7 +189,7 @@ private fun AddReminderSheet(
             .imePadding()
     ) {
         Text(
-            text = AppStrings.Reminders.addSheetTitle,
+            text = sheetTitle,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
@@ -185,7 +205,6 @@ private fun AddReminderSheet(
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Ovdje koristimo onClick da otvorimo DatePicker, a tastatura se ne otvara jer je readOnly
         AutoAiTextField(
             value = dateString,
             onValueChange = {},
@@ -205,7 +224,7 @@ private fun AddReminderSheet(
         Spacer(modifier = Modifier.height(32.dp))
 
         MainButton(
-            text = AppStrings.Reminders.saveButton,
+            text = buttonText,
             onClick = { onEvent(ReminderEvent.OnSaveReminderClicked) },
             enabled = !state.isSaving
         )

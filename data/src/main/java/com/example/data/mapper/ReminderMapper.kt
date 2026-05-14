@@ -16,7 +16,8 @@ fun ReminderDto.toReminder(): AppResult<Reminder> {
             vehicleId = vehicleId,
             title = title,
             dueDateMillis = dueDateMillis,
-            note = note
+            note = note,
+            isCompleted = isCompleted
         )
     )
 }
@@ -28,6 +29,7 @@ fun Reminder.toReminderDto(): ReminderDto {
         vehicleId = vehicleId,
         title = title,
         dueDateMillis = dueDateMillis,
-        note = note
+        note = note,
+        isCompleted = isCompleted
     )
 }

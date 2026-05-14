@@ -8,10 +8,11 @@ data class ReminderState (
     val reminders: List<ReminderItemUi> = emptyList(),
     val selectedNavItem: BottomNavItem = BottomNavItem.REMINDERS,
 
-    // Bottom Sheet (Dodavanje novog podsjetnika)
+    // Bottom Sheet (Add / Edit)
     val isSheetOpen: Boolean = false,
+    val editingReminderId: String? = null,
     val titleInput: String = "",
     val dueDateMillis: Long? = null,
     val noteInput: String = "",
-    val isSaving: Boolean = false
+    val isSaving: Boolean = false,
 )

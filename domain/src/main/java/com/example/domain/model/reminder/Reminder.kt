@@ -7,4 +7,5 @@ data class Reminder (
     val title: String,
     val dueDateMillis: Long,
     val note: String?,
+    val isCompleted: Boolean = false,
 )

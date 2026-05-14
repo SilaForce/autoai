@@ -13,7 +13,9 @@ import com.example.domain.usecase.cost.GetAllCostsByUserIdUseCase
 import com.example.domain.usecase.cost.GetCostsHistoryUseCase
 import com.example.domain.usecase.cost.GetCostStatisticsUseCase
 import com.example.domain.usecase.reminder.AddReminderUseCase
+import com.example.domain.usecase.reminder.DeleteReminderUseCase
 import com.example.domain.usecase.reminder.GetRemindersUseCase
+import com.example.domain.usecase.reminder.UpdateReminderUseCase
 import com.example.domain.usecase.user.LogoutUseCase
 import com.example.domain.usecase.vehicle.AddVehicleUseCase
 import com.example.domain.usecase.vehicle.GetVehiclesUseCase
@@ -41,6 +43,8 @@ val domainModule = module {
     factoryOf(::GetAllCostsByUserIdUseCase)
     factoryOf(::GetRemindersUseCase)
     factoryOf(::AddReminderUseCase)
+    factoryOf(::UpdateReminderUseCase)
+    factoryOf(::DeleteReminderUseCase)
     factoryOf(::SendMessageUseCase)
     // factoryOf(::UploadProfilePictureUseCase)
     factoryOf(::LogoutUseCase)

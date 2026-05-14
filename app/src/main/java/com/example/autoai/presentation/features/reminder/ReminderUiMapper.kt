@@ -16,7 +16,10 @@ fun Reminder.toReminderItemUi(): ReminderItemUi {
     return ReminderItemUi(
         id = id,
         title = title,
+        note = note,
+        dueDateMillis = dueDateMillis,
         formattedDate = "Do: ${dateFormatter().format(Date(dueDateMillis))}",
-        isUrgent = isUrgent
+        isUrgent = isUrgent,
+        isCompleted = isCompleted
     )
 }

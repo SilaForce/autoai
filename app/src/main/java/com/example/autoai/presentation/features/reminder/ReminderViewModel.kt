@@ -10,10 +10,14 @@ import com.example.autoai.presentation.util.UiText
 import com.example.autoai.presentation.util.asUiText
 import com.example.domain.model.app.onFailure
 import com.example.domain.model.app.onSuccess
+import com.example.domain.model.reminder.Reminder
 import com.example.domain.usecase.reminder.AddReminderParams
 import com.example.domain.usecase.reminder.AddReminderUseCase
+import com.example.domain.usecase.reminder.DeleteReminderParams
+import com.example.domain.usecase.reminder.DeleteReminderUseCase
 import com.example.domain.usecase.reminder.GetRemindersParams
 import com.example.domain.usecase.reminder.GetRemindersUseCase
+import com.example.domain.usecase.reminder.UpdateReminderUseCase
 import com.example.domain.usecase.user.GetCurrentUserUseCase
 import com.example.domain.usecase.vehicle.GetVehiclesParams
 import com.example.domain.usecase.vehicle.GetVehiclesUseCase
@@ -24,12 +28,14 @@ class ReminderViewModel(
     private val getVehiclesUseCase: GetVehiclesUseCase,
     private val getRemindersUseCase: GetRemindersUseCase,
     private val addReminderUseCase: AddReminderUseCase,
+    private val updateReminderUseCase: UpdateReminderUseCase,
+    private val deleteReminderUseCase: DeleteReminderUseCase,
     private val navigator: IAppNavigator,
 ) : BaseViewModel<ReminderState, ReminderEvent, RemindersSideEffect>(ReminderState()) {
 
-    // Ove ID-jeve čuvamo u ViewModelu, jer UI nema potrebu da ih iscrtava
     private var currentUserId: String? = null
     private var activeVehicleId: String? = null
+    private var domainReminders: List<Reminder> = emptyList()
 
     init {
         loadData()
@@ -37,29 +43,27 @@ class ReminderViewModel(
 
     override fun onEvent(event: ReminderEvent) {
         when (event) {
-            ReminderEvent.OnAddReminderClicked -> setState { it.copy(isSheetOpen = true) }
-
+            ReminderEvent.OnAddReminderClicked -> setState {
+                it.copy(isSheetOpen = true, editingReminderId = null, titleInput = "", dueDateMillis = null, noteInput = "")
+            }
             ReminderEvent.OnAddSheetDismissed -> resetSheet()
-
             is ReminderEvent.OnTitleChanged -> setState { it.copy(titleInput = event.value) }
-
             is ReminderEvent.OnDateSelected -> setState { it.copy(dueDateMillis = event.dateMillis) }
-
             is ReminderEvent.OnNoteChanged -> setState { it.copy(noteInput = event.value) }
-
             ReminderEvent.OnSaveReminderClicked -> saveReminder()
-
             is ReminderEvent.OnNavItemSelected -> handleBottomNavigation(event.item)
+            is ReminderEvent.OnToggleCompleted -> toggleCompleted(event.reminder)
+            is ReminderEvent.OnEditClicked -> openEditSheet(event.reminder)
+            is ReminderEvent.OnDeleteClicked -> deleteReminder(event.reminderId)
         }
     }
 
-    // ─── Učitavanje podataka ───────────────────────────────────────────────────
+    // ─── Load data ────────────────────────────────────────────────────────────
 
     private fun loadData() {
         setState { it.copy(isLoading = true) }
 
         viewModelScope.launch {
-            // 1. Dobavi trenutnog korisnika
             getCurrentUserUseCase(Unit)
                 .onFailure { error ->
                     setState { it.copy(isLoading = false) }
@@ -69,7 +73,6 @@ class ReminderViewModel(
                 .onSuccess { user ->
                     currentUserId = user.id
 
-                    // 2. Dobavi njegova vozila
                     getVehiclesUseCase(GetVehiclesParams(user.id))
                         .onFailure { error ->
                             setState { it.copy(isLoading = false) }
@@ -77,19 +80,15 @@ class ReminderViewModel(
                             return@launch
                         }
                         .onSuccess { vehicles ->
-                            // 3. Pronađi aktivno vozilo
                             val activeVehicle = vehicles.firstOrNull { it.isActive }
 
                             if (activeVehicle == null) {
-                                // Korisnik nema aktivno vozilo
                                 setState { it.copy(isLoading = false, hasNoActiveVehicle = true) }
                                 return@launch
                             }
 
                             activeVehicleId = activeVehicle.id
                             setState { it.copy(hasNoActiveVehicle = false) }
-
-                            // 4. Dobavi podsjetnike za to vozilo
                             refreshReminders(activeVehicle.id)
                         }
                 }
@@ -102,7 +101,7 @@ class ReminderViewModel(
 
             getRemindersUseCase(GetRemindersParams(vehicleId))
                 .onSuccess { reminders ->
-                    // Transformišemo čiste modele u UI modele
+                    domainReminders = reminders
                     val uiModels = reminders.map { it.toReminderItemUi() }
                     setState { it.copy(isLoading = false, reminders = uiModels) }
                 }
@@ -113,14 +112,13 @@ class ReminderViewModel(
         }
     }
 
-    // ─── Snimanje ─────────────────────────────────────────────────────────────
+    // ─── Save (add or edit) ───────────────────────────────────────────────────
 
     private fun saveReminder() {
         val userId = currentUserId ?: run {
             emitSideEffect(RemindersSideEffect.ShowError(UiText.StringResource(R.string.error_unknown)))
             return
         }
-
         val vehicleId = activeVehicleId ?: run {
             emitSideEffect(RemindersSideEffect.ShowError(UiText.StringResource(R.string.error_unknown)))
             return
@@ -128,46 +126,113 @@ class ReminderViewModel(
 
         val title = state.value.titleInput
         if (title.isBlank()) {
-            // Ovdje ispaljujemo grešku (možeš dodati specifičan string u strings.xml kasnije)
             emitSideEffect(RemindersSideEffect.ShowError(UiText.DynamicString("Enter reminder title.")))
             return
         }
-
         val dueDate = state.value.dueDateMillis
         if (dueDate == null) {
-            emitSideEffect(RemindersSideEffect.ShowError(UiText.DynamicString("Select due date..")))
+            emitSideEffect(RemindersSideEffect.ShowError(UiText.DynamicString("Select due date.")))
             return
         }
 
         setState { it.copy(isSaving = true) }
 
+        val editingId = state.value.editingReminderId
+
         viewModelScope.launch {
-            addReminderUseCase(
-                AddReminderParams(
-                    userId = userId,
-                    vehicleId = vehicleId,
+            if (editingId != null) {
+                val existing = domainReminders.firstOrNull { it.id == editingId } ?: return@launch
+                val updated = existing.copy(
                     title = title,
                     dueDateMillis = dueDate,
-                    note = state.value.noteInput
+                    note = state.value.noteInput.ifBlank { null }
                 )
-            ).onSuccess {
-                resetSheet(isSaving = false)
-                emitSideEffect(RemindersSideEffect.ShowSuccess(UiText.DynamicString("Reminder added successfully.")))
-                refreshReminders(vehicleId)
-            }.onFailure { error ->
-                setState { it.copy(isSaving = false) }
-                emitSideEffect(RemindersSideEffect.ShowError(error.asUiText()))
+                updateReminderUseCase(updated)
+                    .onSuccess {
+                        resetSheet(isSaving = false)
+                        emitSideEffect(RemindersSideEffect.ShowSuccess(UiText.DynamicString("Reminder updated.")))
+                        refreshReminders(vehicleId)
+                    }
+                    .onFailure { error ->
+                        setState { it.copy(isSaving = false) }
+                        emitSideEffect(RemindersSideEffect.ShowError(error.asUiText()))
+                    }
+            } else {
+                addReminderUseCase(
+                    AddReminderParams(
+                        userId = userId,
+                        vehicleId = vehicleId,
+                        title = title,
+                        dueDateMillis = dueDate,
+                        note = state.value.noteInput.ifBlank { null }
+                    )
+                ).onSuccess {
+                    resetSheet(isSaving = false)
+                    emitSideEffect(RemindersSideEffect.ShowSuccess(UiText.DynamicString("Reminder added.")))
+                    refreshReminders(vehicleId)
+                }.onFailure { error ->
+                    setState { it.copy(isSaving = false) }
+                    emitSideEffect(RemindersSideEffect.ShowError(error.asUiText()))
+                }
             }
         }
     }
 
-    // ─── Pomoćne funkcije ─────────────────────────────────────────────────────
+    // ─── Toggle completed ─────────────────────────────────────────────────────
+
+    private fun toggleCompleted(reminderUi: ReminderItemUi) {
+        val vehicleId = activeVehicleId ?: return
+        val existing = domainReminders.firstOrNull { it.id == reminderUi.id } ?: return
+        val updated = existing.copy(isCompleted = !existing.isCompleted)
+
+        viewModelScope.launch {
+            updateReminderUseCase(updated)
+                .onSuccess { refreshReminders(vehicleId) }
+                .onFailure { error ->
+                    emitSideEffect(RemindersSideEffect.ShowError(error.asUiText()))
+                }
+        }
+    }
+
+    // ─── Edit ─────────────────────────────────────────────────────────────────
+
+    private fun openEditSheet(reminderUi: ReminderItemUi) {
+        setState {
+            it.copy(
+                isSheetOpen = true,
+                editingReminderId = reminderUi.id,
+                titleInput = reminderUi.title,
+                dueDateMillis = reminderUi.dueDateMillis,
+                noteInput = reminderUi.note ?: ""
+            )
+        }
+    }
+
+    // ─── Delete ───────────────────────────────────────────────────────────────
+
+    private fun deleteReminder(reminderId: String) {
+        val vehicleId = activeVehicleId ?: return
+
+        viewModelScope.launch {
+            deleteReminderUseCase(DeleteReminderParams(reminderId))
+                .onSuccess {
+                    emitSideEffect(RemindersSideEffect.ShowSuccess(UiText.DynamicString("Reminder deleted.")))
+                    refreshReminders(vehicleId)
+                }
+                .onFailure { error ->
+                    emitSideEffect(RemindersSideEffect.ShowError(error.asUiText()))
+                }
+        }
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
 
     private fun resetSheet(isSaving: Boolean = false) {
         setState {
             it.copy(
                 isSaving = isSaving,
                 isSheetOpen = false,
+                editingReminderId = null,
                 titleInput = "",
                 dueDateMillis = null,
                 noteInput = ""
@@ -193,7 +258,7 @@ class ReminderViewModel(
             BottomNavItem.AI_CHAT -> {
                 setState { it.copy(selectedNavItem = BottomNavItem.AI_CHAT) }
                 navigator.navigateTo(Route.AiChat)
-             }
+            }
         }
     }
 }
