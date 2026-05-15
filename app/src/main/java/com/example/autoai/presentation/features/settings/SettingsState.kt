@@ -4,4 +4,5 @@ data class SettingsState (
     val isLoading: Boolean = false,
     val isDarkModeEnabled: Boolean = false,
     val notificationsEnabled: Boolean = true,
+    val aiAutoRemindersEnabled: Boolean = false
 )

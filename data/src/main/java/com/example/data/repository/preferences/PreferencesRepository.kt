@@ -22,6 +22,7 @@ class PreferencesRepository(
     private object PreferencesKeys {
         val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
         val DARK_MODE_ENABLED = booleanPreferencesKey("dark_mode_enabled")
+        val AI_AUTO_REMINDERS_ENABLED = booleanPreferencesKey("ai_auto_reminders_enabled")
     }
 
     override val isNotificationsEnabled: Flow<Boolean> =
@@ -41,4 +42,13 @@ class PreferencesRepository(
     override suspend fun setDarkModeEnabled(enabled: Boolean) {
         context.dataStore.edit { it[PreferencesKeys.DARK_MODE_ENABLED] = enabled }
     }
+
+    override suspend fun isAiAutoRemindersEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[PreferencesKeys.AI_AUTO_REMINDERS_ENABLED] = enabled }
+    }
+
+    override val isAiAutoRemindersEnabled: Flow<Boolean>
+        get() = context.dataStore.data
+            .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+            .map { it[booleanPreferencesKey("ai_auto_reminders_enabled")] ?: false }
 }

@@ -164,6 +164,7 @@
     <string name="settings_title">Settings</string>
     <string name="settings_notifications">Notifications</string>
     <string name="settings_dark_mode">Dark mode</string>
+    <string name="settings_ai_auto_reminders">AI-generated reminders</string>
     <string name="settings_language">Language</string>
     <string name="settings_privacy_policy">Privacy policy</string>
     <string name="settings_logout">Log out</string>

@@ -33,6 +33,11 @@ class SettingsViewModel(
                 setState { it.copy(notificationsEnabled = enabled) }
             }
         }
+        viewModelScope.launch {
+            preferencesRepository.isAiAutoRemindersEnabled.collect { enabled ->
+                setState { it.copy(aiAutoRemindersEnabled = enabled) }
+            }
+        }
     }
 
     override fun onEvent(event: SettingsEvent) {
@@ -49,7 +54,15 @@ class SettingsViewModel(
                 }
             }
 
+            is SettingsEvent.OnToggleAiAutoReminders -> {
+                viewModelScope.launch {
+                   preferencesRepository.isAiAutoRemindersEnabled(event.isEnabled)
+                }
+            }
+
             is SettingsEvent.OnBackClicked -> navigateBack()
+
+
 
             is SettingsEvent.OnChangeLanguageClicked -> {
                 // Handle language change logic here

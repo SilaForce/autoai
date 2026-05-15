@@ -11,8 +11,11 @@ import com.example.domain.model.app.onFailure
 import com.example.domain.model.app.onSuccess
 import com.example.domain.model.chat.ChatMessage
 import com.example.domain.model.chat.MessageRole
+import com.example.domain.repository.IPreferencesRepository
 import com.example.domain.usecase.chat.SendMessageParams
 import com.example.domain.usecase.chat.SendMessageUseCase
+import com.example.domain.usecase.reminder.AddReminderParams
+import com.example.domain.usecase.reminder.AddReminderUseCase
 import com.example.domain.usecase.reminder.GetRemindersParams
 import com.example.domain.usecase.reminder.GetRemindersUseCase
 import com.example.domain.usecase.user.GetCurrentUserUseCase
@@ -20,13 +23,17 @@ import com.example.domain.usecase.vehicle.GetVehiclesParams
 import com.example.domain.usecase.vehicle.GetVehiclesUseCase
 import kotlinx.coroutines.launch
 import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 
 class AiChatViewModel(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val getVehiclesUseCase: GetVehiclesUseCase,
     private val sendMessageUseCase: SendMessageUseCase,
     private val getReminderUseCase: GetRemindersUseCase,
+    private val preferencesRepository: IPreferencesRepository,
+    private val addReminderUseCase: AddReminderUseCase,
     private val navigator: IAppNavigator
 ) : BaseViewModel<AiChatState, AiChatEvent, AiChatSideEffect>(AiChatState()) {
 
@@ -35,12 +42,24 @@ class AiChatViewModel(
 
     private var systemInstruction = "You are an expert auto mechanic. Provide short and precise automotive advice."
 
+    private var aiAutoReminderEnabled = false
+
+    private var activeVehicleId: String? = null
+
+    private var currentUserId: String? = null
+
     init {
         buildSystemInstruction()
 
         val welcomeMessage = ChatMessage(text = "Dobar dan! Ja sam tvoj lični AI mehaničar. Kako ti mogu pomoći danas?", role = MessageRole.AI)
         setState { it.copy(messages = listOf(welcomeMessage.toUiModel())) }
-    }
+
+        viewModelScope.launch {
+            preferencesRepository.isAiAutoRemindersEnabled.collect { enabled ->
+                aiAutoReminderEnabled = enabled
+            }
+            }
+        }
 
     override fun onEvent(event: AiChatEvent) {
         when (event) {
@@ -66,8 +85,10 @@ class AiChatViewModel(
     private fun buildSystemInstruction() {
         viewModelScope.launch {
             getCurrentUserUseCase(Unit).onSuccess { user ->
+                currentUserId = user.id
                 getVehiclesUseCase(GetVehiclesParams(user.id)).onSuccess { vehicles ->
                     val activeVehicle = vehicles.firstOrNull { it.isActive } ?: return@onSuccess
+                    activeVehicleId = activeVehicle.id
                     getReminderUseCase(GetRemindersParams(activeVehicle.id)).onSuccess { reminders ->
                         val closestReminder = reminders
                             .filter { !it.isCompleted }
@@ -91,12 +112,26 @@ class AiChatViewModel(
                             ""
                         }
 
+                        val autoReminderBlock = if (aiAutoReminderEnabled) {
+                            """
+                            Auto-Reminders (ENABLED):
+                            If you determine from the conversation that the user needs a reminder, include this exact tag in your response:
+                            [ADD_REMINDER: title="reminder title", date="YYYY-MM-DD"]
+                            Only add a reminder when the user clearly describes a need. Always confirm to the user that you are adding it.
+                            Do NOT use this tag unless there is a clear reason. Never invent reminders unprompted.
+                            """.trimIndent()
+                        } else {
+                            ""
+                        }
+
                         systemInstruction = """
                             You are an expert auto mechanic and vehicle diagnostics assistant.
 
                             $closestBlock
 
                             $allRemindersBlock
+
+                            $autoReminderBlock
 
                             The user currently drives: ${activeVehicle.make} ${activeVehicle.model} (${activeVehicle.year}), Fuel type: ${activeVehicle.fuelType}.
                             Always tailor your answers to this specific vehicle (correct parts, known issues, compatible fluids, etc.).
@@ -154,7 +189,8 @@ class AiChatViewModel(
                     images = images
                 )
             ).onSuccess { aiReply ->
-                addMessageToApiAndUi(ChatMessage(text = aiReply, role = MessageRole.AI))
+                val parsedReply = parseAndCreateReminder(aiReply)
+                addMessageToApiAndUi(ChatMessage(text = parsedReply, role = MessageRole.AI))
                 setState { it.copy(isAiTyping = false) }
             }.onFailure { error ->
                 setState { it.copy(isAiTyping = false) }
@@ -162,6 +198,38 @@ class AiChatViewModel(
             }
         }
     }
+
+    private fun parseAndCreateReminder(aiReply: String): String {
+        val regex = Regex("""\[ADD_REMINDER: title="(.+?)", date="(\d{4}-\d{2}-\d{2})"]""")
+        val match = regex.find(aiReply) ?: return aiReply
+
+        val title = match.groupValues[1]
+        val dateString = match.groupValues[2]
+
+
+        val userId = currentUserId ?: return aiReply
+        val vehicleId = activeVehicleId ?: return aiReply
+
+        val dateMillis = try {
+            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dateString)?.time ?: return aiReply
+        } catch (e: Exception) {
+            return aiReply
+        }
+
+        viewModelScope.launch {
+            addReminderUseCase(
+                AddReminderParams(
+                    userId = userId,
+                    vehicleId = vehicleId,
+                    title = title,
+                    dueDateMillis = dateMillis
+                )
+            )
+        }
+
+        return aiReply.replace(match.value, "").trim()
+    }
+
 
     private fun addMessageToApiAndUi(message: ChatMessage) {
         apiChatHistory.add(message)

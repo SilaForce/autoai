@@ -117,6 +117,21 @@ fun SettingsContent(
             )
 
             SettingsItemCard(
+                icon = Icons.Outlined.DarkMode,
+                title = AppStrings.Settings.aiAutoRemindersStr,
+                trailingContent = {
+                    Switch(
+                        checked = state.aiAutoRemindersEnabled,
+                        onCheckedChange = { onEvent(SettingsEvent.OnToggleAiAutoReminders(it)) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colorScheme.surface,
+                            checkedTrackColor = VerdantGreen
+                        )
+                    )
+                }
+            )
+
+            SettingsItemCard(
                 icon = Icons.Outlined.Language,
                 title = AppStrings.Settings.languageStr,
                 onClick = { onEvent(SettingsEvent.OnChangeLanguageClicked) },

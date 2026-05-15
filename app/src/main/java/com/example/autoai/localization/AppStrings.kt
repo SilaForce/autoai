@@ -532,6 +532,7 @@ object AppStrings {
         @StringRes val privacyPolicy = R.string.settings_privacy_policy
         @StringRes val logout = R.string.settings_logout
         @StringRes val comingSoon = R.string.settings_coming_soon
+        @StringRes val aiAutoReminders = R.string.settings_ai_auto_reminders
 
         val titleStr: String @Composable @ReadOnlyComposable get() = stringResource(title)
         val notificationsStr: String @Composable @ReadOnlyComposable get() = stringResource(notifications)
@@ -540,6 +541,7 @@ object AppStrings {
         val privacyPolicyStr: String @Composable @ReadOnlyComposable get() = stringResource(privacyPolicy)
         val logoutStr: String @Composable @ReadOnlyComposable get() = stringResource(logout)
         val comingSoonStr: String @Composable @ReadOnlyComposable get() = stringResource(comingSoon)
+        val aiAutoRemindersStr: String @Composable @ReadOnlyComposable get() = stringResource(aiAutoReminders)
     }
 
     object Chat {
