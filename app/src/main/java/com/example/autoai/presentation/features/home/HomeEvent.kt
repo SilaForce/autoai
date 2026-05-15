@@ -11,6 +11,7 @@ sealed interface HomeEvent {
     data object OnProfileClicked : HomeEvent
     data class OnNavItemSelected(val item: BottomNavItem) : HomeEvent
     data object OnScreenResumed : HomeEvent
+    data object OnDueReminderClicked : HomeEvent
 }
 
 // No side effects yet — will be populated as features are added

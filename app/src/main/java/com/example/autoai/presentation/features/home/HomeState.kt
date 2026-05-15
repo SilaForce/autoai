@@ -10,5 +10,7 @@ data class HomeState(
     val activeVehiclePlate: String = "",
     // Formatted total expenses for the active vehicle, e.g. "1.045"
     val totalExpenses: String = "0",
+    val dueReminderTitle: String = "",
+    val dueReminderDate: String = "",
     val selectedNavItem: BottomNavItem = BottomNavItem.HOME,
 )

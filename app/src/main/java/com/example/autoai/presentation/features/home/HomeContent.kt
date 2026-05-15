@@ -41,6 +41,7 @@ import com.example.autoai.presentation.components.MonthlyCostCard
 import com.example.autoai.presentation.components.VehicleCard
 import com.example.autoai.presentation.theme.AutoAITheme
 import androidx.compose.material3.MaterialTheme
+import com.example.autoai.presentation.components.DueReminderCard
 
 @Composable
 fun HomeContent(
@@ -121,6 +122,13 @@ fun HomeContent(
                             label = AppStrings.Home.monthlyCostLabel,
                             amount = state.totalExpenses,
                             currency = "KM",
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        DueReminderCard(
+                            state = state,
+                            onClick = { onEvent(HomeEvent.OnDueReminderClicked) }
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))

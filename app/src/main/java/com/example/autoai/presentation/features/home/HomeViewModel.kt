@@ -10,17 +10,23 @@ import com.example.domain.model.app.onFailure
 import com.example.domain.model.app.onSuccess
 import com.example.domain.usecase.cost.GetCostStatisticsParams
 import com.example.domain.usecase.cost.GetCostStatisticsUseCase
+import com.example.domain.usecase.reminder.GetRemindersParams
+import com.example.domain.usecase.reminder.GetRemindersUseCase
 import com.example.domain.usecase.user.GetCurrentUserUseCase
 import com.example.domain.usecase.vehicle.GetVehiclesParams
 import com.example.domain.usecase.vehicle.GetVehiclesUseCase
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 import kotlin.math.floor
 
 class HomeViewModel(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val getVehiclesUseCase: GetVehiclesUseCase,
     private val getCostStatisticsUseCase: GetCostStatisticsUseCase,
+    private val getReminderUseCase: GetRemindersUseCase,
     private val navigator: IAppNavigator,
 ) : BaseViewModel<HomeState, HomeEvent, HomeSideEffect>(HomeState()) {
 
@@ -45,6 +51,10 @@ class HomeViewModel(
             HomeEvent.OnProfileClicked -> navigator.navigateTo(Route.Profile)
 
             is HomeEvent.OnNavItemSelected -> handleBottomNavigation(event.item)
+
+            HomeEvent.OnDueReminderClicked -> {
+                navigator.navigateTo(Route.Reminder)
+            }
         }
     }
 
@@ -67,7 +77,6 @@ class HomeViewModel(
         }
     }
 
-    /** Silently refresh after returning from another screen (no full-screen spinner). */
     private fun refreshData() {
         val userId = currentUserId ?: run { loadUser(); return }
         viewModelScope.launch {
@@ -108,9 +117,37 @@ class HomeViewModel(
                 }
 
                 loadCostStats(active.id)
+                loadReminder(active.id)
             }
     }
+    private suspend fun loadReminder (vehicleId: String)
+    {
+        getReminderUseCase(GetRemindersParams(vehicleId))
+            .onFailure { error ->
+                setState { it.copy(isLoading = false) }
+                emitSideEffect(HomeSideEffect.ShowError(error.asUiText()))
+            }
+            .onSuccess { reminders ->
+                val dueReminders = reminders.filter { !it.isCompleted && it.dueDateMillis > System.currentTimeMillis() }
+                    .minByOrNull { it.dueDateMillis }
+                if (dueReminders != null) {
+                    setState {
+                        it.copy(
+                            dueReminderTitle = dueReminders.title,
+                            dueReminderDate = SimpleDateFormat(
+                                "dd MMMM yyyy",
+                                Locale.getDefault()
+                            ).format(
+                                Date(dueReminders.dueDateMillis)
+                            )
+                        )
+                    }
 
+                }else {
+                    setState { it.copy(dueReminderTitle = "Reminder", dueReminderDate = "No upcoming reminders") }
+                }
+            }
+    }
     private suspend fun loadCostStats(vehicleId: String) {
         getCostStatisticsUseCase(GetCostStatisticsParams(vehicleId))
             .onSuccess { stats ->
@@ -122,7 +159,6 @@ class HomeViewModel(
                 }
             }
             .onFailure {
-                // Non-fatal: show 0 but don't block the screen
                 setState { it.copy(isLoading = false, totalExpenses = "0") }
             }
     }
