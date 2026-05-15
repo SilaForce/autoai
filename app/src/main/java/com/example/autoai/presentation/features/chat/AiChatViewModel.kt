@@ -13,15 +13,20 @@ import com.example.domain.model.chat.ChatMessage
 import com.example.domain.model.chat.MessageRole
 import com.example.domain.usecase.chat.SendMessageParams
 import com.example.domain.usecase.chat.SendMessageUseCase
+import com.example.domain.usecase.reminder.GetRemindersParams
+import com.example.domain.usecase.reminder.GetRemindersUseCase
 import com.example.domain.usecase.user.GetCurrentUserUseCase
 import com.example.domain.usecase.vehicle.GetVehiclesParams
 import com.example.domain.usecase.vehicle.GetVehiclesUseCase
 import kotlinx.coroutines.launch
+import java.text.DateFormat
+import java.util.Date
 
 class AiChatViewModel(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val getVehiclesUseCase: GetVehiclesUseCase,
     private val sendMessageUseCase: SendMessageUseCase,
+    private val getReminderUseCase: GetRemindersUseCase,
     private val navigator: IAppNavigator
 ) : BaseViewModel<AiChatState, AiChatEvent, AiChatSideEffect>(AiChatState()) {
 
@@ -62,10 +67,36 @@ class AiChatViewModel(
         viewModelScope.launch {
             getCurrentUserUseCase(Unit).onSuccess { user ->
                 getVehiclesUseCase(GetVehiclesParams(user.id)).onSuccess { vehicles ->
-                    val activeVehicle = vehicles.firstOrNull { it.isActive }
-                    if (activeVehicle != null) {
+                    val activeVehicle = vehicles.firstOrNull { it.isActive } ?: return@onSuccess
+                    getReminderUseCase(GetRemindersParams(activeVehicle.id)).onSuccess { reminders ->
+                        val closestReminder = reminders
+                            .filter { !it.isCompleted }
+                            .minByOrNull { it.dueDateMillis }
+                        val activeReminders = reminders.filter { !it.isCompleted }
+
+                        val closestBlock = closestReminder?.let {
+                            val formattedDate = DateFormat.getDateInstance().format(Date(it.dueDateMillis))
+                            val overdue = it.dueDateMillis < System.currentTimeMillis()
+                            val status = if (overdue) "overdue since" else "due on"
+                            "The user's closest reminder is: \"${it.title}\" $status $formattedDate. If it comes up naturally, you may proactively mention this."
+                        } ?: "The user has no upcoming reminders."
+
+                        val allRemindersBlock = if (activeReminders.isNotEmpty()) {
+                            val list = activeReminders.joinToString("\n") { reminder ->
+                                val date = DateFormat.getDateInstance().format(Date(reminder.dueDateMillis))
+                                "- \"${reminder.title}\" — $date"
+                            }
+                            "The user's full reminder list:\n$list\nIf the user asks about their reminders, list all of these."
+                        } else {
+                            ""
+                        }
+
                         systemInstruction = """
                             You are an expert auto mechanic and vehicle diagnostics assistant.
+
+                            $closestBlock
+
+                            $allRemindersBlock
 
                             The user currently drives: ${activeVehicle.make} ${activeVehicle.model} (${activeVehicle.year}), Fuel type: ${activeVehicle.fuelType}.
                             Always tailor your answers to this specific vehicle (correct parts, known issues, compatible fluids, etc.).
