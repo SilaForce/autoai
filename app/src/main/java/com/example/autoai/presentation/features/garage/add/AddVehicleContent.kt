@@ -18,8 +18,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -28,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
@@ -46,6 +54,7 @@ import com.example.autoai.presentation.features.garage.add.components.YearPicker
 import com.example.autoai.presentation.theme.AutoAITheme
 import androidx.compose.material3.MaterialTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddVehicleContent(
     state: AddVehicleState,
@@ -107,22 +116,97 @@ fun AddVehicleContent(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            AutoAiTextField(
-                modifier = Modifier.focusRequester(focusRequester),
-                value = state.make,
-                onValueChange = { onEvent(AddVehicleEvent.OnMakeChanged(it)) },
-                label = AppStrings.AddVehicle.makeLabel,
-                placeholder = AppStrings.AddVehicle.makePlaceholder,
-            )
+            // ── Make autocomplete dropdown ────────────────────────
+            ExposedDropdownMenuBox(
+                expanded = state.isMakesDropdownExpanded,
+                onExpandedChange = { onEvent(AddVehicleEvent.OnMakeDropdownExpandedChange(it)) },
+            ) {
+                OutlinedTextField(
+                    value = state.make,
+                    onValueChange = { onEvent(AddVehicleEvent.OnMakeChanged(it)) },
+                    label = { Text(AppStrings.AddVehicle.makeLabel) },
+                    placeholder = { Text(AppStrings.AddVehicle.makePlaceholder) },
+                    singleLine = true,
+                    trailingIcon = {
+                        if (state.isMakesLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                            )
+                        } else {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = state.isMakesDropdownExpanded,
+                            )
+                        }
+                    },
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                    modifier = Modifier
+                        .menuAnchor(MenuAnchorType.PrimaryEditable, enabled = true)
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
+                )
+
+                ExposedDropdownMenu(
+                    expanded = state.isMakesDropdownExpanded && state.filteredMakes.isNotEmpty(),
+                    onDismissRequest = { onEvent(AddVehicleEvent.OnMakeDropdownExpandedChange(false)) },
+                ) {
+                    state.filteredMakes.forEach { make ->
+                        DropdownMenuItem(
+                            text = { Text(make) },
+                            onClick = { onEvent(AddVehicleEvent.OnMakeSelected(make)) },
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            AutoAiTextField(
-                value = state.model,
-                onValueChange = { onEvent(AddVehicleEvent.OnModelChanged(it)) },
-                label = AppStrings.AddVehicle.modelLabel,
-                placeholder = AppStrings.AddVehicle.modelPlaceholder,
-            )
+            // ── Model autocomplete dropdown ───────────────────────
+            ExposedDropdownMenuBox(
+                expanded = state.isModelsDropdownExpanded && state.isMakeSelected,
+                onExpandedChange = {
+                    if (state.isMakeSelected) {
+                        onEvent(AddVehicleEvent.OnModelDropdownExpandedChange(it))
+                    }
+                },
+            ) {
+                OutlinedTextField(
+                    value = state.model,
+                    onValueChange = { onEvent(AddVehicleEvent.OnModelChanged(it)) },
+                    label = { Text(AppStrings.AddVehicle.modelLabel) },
+                    placeholder = { Text(AppStrings.AddVehicle.modelPlaceholder) },
+                    singleLine = true,
+                    enabled = state.isMakeSelected,
+                    trailingIcon = {
+                        if (state.isModelsLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                            )
+                        } else {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = state.isModelsDropdownExpanded,
+                            )
+                        }
+                    },
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                    modifier = Modifier
+                        .menuAnchor(MenuAnchorType.PrimaryEditable, enabled = state.isMakeSelected)
+                        .fillMaxWidth(),
+                )
+
+                ExposedDropdownMenu(
+                    expanded = state.isModelsDropdownExpanded && state.filteredModels.isNotEmpty(),
+                    onDismissRequest = { onEvent(AddVehicleEvent.OnModelDropdownExpandedChange(false)) },
+                ) {
+                    state.filteredModels.forEach { model ->
+                        DropdownMenuItem(
+                            text = { Text(model) },
+                            onClick = { onEvent(AddVehicleEvent.OnModelSelected(model)) },
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 

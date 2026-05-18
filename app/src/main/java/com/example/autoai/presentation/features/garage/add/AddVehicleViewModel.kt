@@ -12,15 +12,23 @@ import com.example.domain.model.vehicle.FuelType
 import com.example.domain.usecase.user.GetCurrentUserUseCase
 import com.example.domain.usecase.vehicle.AddVehicleParams
 import com.example.domain.usecase.vehicle.AddVehicleUseCase
+import com.example.domain.usecase.vehicle.GetCarMakesUseCase
+import com.example.domain.usecase.vehicle.GetModelsForMakeUseCase
 import kotlinx.coroutines.launch
 
 class AddVehicleViewModel(
     private val savedStateHandle: SavedStateHandle,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val addVehicleUseCase: AddVehicleUseCase,
+    private val getCarMakesUseCase: GetCarMakesUseCase,
+    private val getModelsForMakeUseCase: GetModelsForMakeUseCase
 ) : BaseViewModel<AddVehicleState, AddVehicleEvent, AddVehicleSideEffect>(
     createInitialState(savedStateHandle)
 ) {
+
+    init {
+        loadMakes()
+    }
 
     override fun onEvent(event: AddVehicleEvent) {
         when (event) {
@@ -36,17 +44,104 @@ class AddVehicleViewModel(
             AddVehicleEvent.OnBackClicked -> handleBackPress()
             AddVehicleEvent.OnDiscardDialogDismissed -> setState { it.copy(showDiscardDialog = false) }
             AddVehicleEvent.OnDiscardChangesConfirmed -> discardChanges()
+            is AddVehicleEvent.OnMakeDropdownExpandedChange ->
+                setState { it.copy(isMakesDropdownExpanded = event.expanded) }
+            is AddVehicleEvent.OnMakeSelected -> handleMakeSelected(event.make)
+            is AddVehicleEvent.OnModelDropdownExpandedChange ->
+                setState { it.copy(isModelsDropdownExpanded = event.expanded) }
+            is AddVehicleEvent.OnModelSelected -> handleModelSelected(event.model)
+        }
+    }
+
+    private fun loadMakes() {
+        setState { it.copy(isMakesLoading = true) }
+        viewModelScope.launch {
+            getCarMakesUseCase(Unit)
+                .onSuccess { makes ->
+                    setState { currentState ->
+                        currentState.copy(
+                            isMakesLoading = false,
+                            allMakes = makes,
+                            filteredMakes = makes
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    setState { it.copy(isMakesLoading = false) }
+                    emitSideEffect(AddVehicleSideEffect.ShowError(error.asUiText()))
+                }
+        }
+    }
+
+    private fun loadModelsForMake(make: String) {
+        setState { it.copy(isModelsLoading = true, allModels = emptyList(), filteredModels = emptyList()) }
+        viewModelScope.launch {
+            getModelsForMakeUseCase(make)
+                .onSuccess { models ->
+                    setState { currentState ->
+                        currentState.copy(
+                            isModelsLoading = false,
+                            allModels = models,
+                            filteredModels = models
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    setState { it.copy(isModelsLoading = false) }
+                    emitSideEffect(AddVehicleSideEffect.ShowError(error.asUiText()))
+                }
         }
     }
 
     private fun updateMake(value: String) {
         savedStateHandle[KEY_MAKE] = value
-        updateFormState { it.copy(make = value) }
+        updateFormState { current ->
+            val filtered = current.allMakes.filter { it.contains(value, ignoreCase = true) }
+            val stillMatches = current.allMakes.any { it.equals(value, ignoreCase = true) }
+            current.copy(
+                make = value,
+                filteredMakes = filtered,
+                isMakeSelected = stillMatches,
+                // Auto-open dropdown while typing if there are matches
+                isMakesDropdownExpanded = value.isNotBlank() && filtered.isNotEmpty(),
+                // If make no longer exactly matches, clear model + models
+                model = if (stillMatches) current.model else "",
+                allModels = if (stillMatches) current.allModels else emptyList(),
+                filteredModels = if (stillMatches) current.filteredModels else emptyList(),
+            )
+        }
+    }
+
+    private fun handleMakeSelected(make: String) {
+        savedStateHandle[KEY_MAKE] = make
+        updateFormState {
+            it.copy(
+                make = make,
+                isMakesDropdownExpanded = false,
+                isMakeSelected = true,
+                model = "",  // Reset model when make changes
+            )
+        }
+        loadModelsForMake(make)
     }
 
     private fun updateModel(value: String) {
         savedStateHandle[KEY_MODEL] = value
-        updateFormState { it.copy(model = value) }
+        updateFormState { current ->
+            val filtered = current.allModels.filter { it.contains(value, ignoreCase = true) }
+            current.copy(
+                model = value,
+                filteredModels = filtered,
+                isModelsDropdownExpanded = value.isNotBlank() && filtered.isNotEmpty(),
+            )
+        }
+    }
+
+    private fun handleModelSelected(model: String) {
+        savedStateHandle[KEY_MODEL] = model
+        updateFormState {
+            it.copy(model = model, isModelsDropdownExpanded = false)
+        }
     }
 
     private fun updateYear(year: Int) {

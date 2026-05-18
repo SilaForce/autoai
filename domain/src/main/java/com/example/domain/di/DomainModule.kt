@@ -18,6 +18,8 @@ import com.example.domain.usecase.reminder.GetRemindersUseCase
 import com.example.domain.usecase.reminder.UpdateReminderUseCase
 import com.example.domain.usecase.user.LogoutUseCase
 import com.example.domain.usecase.vehicle.AddVehicleUseCase
+import com.example.domain.usecase.vehicle.GetCarMakesUseCase
+import com.example.domain.usecase.vehicle.GetModelsForMakeUseCase
 import com.example.domain.usecase.vehicle.GetVehiclesUseCase
 import com.example.domain.usecase.vehicle.SetActiveVehicleUseCase
 import kotlinx.coroutines.CoroutineDispatcher
@@ -48,4 +50,6 @@ val domainModule = module {
     factoryOf(::SendMessageUseCase)
     // factoryOf(::UploadProfilePictureUseCase)
     factoryOf(::LogoutUseCase)
+    factoryOf(::GetCarMakesUseCase)
+    factoryOf(::GetModelsForMakeUseCase)
 }

@@ -15,4 +15,8 @@ sealed interface AddVehicleEvent {
     data object OnBackClicked : AddVehicleEvent
     data object OnDiscardDialogDismissed : AddVehicleEvent
     data object OnDiscardChangesConfirmed : AddVehicleEvent
+    data class OnMakeDropdownExpandedChange(val expanded: Boolean) : AddVehicleEvent
+    data class OnMakeSelected(val make: String) : AddVehicleEvent
+    data class OnModelDropdownExpandedChange(val expanded: Boolean) : AddVehicleEvent
+    data class OnModelSelected(val model: String) : AddVehicleEvent
 }
