@@ -13,8 +13,14 @@ class UpdateReminderUseCase(
 ) : BaseUseCase<Reminder, Unit>(dispatcher) {
 
     override suspend fun execute(params: Reminder): AppResult<Unit> {
-        if (params.id.isBlank() || params.title.isBlank()) {
-            return AppResult.Failure(DataError.Local.ValidationError)
+        if (params.id.isBlank()) {
+            return AppResult.Failure(DataError.Local.Validation.Generic)
+        }
+        if (params.title.isBlank()) {
+            return AppResult.Failure(DataError.Local.Validation.FieldEmpty)
+        }
+        if (params.dueDateMillis <= 0L) {
+            return AppResult.Failure(DataError.Local.Validation.InvalidDate)
         }
         return repository.updateReminder(params)
     }

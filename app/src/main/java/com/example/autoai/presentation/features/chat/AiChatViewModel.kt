@@ -95,6 +95,8 @@ class AiChatViewModel(
                             .minByOrNull { it.dueDateMillis }
                         val activeReminders = reminders.filter { !it.isCompleted }
 
+                        val today = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(Date())
+
                         val closestBlock = closestReminder?.let {
                             val formattedDate = DateFormat.getDateInstance().format(Date(it.dueDateMillis))
                             val overdue = it.dueDateMillis < System.currentTimeMillis()
@@ -114,19 +116,24 @@ class AiChatViewModel(
 
                         val autoReminderBlock = if (aiAutoReminderEnabled) {
                             """
-                            Auto-Reminders (ENABLED):
-                            If you determine from the conversation that the user needs a reminder, include this exact tag in your response:
-                            [ADD_REMINDER: title="reminder title", date="YYYY-MM-DD"]
-                            Only add a reminder when the user clearly describes a need. Always confirm to the user that you are adding it.
-                            Do NOT use this tag unless there is a clear reason. Never invent reminders unprompted.
+                             Always use a future date.                                                                                   
+                             When the user needs a reminder, add this tag in your response: [ADD_REMINDER: title="title here", date="YYYY-MM-DD"]                                                                                   
+                             Always confirm you're adding it.     
                             """.trimIndent()
                         } else {
-                            ""
+                            """
+                         Auto-Reminders (DISABLED):
+                         You CANNOT create reminders right now. If the user asks you to add a reminder, do NOT pretend to add it. Instead, politely tell them to enable "AI Auto-Reminders" in the Settings screen first.
+                         """.trimIndent()
                         }
 
                         systemInstruction = """
                             You are an expert auto mechanic and vehicle diagnostics assistant.
 
+                            Today's date is $today.
+                                                                                                                                                                                                         
+                            Put it before the vehicle info, reminder blocks, everything — so the AI has the date context for all its reasoning.
+                             
                             $closestBlock
 
                             $allRemindersBlock
@@ -215,6 +222,8 @@ class AiChatViewModel(
         } catch (e: Exception) {
             return aiReply
         }
+
+        if (dateMillis < System.currentTimeMillis()) return aiReply
 
         viewModelScope.launch {
             addReminderUseCase(

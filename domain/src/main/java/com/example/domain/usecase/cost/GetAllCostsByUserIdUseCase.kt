@@ -18,7 +18,7 @@ class GetAllCostsByUserIdUseCase(
 
     override suspend fun execute(params: GetAllCostsByUserIdParams): AppResult<List<Cost>> {
         if (params.userId.isBlank()) {
-            return AppResult.Failure(DataError.Local.ValidationError)
+            return AppResult.Failure(DataError.Local.Validation.Generic)
         }
         return repository.getCostsByUserId(userId = params.userId.trim())
     }

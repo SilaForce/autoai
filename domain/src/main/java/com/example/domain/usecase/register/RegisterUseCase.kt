@@ -20,13 +20,17 @@ class RegisterUseCase(
     ): BaseUseCase <RegisterParams, User>(dispatcher) {
 
     override suspend fun execute(params: RegisterParams): AppResult<User> {
-
-        if (!ValidationUtil.isValidFullName(params.name) ||
-            !ValidationUtil.isValidEmail(params.email) ||
-            !ValidationUtil.isValidPassword(params.password)
-        ) {
-            // Ako BILO ŠTA ne valja, odmah prekini i vrati grešku!
-            return AppResult.Failure(DataError.Local.ValidationError)
+        if (params.name.isBlank() || params.email.isBlank() || params.password.isBlank()) {
+            return AppResult.Failure(DataError.Local.Validation.FieldEmpty)
+        }
+        if (!ValidationUtil.isValidFullName(params.name)) {
+            return AppResult.Failure(DataError.Local.Validation.InvalidName)
+        }
+        if (!ValidationUtil.isValidEmail(params.email)) {
+            return AppResult.Failure(DataError.Local.Validation.InvalidEmail)
+        }
+        if (!ValidationUtil.isValidPassword(params.password)) {
+            return AppResult.Failure(DataError.Local.Validation.InvalidPassword)
         }
 
         return repository.register(

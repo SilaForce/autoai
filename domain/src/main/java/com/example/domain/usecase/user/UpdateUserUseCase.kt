@@ -22,7 +22,7 @@ class UpdateUserUseCase(
 
     override suspend fun execute(params: UpdateUserParams): AppResult<User> {
         if (params.name.isBlank()) {
-            return AppResult.Failure(DataError.Local.InvalidInput)
+            return AppResult.Failure(DataError.Local.Validation.FieldEmpty)
         }
 
         return repository.getCurrentUser().andThen { currentUser ->

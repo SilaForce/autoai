@@ -29,7 +29,7 @@ class VehicleUseCasesTest {
         )
 
         assertTrue(result is AppResult.Failure)
-        assertEquals(DataError.Local.ValidationError, (result as AppResult.Failure).error)
+        assertEquals(DataError.Local.Validation.FieldEmpty, (result as AppResult.Failure).error)
         assertEquals(null, repository.addedVehicle)
     }
 
@@ -70,7 +70,7 @@ class VehicleUseCasesTest {
         val result = useCase(GetVehiclesParams(userId = "   "))
 
         assertTrue(result is AppResult.Failure)
-        assertEquals(DataError.Local.ValidationError, (result as AppResult.Failure).error)
+        assertEquals(DataError.Local.Validation.Generic, (result as AppResult.Failure).error)
     }
 
     @Test
@@ -97,7 +97,7 @@ class VehicleUseCasesTest {
         )
 
         assertTrue(result is AppResult.Failure)
-        assertEquals(DataError.Local.ValidationError, (result as AppResult.Failure).error)
+        assertEquals(DataError.Local.Validation.Generic, (result as AppResult.Failure).error)
     }
 
     @Test

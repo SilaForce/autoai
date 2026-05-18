@@ -18,7 +18,7 @@ class GetCostsHistoryUseCase(
 
     override suspend fun execute(params: GetCostsHistoryParams): AppResult<List<Cost>> {
         if (params.vehicleId.isBlank()) {
-            return AppResult.Failure(DataError.Local.ValidationError)
+            return AppResult.Failure(DataError.Local.Validation.Generic)
         }
         return repository.getCosts(vehicleId = params.vehicleId.trim())
     }

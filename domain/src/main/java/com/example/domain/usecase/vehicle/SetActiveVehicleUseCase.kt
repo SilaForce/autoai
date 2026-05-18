@@ -21,7 +21,7 @@ class SetActiveVehicleUseCase(
         if (!ValidationUtil.isValidVehicleText(params.userId) ||
             !ValidationUtil.isValidVehicleText(params.vehicleId)
         ) {
-            return AppResult.Failure(DataError.Local.ValidationError)
+            return AppResult.Failure(DataError.Local.Validation.Generic)
         }
 
         return repository.setActiveVehicle(

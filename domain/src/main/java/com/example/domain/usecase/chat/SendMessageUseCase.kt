@@ -22,7 +22,7 @@ class SendMessageUseCase(
     override suspend fun execute(params: SendMessageParams): AppResult<String> {
         // Validacija: ne dozvoljavamo slanje praznih poruka!
         if (params.prompt.isBlank()) {
-            return AppResult.Failure(DataError.Local.ValidationError)
+            return AppResult.Failure(DataError.Local.Validation.Generic)
         }
 
         return repository.sendMessage(

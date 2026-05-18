@@ -16,7 +16,7 @@ class GetRemindersUseCase(
 
     override suspend fun execute(params: GetRemindersParams): AppResult<List<Reminder>> {
         if (params.vehicleId.isBlank()) {
-            return AppResult.Failure(DataError.Local.ValidationError)
+            return AppResult.Failure(DataError.Local.Validation.Generic)
         }
         return repository.getReminders(params.vehicleId.trim())
     }

@@ -19,10 +19,14 @@ class LoginUseCase(
 ) : BaseUseCase<LoginParams, User>(dispatcher) {
 
     override suspend fun execute(params: LoginParams): AppResult<User> {
-        if (!ValidationUtil.isValidEmail(params.email) ||
-            !ValidationUtil.isValidPassword(params.password)
-        ) {
-            return AppResult.Failure(DataError.Local.ValidationError)
+        if (params.email.isBlank() || params.password.isBlank()) {
+            return AppResult.Failure(DataError.Local.Validation.FieldEmpty)
+        }
+        if (!ValidationUtil.isValidEmail(params.email)) {
+            return AppResult.Failure(DataError.Local.Validation.InvalidEmail)
+        }
+        if (!ValidationUtil.isValidPassword(params.password)) {
+            return AppResult.Failure(DataError.Local.Validation.InvalidPassword)
         }
 
         return repository.login(

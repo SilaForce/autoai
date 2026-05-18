@@ -26,13 +26,19 @@ class AddVehicleUseCase(
 ) : BaseUseCase<AddVehicleParams, Vehicle>(dispatcher) {
 
     override suspend fun execute(params: AddVehicleParams): AppResult<Vehicle> {
-        if (!ValidationUtil.isValidVehicleText(params.userId) ||
-            !ValidationUtil.isValidVehicleText(params.make) ||
-            !ValidationUtil.isValidVehicleText(params.model) ||
-            !ValidationUtil.isValidVehicleYear(params.year) ||
-            !ValidationUtil.isValidMileage(params.mileage)
+        if (!ValidationUtil.isValidVehicleText(params.userId)) {
+            return AppResult.Failure(DataError.Local.Validation.Generic)
+        }
+        if (!ValidationUtil.isValidVehicleText(params.make) ||
+            !ValidationUtil.isValidVehicleText(params.model)
         ) {
-            return AppResult.Failure(DataError.Local.ValidationError)
+            return AppResult.Failure(DataError.Local.Validation.FieldEmpty)
+        }
+        if (!ValidationUtil.isValidVehicleYear(params.year)) {
+            return AppResult.Failure(DataError.Local.Validation.InvalidYear)
+        }
+        if (!ValidationUtil.isValidMileage(params.mileage)) {
+            return AppResult.Failure(DataError.Local.Validation.InvalidMileage)
         }
 
         return repository.addVehicle(

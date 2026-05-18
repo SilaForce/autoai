@@ -19,7 +19,7 @@ class GetVehiclesUseCase(
 
     override suspend fun execute(params: GetVehiclesParams): AppResult<List<Vehicle>> {
         if (!ValidationUtil.isValidVehicleText(params.userId)) {
-            return AppResult.Failure(DataError.Local.ValidationError)
+            return AppResult.Failure(DataError.Local.Validation.Generic)
         }
 
         return repository.getVehicles(userId = params.userId.trim())

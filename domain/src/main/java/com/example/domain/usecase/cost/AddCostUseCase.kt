@@ -24,17 +24,14 @@ class AddCostUseCase(
 ) : BaseUseCase<AddCostParams, Cost>(dispatcher) {
 
     override suspend fun execute(params: AddCostParams): AppResult<Cost> {
-        if (params.userId.isBlank()) {
-            return AppResult.Failure(DataError.Local.ValidationError)
-        }
-        if (params.vehicleId.isBlank()) {
-            return AppResult.Failure(DataError.Local.ValidationError)
+        if (params.userId.isBlank() || params.vehicleId.isBlank()) {
+            return AppResult.Failure(DataError.Local.Validation.Generic)
         }
         if (params.amount <= 0.0) {
-            return AppResult.Failure(DataError.Local.ValidationError)
+            return AppResult.Failure(DataError.Local.Validation.InvalidAmount)
         }
         if (params.dateMillis <= 0L) {
-            return AppResult.Failure(DataError.Local.ValidationError)
+            return AppResult.Failure(DataError.Local.Validation.InvalidDate)
         }
 
         return repository.addCost(

@@ -13,11 +13,23 @@ sealed interface DataError {
 
     sealed interface Local : DataError {
         data object DiskFull : Local
-        data object InvalidInput : Local
         data object PermissionDenied : Local
         data object NotFound : Local
         data object Unknown : Local
 
-        data object ValidationError: Local
+        sealed interface Validation : Local {
+            data object FieldEmpty : Validation
+            data object InvalidEmail : Validation
+            data object InvalidPassword : Validation
+            data object PasswordsDoNotMatch : Validation
+            data object InvalidDate : Validation
+            data object DateInPast : Validation
+            data object InvalidAmount : Validation
+            data object InvalidMileage : Validation
+            data object InvalidYear : Validation
+            data object InvalidName : Validation
+            data object FuelTypeNotSelected : Validation
+            data object Generic : Validation
+        }
     }
 }

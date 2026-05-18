@@ -15,7 +15,7 @@ class DeleteReminderUseCase(
 
     override suspend fun execute(params: DeleteReminderParams): AppResult<Unit> {
         if (params.reminderId.isBlank()) {
-            return AppResult.Failure(DataError.Local.ValidationError)
+            return AppResult.Failure(DataError.Local.Validation.Generic)
         }
         return repository.deleteReminder(params.reminderId)
     }
