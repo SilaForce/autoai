@@ -122,6 +122,7 @@ fun HomeContent(
                             label = AppStrings.Home.monthlyCostLabel,
                             amount = state.totalExpenses,
                             currency = "KM",
+                            onClick = { onEvent(HomeEvent.OnMonthlyCostClicked) }
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))

@@ -41,11 +41,13 @@ fun VehicleCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
 ) {
+    val shape = RoundedCornerShape(16.dp)
     Surface(
         modifier = modifier
             .fillMaxWidth()
+            .clip(shape)
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+        shape = shape,
         color = MaterialTheme.colorScheme.surface,
         shadowElevation = 4.dp,
         tonalElevation = 0.dp,

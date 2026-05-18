@@ -1,6 +1,7 @@
 package com.example.autoai.presentation.features.settings.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,12 +38,13 @@ fun SettingsItemCard(
 ) {
     val defaultOnSurface = MaterialTheme.colorScheme.onSurface
 
+    val shape = RoundedCornerShape(16.dp)
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
-            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier),
-        shape = RoundedCornerShape(16.dp),
+            .then(if (onClick != null) Modifier.clip(shape).clickable { onClick() } else Modifier),
+        shape = shape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)

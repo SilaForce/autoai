@@ -55,6 +55,10 @@ class HomeViewModel(
             HomeEvent.OnDueReminderClicked -> {
                 navigator.navigateTo(Route.Reminder)
             }
+
+            HomeEvent.OnMonthlyCostClicked -> {
+                navigator.navigateTo(Route.Costs)
+            }
         }
     }
 

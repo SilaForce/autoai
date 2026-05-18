@@ -1,5 +1,6 @@
 package com.example.autoai.presentation.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.draw.clip
 import com.example.autoai.presentation.theme.VerdantGreen
 
 @Composable
@@ -27,10 +29,15 @@ fun MonthlyCostCard(
     amount: String,
     currency: String,
     modifier: Modifier = Modifier,
-) {
+    onClick : () -> Unit = {},
+    ) {
+    val shape = RoundedCornerShape(16.dp)
     Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .clickable(onClick = onClick),
+        shape = shape,
         color = MaterialTheme.colorScheme.surface,
         shadowElevation = 4.dp,
         tonalElevation = 0.dp,
@@ -66,7 +73,7 @@ fun MonthlyCostCard(
 @Composable
 private fun MonthlyCostCardPreview() {
     Box(modifier = Modifier.padding(16.dp)) {
-        MonthlyCostCard(label = "Troškovi ovog mjeseca", amount = "1,045", currency = "KM")
+        MonthlyCostCard(label = "Troškovi", amount = "1,045", currency = "KM")
     }
 }
 
