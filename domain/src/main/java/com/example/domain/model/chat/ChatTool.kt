@@ -1,12 +1,13 @@
 package com.example.domain.model.chat
 
-enum class ChatToolParamType { STRING, LONG, INT, DOUBLE, BOOL }
+enum class ChatToolParamType { STRING, LONG, INT, DOUBLE, BOOL, ENUM }
 
 data class ChatToolParam(
     val name: String,
     val type: ChatToolParamType,
     val description: String,
     val required: Boolean = true,
+    val values: List<String>? = null,
 )
 
 data class ChatTool(

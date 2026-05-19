@@ -45,8 +45,12 @@ dependencies {
 
     implementation(project(":domain"))
 
-    // Generative AI SDK
-    implementation(libs.generativeai)
+    // Google Gen AI SDK (unified). Exclude full protobuf-java since Firebase already
+    // pulls in protobuf-javalite (the Android-optimized variant) and Android can
+    // only have one. Having both crashes the build with a duplicate-class error.
+    implementation(libs.google.genai) {
+        exclude(group = "com.google.protobuf", module = "protobuf-java")
+    }
 
     // Ktor
     implementation(libs.ktor.client.core)

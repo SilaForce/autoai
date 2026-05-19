@@ -55,7 +55,8 @@ class AiChatViewModel(
     // Čuvamo čiste Domain modele u ViewModelu za historiju razgovora
     private val apiChatHistory = mutableListOf<ChatMessage>()
 
-    private var systemInstruction = "You are an expert auto mechanic. Provide short and precise automotive advice."
+    private var systemInstruction =
+        "You are an expert auto mechanic. Provide short and precise automotive advice."
 
     private var aiAutoReminderEnabled = false
 
@@ -64,17 +65,20 @@ class AiChatViewModel(
     private var currentUserId: String? = null
 
     init {
-        buildSystemInstruction()
-
-        val welcomeMessage = ChatMessage(text = "Dobar dan! Ja sam tvoj lični AI mehaničar. Kako ti mogu pomoći danas?", role = MessageRole.AI)
+        val welcomeMessage = ChatMessage(
+            text = "Dobar dan! Ja sam tvoj lični AI mehaničar. Kako ti mogu pomoći danas?",
+            role = MessageRole.AI
+        )
         setState { it.copy(messages = listOf(welcomeMessage.toUiModel())) }
+
+        viewModelScope.launch { refreshSystemInstruction() }
 
         viewModelScope.launch {
             preferencesRepository.isAiAutoRemindersEnabled.collect { enabled ->
                 aiAutoReminderEnabled = enabled
             }
-            }
         }
+    }
 
     override fun onEvent(event: AiChatEvent) {
         when (event) {
@@ -91,62 +95,72 @@ class AiChatViewModel(
                     }
                 }
             }
+
             is AiChatEvent.OnRemoveImage -> {
-                setState { it.copy(selectedImages = it.selectedImages.toMutableList().apply { removeAt(event.index) }) }
+                setState {
+                    it.copy(
+                        selectedImages = it.selectedImages.toMutableList()
+                            .apply { removeAt(event.index) })
+                }
             }
         }
     }
 
-    private fun buildSystemInstruction() {
-        viewModelScope.launch {
-            getCurrentUserUseCase(Unit).onSuccess { user ->
-                currentUserId = user.id
-                getVehiclesUseCase(GetVehiclesParams(user.id)).onSuccess { vehicles ->
-                    val activeVehicle = vehicles.firstOrNull { it.isActive } ?: return@onSuccess
-                    activeVehicleId = activeVehicle.id
-                    getReminderUseCase(GetRemindersParams(activeVehicle.id)).onSuccess { reminders ->
-                        val closestReminder = reminders
-                            .filter { !it.isCompleted }
-                            .minByOrNull { it.dueDateMillis }
-                        val activeReminders = reminders.filter { !it.isCompleted }
+    private suspend fun refreshSystemInstruction() {
+        getCurrentUserUseCase(Unit).onSuccess { user ->
+            currentUserId = user.id
+            getVehiclesUseCase(GetVehiclesParams(user.id)).onSuccess { vehicles ->
+                val activeVehicle = vehicles.firstOrNull { it.isActive } ?: return@onSuccess
+                activeVehicleId = activeVehicle.id
+                getReminderUseCase(GetRemindersParams(activeVehicle.id)).onSuccess { reminders ->
+                    val closestReminder = reminders
+                        .filter { !it.isCompleted }
+                        .minByOrNull { it.dueDateMillis }
+                    val activeReminders = reminders.filter { !it.isCompleted }
 
-                        val today = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(Date())
+                    val today = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(Date())
 
-                        val closestBlock = closestReminder?.let {
-                            val formattedDate = DateFormat.getDateInstance().format(Date(it.dueDateMillis))
-                            val overdue = it.dueDateMillis < System.currentTimeMillis()
-                            val status = if (overdue) "overdue since" else "due on"
-                            "The user's closest reminder is: \"${it.title}\" $status $formattedDate. If it comes up naturally, you may proactively mention this."
-                        } ?: "The user has no upcoming reminders."
+                    val closestBlock = closestReminder?.let {
+                        val formattedDate =
+                            DateFormat.getDateInstance().format(Date(it.dueDateMillis))
+                        val overdue = it.dueDateMillis < System.currentTimeMillis()
+                        val status = if (overdue) "overdue since" else "due on"
+                        "The user's closest reminder is: \"${it.title}\" $status $formattedDate. If it comes up naturally, you may proactively mention this."
+                    } ?: "The user has no upcoming reminders."
 
-                        val allRemindersBlock = if (activeReminders.isNotEmpty()) {
-                            val list = activeReminders.joinToString("\n") { reminder ->
-                                val date = DateFormat.getDateInstance().format(Date(reminder.dueDateMillis))
-                                "- \"${reminder.title}\" — $date"
-                            }
-                            "The user's full reminder list:\n$list\nIf the user asks about their reminders, list all of these."
-                        } else {
-                            ""
+                    val allRemindersBlock = if (activeReminders.isNotEmpty()) {
+                        val list = activeReminders.joinToString("\n") { reminder ->
+                            val date =
+                                DateFormat.getDateInstance().format(Date(reminder.dueDateMillis))
+                            "- \"${reminder.title}\" — $date"
                         }
+                        "The user's full reminder list:\n$list\nIf the user asks about their reminders, list all of these."
+                    } else {
+                        ""
+                    }
 
-                        var costs: List<Cost> = emptyList()
-                        var stats: CostStatistics? = null
-                        getCostsHistoryUseCase(GetCostsHistoryParams(activeVehicle.id)).onSuccess { costs = it }
-                        getCostStatisticsUseCase(GetCostStatisticsParams(activeVehicle.id)).onSuccess { stats = it }
-                        val costsBlock = buildCostsBlock(costs, stats)
+                    var costs: List<Cost> = emptyList()
+                    var stats: CostStatistics? = null
+                    getCostsHistoryUseCase(GetCostsHistoryParams(activeVehicle.id)).onSuccess {
+                        costs = it
+                    }
+                    getCostStatisticsUseCase(GetCostStatisticsParams(activeVehicle.id)).onSuccess {
+                        stats = it
+                    }
+                    val costsBlock = buildCostsBlock(costs, stats)
 
-                        val autoReminderBlock = if (aiAutoReminderEnabled) {
-                            """
+                    val autoReminderBlock = if (aiAutoReminderEnabled) {
+                        """
                             You have access to a tool named "addReminder" that creates a maintenance reminder for the user's active vehicle. When the user asks to be reminded about a future service or check, call the tool with a short title and a YYYY-MM-DD date in the future. After the tool reports success, confirm in your reply that you added the reminder. If the tool reports failure, explain the problem to the user honestly without retrying with the same arguments.
                             """.trimIndent()
-                        } else {
-                            """
+                    } else {
+                        """
                          Auto-Reminders (DISABLED):
                          You CANNOT create reminders right now. If the user asks you to add a reminder, do NOT pretend to add it. Instead, politely tell them to enable "AI Auto-Reminders" in the Settings screen first.
                          """.trimIndent()
-                        }
+                    }
 
-                        systemInstruction = """
+                    systemInstruction = """
                             You are an expert auto mechanic and vehicle diagnostics assistant.
 
                             Today's date is $today.
@@ -187,7 +201,6 @@ class AiChatViewModel(
                             - Respond in the same language the user writes in.
                             - If you are unsure about something, say so honestly rather than guessing.
                         """.trimIndent()
-                    }
                 }
             }
         }
@@ -209,6 +222,7 @@ class AiChatViewModel(
         addMessageToApiAndUi(userMessage)
 
         viewModelScope.launch {
+            refreshSystemInstruction()
             sendMessageUseCase(
                 SendMessageParams(
                     prompt = prompt,
@@ -233,7 +247,6 @@ class AiChatViewModel(
         }
 
         val dateFormat = DateFormat.getDateInstance()
-        fun money(amount: Double): String = String.format(Locale.getDefault(), "%.2f", amount)
 
         val total = money(stats.totalAmount)
         val perCategoryStats = CostCategory.entries.joinToString("\n") { category ->
@@ -251,14 +264,15 @@ class AiChatViewModel(
             }
         }
 
-        val recent = costs.sortedByDescending { it.dateMillis }.take(10).joinToString("\n") { cost ->
-            val date = dateFormat.format(Date(cost.dateMillis))
-            val descPart = cost.description
-                ?.takeIf { it.isNotBlank() }
-                ?.let { " — \"${it.take(40)}\"" }
-                .orEmpty()
-            "- $date — ${cost.category.name} — ${money(cost.amount)}$descPart"
-        }
+        val recent =
+            costs.sortedByDescending { it.dateMillis }.take(10).joinToString("\n") { cost ->
+                val date = dateFormat.format(Date(cost.dateMillis))
+                val descPart = cost.description
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { " — \"${it.take(40)}\"" }
+                    .orEmpty()
+                "- $date — ${cost.category.name} — ${money(cost.amount)}$descPart"
+            }
 
         return """
             The user's spending summary for this vehicle (amounts in their local currency):
@@ -296,7 +310,11 @@ class AiChatViewModel(
         description = "Creates a maintenance reminder for the user's active vehicle. Use when the user asks to be reminded about a future service or check. Returns success/failure as a string.",
         parameters = listOf(
             ChatToolParam("title", ChatToolParamType.STRING, "Short title (e.g. 'Oil change')."),
-            ChatToolParam("date", ChatToolParamType.STRING, "Due date in YYYY-MM-DD format. Must be in the future."),
+            ChatToolParam(
+                "date",
+                ChatToolParamType.STRING,
+                "Due date in YYYY-MM-DD format. Must be in the future."
+            ),
         ),
         execute = { args -> executeAddReminder(userId, vehicleId, args) },
     )
@@ -337,8 +355,18 @@ class AiChatViewModel(
         name = "getCostStatisticsForPeriod",
         description = "Returns the user's spending totals for this vehicle within a date range. Use when the user asks about spending in a specific period (e.g. \"this month\", \"last 30 days\", \"between March and May\"). If both dates are omitted, returns lifetime totals.",
         parameters = listOf(
-            ChatToolParam("since", ChatToolParamType.STRING, "Inclusive start date in YYYY-MM-DD format. Omit for no lower bound.", required = false),
-            ChatToolParam("until", ChatToolParamType.STRING, "Inclusive end date in YYYY-MM-DD format. Omit for no upper bound.", required = false),
+            ChatToolParam(
+                "since",
+                ChatToolParamType.STRING,
+                "Inclusive start date in YYYY-MM-DD format. Omit for no lower bound.",
+                required = false
+            ),
+            ChatToolParam(
+                "until",
+                ChatToolParamType.STRING,
+                "Inclusive end date in YYYY-MM-DD format. Omit for no upper bound.",
+                required = false
+            ),
         ),
         execute = { args -> executeGetCostStatisticsForPeriod(vehicleId, args) },
     )
@@ -383,9 +411,24 @@ class AiChatViewModel(
         name = "getCostsByCategory",
         description = "Returns individual cost entries for a given category, optionally within a date range. Use when the user asks to see specific expenses (e.g. \"show me all my fuel receipts from April\", \"what brake-related services have I logged?\"). Returns up to 20 most recent matching entries.",
         parameters = listOf(
-            ChatToolParam("category", ChatToolParamType.STRING, "One of: FUEL, SERVICE, TIRES, EQUIPMENT, OTHER."),
-            ChatToolParam("since", ChatToolParamType.STRING, "Inclusive start date in YYYY-MM-DD format. Omit for no lower bound.", required = false),
-            ChatToolParam("until", ChatToolParamType.STRING, "Inclusive end date in YYYY-MM-DD format. Omit for no upper bound.", required = false),
+            ChatToolParam(
+                name = "category",
+                type = ChatToolParamType.ENUM,
+                description = "Cost category to filter by.",
+                values = CostCategory.entries.map { it.name },
+            ),
+            ChatToolParam(
+                "since",
+                ChatToolParamType.STRING,
+                "Inclusive start date in YYYY-MM-DD format. Omit for no lower bound.",
+                required = false
+            ),
+            ChatToolParam(
+                "until",
+                ChatToolParamType.STRING,
+                "Inclusive end date in YYYY-MM-DD format. Omit for no upper bound.",
+                required = false
+            ),
         ),
         execute = { args -> executeGetCostsByCategory(vehicleId, args) },
     )
@@ -396,8 +439,9 @@ class AiChatViewModel(
     ): String {
         val categoryArg = args["category"]?.takeIf { it.isNotBlank() }
             ?: return "Failure: 'category' is required."
-        val category = runCatching { CostCategory.valueOf(categoryArg.uppercase(Locale.ROOT)) }.getOrNull()
-            ?: return "Failure: 'category' must be one of ${CostCategory.entries.joinToString { it.name }}."
+        val category =
+            runCatching { CostCategory.valueOf(categoryArg.uppercase(Locale.ROOT)) }.getOrNull()
+                ?: return "Failure: 'category' must be one of ${CostCategory.entries.joinToString { it.name }}."
         val sinceMillis = parseDayStartMillis(args["since"])
         val untilMillis = parseDayEndMillis(args["until"])
         if (args["since"]?.isNotBlank() == true && sinceMillis == null) {
@@ -421,7 +465,8 @@ class AiChatViewModel(
                 val shown = matching.take(20)
                 val isoFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
                 val lines = shown.joinToString("\n") { cost ->
-                    val descPart = cost.description?.takeIf { it.isNotBlank() }?.let { " — \"${it.take(60)}\"" }.orEmpty()
+                    val descPart = cost.description?.takeIf { it.isNotBlank() }
+                        ?.let { " — \"${it.take(60)}\"" }.orEmpty()
                     "- ${isoFormat.format(Date(cost.dateMillis))}: ${money(cost.amount)}$descPart"
                 }
                 val header = if (matching.size > shown.size) {
@@ -482,18 +527,22 @@ class AiChatViewModel(
                 setState { it.copy(selectedNavItem = BottomNavItem.HOME) }
                 navigator.navigateTo(Route.Home)
             }
+
             BottomNavItem.GARAGE -> {
                 setState { it.copy(selectedNavItem = BottomNavItem.GARAGE) }
                 navigator.navigateTo(Route.Garage)
             }
+
             BottomNavItem.COSTS -> {
                 setState { it.copy(selectedNavItem = BottomNavItem.COSTS) }
                 navigator.navigateTo(Route.Costs)
             }
+
             BottomNavItem.REMINDERS -> {
                 setState { it.copy(selectedNavItem = BottomNavItem.REMINDERS) }
                 navigator.navigateTo(Route.Reminder)
             }
+
             BottomNavItem.AI_CHAT -> Unit
         }
     }

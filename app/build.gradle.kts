@@ -55,6 +55,17 @@ android {
     buildFeatures {
         compose = true
     }
+    packaging {
+        resources {
+            // The Google Gen AI SDK transitively pulls in several JVM-style libraries
+            // (google-auth, api-common, etc.) that each ship META-INF/INDEX.LIST
+            // — a JAR index file Android doesn't use. Multiple copies collide at
+            // APK assembly. These META-INF entries are safe to drop.
+            excludes += "/META-INF/INDEX.LIST"
+            excludes += "/META-INF/DEPENDENCIES"
+            excludes += "/META-INF/io.netty.versions.properties"
+        }
+    }
 }
 
 dependencies {
@@ -85,6 +96,12 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
+
+    // Align all transitive io.grpc:* artifacts to a single version. Firebase Firestore
+    // and the Google Gen AI SDK each bring gRPC at different versions; without this BoM
+    // they get mixed (e.g. grpc-core at one version, grpc-api at another) and Firestore
+    // crashes at startup with NoClassDefFoundError on classes like InternalGlobalInterceptors.
+    implementation(platform("io.grpc:grpc-bom:1.69.0"))
 
 
     // Navigation
