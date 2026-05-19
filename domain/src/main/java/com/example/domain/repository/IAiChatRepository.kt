@@ -2,6 +2,7 @@ package com.example.domain.repository
 
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.chat.ChatMessage
+import com.example.domain.model.chat.ChatTool
 
 interface IAiChatRepository {
     suspend fun sendMessage(
@@ -9,5 +10,6 @@ interface IAiChatRepository {
         history: List<ChatMessage>,
         systemInstruction: String,
         images: List<ByteArray> = emptyList(),
-        ): AppResult<String>
+        tools: List<ChatTool> = emptyList(),
+    ): AppResult<String>
 }

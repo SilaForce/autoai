@@ -11,6 +11,7 @@ import com.example.domain.usecase.user.UpdateUserUseCase
 import com.example.domain.usecase.cost.AddCostUseCase
 import com.example.domain.usecase.cost.GetAllCostsByUserIdUseCase
 import com.example.domain.usecase.cost.GetCostsHistoryUseCase
+import com.example.domain.usecase.cost.GetCostStatisticsForPeriodUseCase
 import com.example.domain.usecase.cost.GetCostStatisticsUseCase
 import com.example.domain.usecase.reminder.AddReminderUseCase
 import com.example.domain.usecase.reminder.DeleteReminderUseCase
@@ -42,6 +43,7 @@ val domainModule = module {
     factoryOf(::AddCostUseCase)
     factoryOf(::GetCostsHistoryUseCase)
     factoryOf(::GetCostStatisticsUseCase)
+    factoryOf(::GetCostStatisticsForPeriodUseCase)
     factoryOf(::GetAllCostsByUserIdUseCase)
     factoryOf(::GetRemindersUseCase)
     factoryOf(::AddReminderUseCase)

@@ -10,10 +10,22 @@ import com.example.autoai.presentation.util.asUiText
 import com.example.domain.model.app.onFailure
 import com.example.domain.model.app.onSuccess
 import com.example.domain.model.chat.ChatMessage
+import com.example.domain.model.chat.ChatTool
+import com.example.domain.model.chat.ChatToolParam
+import com.example.domain.model.chat.ChatToolParamType
 import com.example.domain.model.chat.MessageRole
+import com.example.domain.model.cost.Cost
+import com.example.domain.model.cost.CostCategory
+import com.example.domain.model.cost.CostStatistics
 import com.example.domain.repository.IPreferencesRepository
 import com.example.domain.usecase.chat.SendMessageParams
 import com.example.domain.usecase.chat.SendMessageUseCase
+import com.example.domain.usecase.cost.GetCostStatisticsForPeriodParams
+import com.example.domain.usecase.cost.GetCostStatisticsForPeriodUseCase
+import com.example.domain.usecase.cost.GetCostStatisticsParams
+import com.example.domain.usecase.cost.GetCostStatisticsUseCase
+import com.example.domain.usecase.cost.GetCostsHistoryParams
+import com.example.domain.usecase.cost.GetCostsHistoryUseCase
 import com.example.domain.usecase.reminder.AddReminderParams
 import com.example.domain.usecase.reminder.AddReminderUseCase
 import com.example.domain.usecase.reminder.GetRemindersParams
@@ -32,6 +44,9 @@ class AiChatViewModel(
     private val getVehiclesUseCase: GetVehiclesUseCase,
     private val sendMessageUseCase: SendMessageUseCase,
     private val getReminderUseCase: GetRemindersUseCase,
+    private val getCostsHistoryUseCase: GetCostsHistoryUseCase,
+    private val getCostStatisticsUseCase: GetCostStatisticsUseCase,
+    private val getCostStatisticsForPeriodUseCase: GetCostStatisticsForPeriodUseCase,
     private val preferencesRepository: IPreferencesRepository,
     private val addReminderUseCase: AddReminderUseCase,
     private val navigator: IAppNavigator
@@ -114,11 +129,15 @@ class AiChatViewModel(
                             ""
                         }
 
+                        var costs: List<Cost> = emptyList()
+                        var stats: CostStatistics? = null
+                        getCostsHistoryUseCase(GetCostsHistoryParams(activeVehicle.id)).onSuccess { costs = it }
+                        getCostStatisticsUseCase(GetCostStatisticsParams(activeVehicle.id)).onSuccess { stats = it }
+                        val costsBlock = buildCostsBlock(costs, stats)
+
                         val autoReminderBlock = if (aiAutoReminderEnabled) {
                             """
-                             Always use a future date.                                                                                   
-                             When the user needs a reminder, add this tag in your response: [ADD_REMINDER: title="title here", date="YYYY-MM-DD"]                                                                                   
-                             Always confirm you're adding it.     
+                            You have access to a tool named "addReminder" that creates a maintenance reminder for the user's active vehicle. When the user asks to be reminded about a future service or check, call the tool with a short title and a YYYY-MM-DD date in the future. After the tool reports success, confirm in your reply that you added the reminder. If the tool reports failure, explain the problem to the user honestly without retrying with the same arguments.
                             """.trimIndent()
                         } else {
                             """
@@ -137,6 +156,8 @@ class AiChatViewModel(
                             $closestBlock
 
                             $allRemindersBlock
+
+                            $costsBlock
 
                             $autoReminderBlock
 
@@ -191,13 +212,13 @@ class AiChatViewModel(
             sendMessageUseCase(
                 SendMessageParams(
                     prompt = prompt,
-                    history = previousApiHistory, // Sending the clean history!
+                    history = previousApiHistory,
                     systemInstruction = systemInstruction,
-                    images = images
+                    images = images,
+                    tools = buildTools(),
                 )
             ).onSuccess { aiReply ->
-                val parsedReply = parseAndCreateReminder(aiReply)
-                addMessageToApiAndUi(ChatMessage(text = parsedReply, role = MessageRole.AI))
+                addMessageToApiAndUi(ChatMessage(text = aiReply, role = MessageRole.AI))
                 setState { it.copy(isAiTyping = false) }
             }.onFailure { error ->
                 setState { it.copy(isAiTyping = false) }
@@ -206,38 +227,238 @@ class AiChatViewModel(
         }
     }
 
-    private fun parseAndCreateReminder(aiReply: String): String {
-        val regex = Regex("""\[ADD_REMINDER: title="(.+?)", date="(\d{4}-\d{2}-\d{2})"]""")
-        val match = regex.find(aiReply) ?: return aiReply
-
-        val title = match.groupValues[1]
-        val dateString = match.groupValues[2]
-
-
-        val userId = currentUserId ?: return aiReply
-        val vehicleId = activeVehicleId ?: return aiReply
-
-        val dateMillis = try {
-            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dateString)?.time ?: return aiReply
-        } catch (e: Exception) {
-            return aiReply
+    private fun buildCostsBlock(costs: List<Cost>, stats: CostStatistics?): String {
+        if (costs.isEmpty() || stats == null) {
+            return "The user has not logged any costs for this vehicle yet. If they ask cost-related questions, say so honestly."
         }
 
-        if (dateMillis < System.currentTimeMillis()) return aiReply
+        val dateFormat = DateFormat.getDateInstance()
+        fun money(amount: Double): String = String.format(Locale.getDefault(), "%.2f", amount)
 
-        viewModelScope.launch {
-            addReminderUseCase(
-                AddReminderParams(
-                    userId = userId,
-                    vehicleId = vehicleId,
-                    title = title,
-                    dueDateMillis = dateMillis
-                )
-            )
+        val total = money(stats.totalAmount)
+        val perCategoryStats = CostCategory.entries.joinToString("\n") { category ->
+            "- ${category.name}: ${money(stats.amountByCategory[category] ?: 0.0)}"
         }
 
-        return aiReply.replace(match.value, "").trim()
+        val lastEntryByCategory = costs.groupBy { it.category }
+            .mapValues { (_, list) -> list.maxByOrNull { it.dateMillis } }
+        val lastEntryBlock = CostCategory.entries.joinToString("\n") { category ->
+            val entry = lastEntryByCategory[category]
+            if (entry == null) {
+                "- ${category.name}: no entries yet"
+            } else {
+                "- ${category.name}: ${money(entry.amount)} on ${dateFormat.format(Date(entry.dateMillis))}"
+            }
+        }
+
+        val recent = costs.sortedByDescending { it.dateMillis }.take(10).joinToString("\n") { cost ->
+            val date = dateFormat.format(Date(cost.dateMillis))
+            val descPart = cost.description
+                ?.takeIf { it.isNotBlank() }
+                ?.let { " — \"${it.take(40)}\"" }
+                .orEmpty()
+            "- $date — ${cost.category.name} — ${money(cost.amount)}$descPart"
+        }
+
+        return """
+            The user's spending summary for this vehicle (amounts in their local currency):
+            - Total spent: $total
+            $perCategoryStats
+
+            Last entry per category:
+            $lastEntryBlock
+
+            Recent activity (most recent first, up to 10):
+            $recent
+
+            Notes on using this cost data:
+            - When the user asks WHEN something was last done, use the "Last entry per category" section.
+            - When the user asks HOW MUCH was spent on a category in total (lifetime), use the per-category totals — do not re-sum the recent activity list.
+            - For date-range questions (e.g. "this month", "last 30 days", "between March and May") or filtered lookups, call the "getCostStatisticsForPeriod" or "getCostsByCategory" tools. You know today's date, so resolve relative ranges yourself before calling. Do NOT guess date-range totals from the recent activity list.
+            - When giving mechanic advice, cross-reference the user's symptoms with recent activity — flag if a related service was recently logged, or appears overdue.
+        """.trimIndent()
     }
+
+    private fun buildTools(): List<ChatTool> {
+        val userId = currentUserId ?: return emptyList()
+        val vehicleId = activeVehicleId ?: return emptyList()
+        val tools = mutableListOf<ChatTool>()
+        if (aiAutoReminderEnabled) {
+            tools += buildAddReminderTool(userId, vehicleId)
+        }
+        tools += buildGetCostStatisticsForPeriodTool(vehicleId)
+        tools += buildGetCostsByCategoryTool(vehicleId)
+        return tools
+    }
+
+    private fun buildAddReminderTool(userId: String, vehicleId: String): ChatTool = ChatTool(
+        name = "addReminder",
+        description = "Creates a maintenance reminder for the user's active vehicle. Use when the user asks to be reminded about a future service or check. Returns success/failure as a string.",
+        parameters = listOf(
+            ChatToolParam("title", ChatToolParamType.STRING, "Short title (e.g. 'Oil change')."),
+            ChatToolParam("date", ChatToolParamType.STRING, "Due date in YYYY-MM-DD format. Must be in the future."),
+        ),
+        execute = { args -> executeAddReminder(userId, vehicleId, args) },
+    )
+
+    private suspend fun executeAddReminder(
+        userId: String,
+        vehicleId: String,
+        args: Map<String, String?>
+    ): String {
+        val title = args["title"]?.takeIf { it.isNotBlank() }
+            ?: return "Failure: 'title' is required."
+        val dateString = args["date"]?.takeIf { it.isNotBlank() }
+            ?: return "Failure: 'date' is required."
+        val dateMillis = try {
+            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dateString)?.time
+        } catch (_: Exception) {
+            null
+        } ?: return "Failure: 'date' is not a valid YYYY-MM-DD."
+        if (dateMillis < System.currentTimeMillis()) {
+            return "Failure: 'date' must be in the future."
+        }
+
+        var outcome = "Success: reminder \"$title\" added for $dateString."
+        addReminderUseCase(
+            AddReminderParams(
+                userId = userId,
+                vehicleId = vehicleId,
+                title = title,
+                dueDateMillis = dateMillis,
+            )
+        ).onFailure { error ->
+            outcome = "Failure: could not save reminder (${error::class.simpleName})."
+        }
+        return outcome
+    }
+
+    private fun buildGetCostStatisticsForPeriodTool(vehicleId: String): ChatTool = ChatTool(
+        name = "getCostStatisticsForPeriod",
+        description = "Returns the user's spending totals for this vehicle within a date range. Use when the user asks about spending in a specific period (e.g. \"this month\", \"last 30 days\", \"between March and May\"). If both dates are omitted, returns lifetime totals.",
+        parameters = listOf(
+            ChatToolParam("since", ChatToolParamType.STRING, "Inclusive start date in YYYY-MM-DD format. Omit for no lower bound.", required = false),
+            ChatToolParam("until", ChatToolParamType.STRING, "Inclusive end date in YYYY-MM-DD format. Omit for no upper bound.", required = false),
+        ),
+        execute = { args -> executeGetCostStatisticsForPeriod(vehicleId, args) },
+    )
+
+    private suspend fun executeGetCostStatisticsForPeriod(
+        vehicleId: String,
+        args: Map<String, String?>
+    ): String {
+        val sinceMillis = parseDayStartMillis(args["since"])
+        val untilMillis = parseDayEndMillis(args["until"])
+        if (args["since"]?.isNotBlank() == true && sinceMillis == null) {
+            return "Failure: 'since' is not a valid YYYY-MM-DD."
+        }
+        if (args["until"]?.isNotBlank() == true && untilMillis == null) {
+            return "Failure: 'until' is not a valid YYYY-MM-DD."
+        }
+
+        var outcome = "Failure: could not load statistics."
+        getCostStatisticsForPeriodUseCase(
+            GetCostStatisticsForPeriodParams(
+                vehicleId = vehicleId,
+                sinceMillis = sinceMillis,
+                untilMillis = untilMillis,
+            )
+        ).onSuccess { stats ->
+            val rangeLabel = formatRangeLabel(args["since"], args["until"])
+            outcome = if (stats.totalAmount == 0.0 && stats.amountByCategory.isEmpty()) {
+                "No costs logged $rangeLabel."
+            } else {
+                val perCategory = CostCategory.entries.joinToString(", ") { category ->
+                    "${category.name} ${money(stats.amountByCategory[category] ?: 0.0)}"
+                }
+                "Spending $rangeLabel: total ${money(stats.totalAmount)}. By category: $perCategory."
+            }
+        }.onFailure { error ->
+            outcome = "Failure: could not load statistics (${error::class.simpleName})."
+        }
+        return outcome
+    }
+
+    private fun buildGetCostsByCategoryTool(vehicleId: String): ChatTool = ChatTool(
+        name = "getCostsByCategory",
+        description = "Returns individual cost entries for a given category, optionally within a date range. Use when the user asks to see specific expenses (e.g. \"show me all my fuel receipts from April\", \"what brake-related services have I logged?\"). Returns up to 20 most recent matching entries.",
+        parameters = listOf(
+            ChatToolParam("category", ChatToolParamType.STRING, "One of: FUEL, SERVICE, TIRES, EQUIPMENT, OTHER."),
+            ChatToolParam("since", ChatToolParamType.STRING, "Inclusive start date in YYYY-MM-DD format. Omit for no lower bound.", required = false),
+            ChatToolParam("until", ChatToolParamType.STRING, "Inclusive end date in YYYY-MM-DD format. Omit for no upper bound.", required = false),
+        ),
+        execute = { args -> executeGetCostsByCategory(vehicleId, args) },
+    )
+
+    private suspend fun executeGetCostsByCategory(
+        vehicleId: String,
+        args: Map<String, String?>
+    ): String {
+        val categoryArg = args["category"]?.takeIf { it.isNotBlank() }
+            ?: return "Failure: 'category' is required."
+        val category = runCatching { CostCategory.valueOf(categoryArg.uppercase(Locale.ROOT)) }.getOrNull()
+            ?: return "Failure: 'category' must be one of ${CostCategory.entries.joinToString { it.name }}."
+        val sinceMillis = parseDayStartMillis(args["since"])
+        val untilMillis = parseDayEndMillis(args["until"])
+        if (args["since"]?.isNotBlank() == true && sinceMillis == null) {
+            return "Failure: 'since' is not a valid YYYY-MM-DD."
+        }
+        if (args["until"]?.isNotBlank() == true && untilMillis == null) {
+            return "Failure: 'until' is not a valid YYYY-MM-DD."
+        }
+
+        var outcome = "Failure: could not load costs."
+        getCostsHistoryUseCase(GetCostsHistoryParams(vehicleId)).onSuccess { allCosts ->
+            val matching = allCosts
+                .filter { it.category == category }
+                .filter { sinceMillis == null || it.dateMillis >= sinceMillis }
+                .filter { untilMillis == null || it.dateMillis <= untilMillis }
+                .sortedByDescending { it.dateMillis }
+            val rangeLabel = formatRangeLabel(args["since"], args["until"])
+            outcome = if (matching.isEmpty()) {
+                "No ${category.name} entries found $rangeLabel."
+            } else {
+                val shown = matching.take(20)
+                val isoFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                val lines = shown.joinToString("\n") { cost ->
+                    val descPart = cost.description?.takeIf { it.isNotBlank() }?.let { " — \"${it.take(60)}\"" }.orEmpty()
+                    "- ${isoFormat.format(Date(cost.dateMillis))}: ${money(cost.amount)}$descPart"
+                }
+                val header = if (matching.size > shown.size) {
+                    "Found ${matching.size} ${category.name} entries $rangeLabel (showing 20 most recent):"
+                } else {
+                    "Found ${matching.size} ${category.name} entries $rangeLabel:"
+                }
+                "$header\n$lines"
+            }
+        }.onFailure { error ->
+            outcome = "Failure: could not load costs (${error::class.simpleName})."
+        }
+        return outcome
+    }
+
+    private fun parseDayStartMillis(value: String?): Long? {
+        val s = value?.takeIf { it.isNotBlank() } ?: return null
+        return try {
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(s)?.time
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun parseDayEndMillis(value: String?): Long? {
+        val start = parseDayStartMillis(value) ?: return null
+        return start + 24L * 60L * 60L * 1000L - 1L
+    }
+
+    private fun formatRangeLabel(since: String?, until: String?): String = when {
+        !since.isNullOrBlank() && !until.isNullOrBlank() -> "between $since and $until"
+        !since.isNullOrBlank() -> "since $since"
+        !until.isNullOrBlank() -> "up to $until"
+        else -> "(lifetime)"
+    }
+
+    private fun money(amount: Double): String = String.format(Locale.getDefault(), "%.2f", amount)
 
 
     private fun addMessageToApiAndUi(message: ChatMessage) {

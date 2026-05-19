@@ -4,6 +4,7 @@ import com.example.domain.base.BaseUseCase
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.DataError
 import com.example.domain.model.chat.ChatMessage
+import com.example.domain.model.chat.ChatTool
 import com.example.domain.repository.IAiChatRepository
 import kotlinx.coroutines.CoroutineDispatcher
 
@@ -11,7 +12,8 @@ data class SendMessageParams(
     val prompt: String,
     val history: List<ChatMessage>,
     val systemInstruction: String,
-    val images: List<ByteArray> = emptyList()
+    val images: List<ByteArray> = emptyList(),
+    val tools: List<ChatTool> = emptyList(),
 )
 
 class SendMessageUseCase(
@@ -20,7 +22,6 @@ class SendMessageUseCase(
 ) : BaseUseCase<SendMessageParams, String>(dispatcher) {
 
     override suspend fun execute(params: SendMessageParams): AppResult<String> {
-        // Validacija: ne dozvoljavamo slanje praznih poruka!
         if (params.prompt.isBlank()) {
             return AppResult.Failure(DataError.Local.Validation.Generic)
         }
@@ -29,7 +30,8 @@ class SendMessageUseCase(
             prompt = params.prompt.trim(),
             history = params.history,
             systemInstruction = params.systemInstruction,
-            images = params.images
+            images = params.images,
+            tools = params.tools,
         )
     }
 }
