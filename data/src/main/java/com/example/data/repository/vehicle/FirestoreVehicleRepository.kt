@@ -59,6 +59,32 @@ class FirestoreVehicleRepository(
         }
     }
 
+    override suspend fun getVehicleById(vehicleId: String): AppResult<Vehicle> {
+        return safeFirebaseCall {
+            firestore.collection(VEHICLES_COLLECTION).document(vehicleId).get().await()
+        }.andThen { document ->
+            val dto = document.toObject(VehicleDto::class.java)
+                ?.let { if (it.id.isBlank()) it.copy(id = document.id) else it }
+                ?: return@andThen AppResult.Failure(DataError.Network.Serialization)
+            dto.toVehicle()
+        }
+    }
+
+    override suspend fun updateVehicle(vehicle: Vehicle): AppResult<Vehicle> {
+        return safeFirebaseCall {
+            firestore.collection(VEHICLES_COLLECTION).document(vehicle.id)
+                .set(vehicle.toVehicleDto())
+                .await()
+            vehicle
+        }
+    }
+
+    override suspend fun deleteVehicle(vehicleId: String): AppResult<Unit> {
+        return safeFirebaseCall {
+            firestore.collection(VEHICLES_COLLECTION).document(vehicleId).delete().await()
+        }
+    }
+
     override suspend fun setActiveVehicle(userId: String, vehicleId: String): AppResult<Unit> {
         val vehiclesCollection = firestore.collection(VEHICLES_COLLECTION)
 

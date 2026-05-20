@@ -11,6 +11,7 @@ import com.example.autoai.presentation.util.asUiText
 import com.example.domain.model.app.onFailure
 import com.example.domain.model.app.onSuccess
 import com.example.domain.usecase.user.GetCurrentUserUseCase
+import com.example.domain.usecase.vehicle.DeleteVehicleUseCase
 import com.example.domain.usecase.vehicle.GetVehiclesParams
 import com.example.domain.usecase.vehicle.GetVehiclesUseCase
 import com.example.domain.usecase.vehicle.SetActiveVehicleParams
@@ -21,6 +22,7 @@ class GarageViewModel(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val getVehiclesUseCase: GetVehiclesUseCase,
     private val setActiveVehicleUseCase: SetActiveVehicleUseCase,
+    private val deleteVehicleUseCase: DeleteVehicleUseCase,
     private val navigator: IAppNavigator,
 ) : BaseViewModel<GarageState, GarageEvent, GarageSideEffect>(GarageState()) {
 
@@ -32,7 +34,7 @@ class GarageViewModel(
 
     override fun onEvent(event: GarageEvent) {
         when (event) {
-            GarageEvent.OnAddVehicleClicked -> navigator.navigateTo(Route.AddVehicle)
+            GarageEvent.OnAddVehicleClicked -> navigator.navigateTo(Route.AddVehicle())
 
             GarageEvent.OnScreenResumed -> {
                 if (!state.value.isLoading && !state.value.isUpdatingActiveVehicle) {
@@ -47,6 +49,23 @@ class GarageViewModel(
             }
 
             is GarageEvent.OnNavItemSelected -> handleBottomNavigation(event.item)
+
+            is GarageEvent.OnVehicleLongPressed -> setState { it.copy(vehicleMenuId = event.vehicleId) }
+
+            GarageEvent.OnDismissVehicleMenu -> setState { it.copy(vehicleMenuId = null) }
+
+            is GarageEvent.OnEditVehicleClicked -> {
+                setState { it.copy(vehicleMenuId = null) }
+                navigator.navigateTo(Route.AddVehicle(vehicleId = event.vehicleId))
+            }
+
+            is GarageEvent.OnDeleteVehicleClicked -> setState {
+                it.copy(vehicleMenuId = null, pendingDeleteVehicleId = event.vehicleId)
+            }
+
+            GarageEvent.OnDismissDeleteDialog -> setState { it.copy(pendingDeleteVehicleId = null) }
+
+            GarageEvent.OnConfirmDeleteVehicle -> deletePendingVehicle()
         }
     }
 
@@ -120,6 +139,35 @@ class GarageViewModel(
                 setState { it.copy(isUpdatingActiveVehicle = false) }
                 emitSideEffect(GarageSideEffect.ShowError(error.asUiText()))
             }
+        }
+    }
+
+    private fun deletePendingVehicle() {
+        val vehicleId = state.value.pendingDeleteVehicleId ?: return
+        val userId = currentUserId ?: return
+        val wasActive = state.value.vehicles.firstOrNull { it.id == vehicleId }?.isActive == true
+        setState { it.copy(pendingDeleteVehicleId = null) }
+
+        viewModelScope.launch {
+            deleteVehicleUseCase(vehicleId)
+                .onSuccess {
+                    val remaining = state.value.vehicles.filter { it.id != vehicleId }
+                    setState { it.copy(vehicles = remaining) }
+                    if (wasActive && remaining.isNotEmpty()) {
+                        setActiveVehicleUseCase(
+                            SetActiveVehicleParams(
+                                userId = userId,
+                                vehicleId = remaining.first().id,
+                            )
+                        ).onFailure { error ->
+                            emitSideEffect(GarageSideEffect.ShowError(error.asUiText()))
+                        }
+                    }
+                    refreshVehicles()
+                }
+                .onFailure { error ->
+                    emitSideEffect(GarageSideEffect.ShowError(error.asUiText()))
+                }
         }
     }
 

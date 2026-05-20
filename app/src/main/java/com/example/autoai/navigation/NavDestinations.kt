@@ -16,7 +16,7 @@ sealed interface Route {
 
     @Serializable data object Garage : Route
 
-    @Serializable data object AddVehicle : Route
+    @Serializable data class AddVehicle(val vehicleId: String? = null) : Route
 
     @Serializable data object Costs : Route
     @Serializable data object Reminder : Route

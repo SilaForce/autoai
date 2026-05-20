@@ -322,6 +322,54 @@ object AppStrings {
             @Composable
             @ReadOnlyComposable
             get() = stringResource(activeVehicleContentDescriptionRes)
+
+        @StringRes
+        val vehicleMenuEditRes = R.string.garage_vehicle_menu_edit
+
+        @StringRes
+        val vehicleMenuDeleteRes = R.string.garage_vehicle_menu_delete
+
+        @StringRes
+        val vehicleDeleteDialogTitleRes = R.string.garage_vehicle_delete_dialog_title
+
+        @StringRes
+        val vehicleDeleteDialogMessageRes = R.string.garage_vehicle_delete_dialog_message
+
+        @StringRes
+        val vehicleDeleteConfirmRes = R.string.garage_vehicle_delete_confirm
+
+        @StringRes
+        val vehicleDeleteCancelRes = R.string.garage_vehicle_delete_cancel
+
+        val vehicleMenuEdit: String
+            @Composable
+            @ReadOnlyComposable
+            get() = stringResource(vehicleMenuEditRes)
+
+        val vehicleMenuDelete: String
+            @Composable
+            @ReadOnlyComposable
+            get() = stringResource(vehicleMenuDeleteRes)
+
+        val vehicleDeleteDialogTitle: String
+            @Composable
+            @ReadOnlyComposable
+            get() = stringResource(vehicleDeleteDialogTitleRes)
+
+        val vehicleDeleteDialogMessage: String
+            @Composable
+            @ReadOnlyComposable
+            get() = stringResource(vehicleDeleteDialogMessageRes)
+
+        val vehicleDeleteConfirm: String
+            @Composable
+            @ReadOnlyComposable
+            get() = stringResource(vehicleDeleteConfirmRes)
+
+        val vehicleDeleteCancel: String
+            @Composable
+            @ReadOnlyComposable
+            get() = stringResource(vehicleDeleteCancelRes)
     }
 
     object AddVehicle {
@@ -492,6 +540,30 @@ object AppStrings {
             @Composable
             @ReadOnlyComposable
             get() = stringResource(yearPickerConfirmRes)
+
+        @StringRes
+        val editTitleRes = R.string.edit_vehicle_title
+
+        @StringRes
+        val editSubtitleRes = R.string.edit_vehicle_subtitle
+
+        @StringRes
+        val editSaveButtonRes = R.string.edit_vehicle_save_button
+
+        val editTitle: String
+            @Composable
+            @ReadOnlyComposable
+            get() = stringResource(editTitleRes)
+
+        val editSubtitle: String
+            @Composable
+            @ReadOnlyComposable
+            get() = stringResource(editSubtitleRes)
+
+        val editSaveButton: String
+            @Composable
+            @ReadOnlyComposable
+            get() = stringResource(editSaveButtonRes)
     }
 
     object Reminders {

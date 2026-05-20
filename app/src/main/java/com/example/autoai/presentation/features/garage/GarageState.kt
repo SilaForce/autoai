@@ -9,4 +9,6 @@ data class GarageState(
     val isLoading: Boolean = false,
     val isUpdatingActiveVehicle: Boolean = false,
     val selectedNavItem: BottomNavItem = BottomNavItem.GARAGE,
+    val vehicleMenuId: String? = null,
+    val pendingDeleteVehicleId: String? = null,
 )

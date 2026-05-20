@@ -65,6 +65,16 @@
     <string name="garage_add_vehicle">Add Vehicle</string>
     <string name="garage_no_license_plate">No license plate</string>
     <string name="garage_active_vehicle_content_description">Active vehicle</string>
+    <string name="garage_vehicle_menu_edit">Edit</string>
+    <string name="garage_vehicle_menu_delete">Delete</string>
+    <string name="garage_vehicle_delete_dialog_title">Delete vehicle?</string>
+    <string name="garage_vehicle_delete_dialog_message">This vehicle will be permanently removed from your garage.</string>
+    <string name="garage_vehicle_delete_confirm">Delete</string>
+    <string name="garage_vehicle_delete_cancel">Cancel</string>
+
+    <string name="edit_vehicle_title">Edit vehicle</string>
+    <string name="edit_vehicle_subtitle">Update your vehicle details.</string>
+    <string name="edit_vehicle_save_button">Update Vehicle</string>
 
     <string name="add_vehicle_title">Add vehicle</string>
     <string name="add_vehicle_subtitle">Enter your vehicle details to add it to the garage.</string>

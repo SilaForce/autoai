@@ -2,8 +2,10 @@ package com.example.autoai.presentation.features.garage.add
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.example.autoai.R
 import com.example.autoai.base.BaseViewModel
+import com.example.autoai.navigation.Route
 import com.example.autoai.presentation.util.UiText
 import com.example.autoai.presentation.util.asUiText
 import com.example.domain.model.app.onFailure
@@ -14,20 +16,30 @@ import com.example.domain.usecase.vehicle.AddVehicleParams
 import com.example.domain.usecase.vehicle.AddVehicleUseCase
 import com.example.domain.usecase.vehicle.GetCarMakesUseCase
 import com.example.domain.usecase.vehicle.GetModelsForMakeUseCase
+import com.example.domain.usecase.vehicle.GetVehicleByIdUseCase
+import com.example.domain.usecase.vehicle.UpdateVehicleParams
+import com.example.domain.usecase.vehicle.UpdateVehicleUseCase
 import kotlinx.coroutines.launch
 
 class AddVehicleViewModel(
     private val savedStateHandle: SavedStateHandle,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val addVehicleUseCase: AddVehicleUseCase,
+    private val updateVehicleUseCase: UpdateVehicleUseCase,
+    private val getVehicleByIdUseCase: GetVehicleByIdUseCase,
     private val getCarMakesUseCase: GetCarMakesUseCase,
-    private val getModelsForMakeUseCase: GetModelsForMakeUseCase
+    private val getModelsForMakeUseCase: GetModelsForMakeUseCase,
 ) : BaseViewModel<AddVehicleState, AddVehicleEvent, AddVehicleSideEffect>(
     createInitialState(savedStateHandle)
 ) {
 
+    private val vehicleId: String? = savedStateHandle.toRoute<Route.AddVehicle>().vehicleId
+
     init {
         loadMakes()
+        if (vehicleId != null) {
+            loadVehicleForEdit(vehicleId)
+        }
     }
 
     override fun onEvent(event: AddVehicleEvent) {
@@ -50,6 +62,37 @@ class AddVehicleViewModel(
             is AddVehicleEvent.OnModelDropdownExpandedChange ->
                 setState { it.copy(isModelsDropdownExpanded = event.expanded) }
             is AddVehicleEvent.OnModelSelected -> handleModelSelected(event.model)
+        }
+    }
+
+    private fun loadVehicleForEdit(id: String) {
+        setState { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            getVehicleByIdUseCase(id)
+                .onSuccess { vehicle ->
+                    val fuelType = vehicle.fuelType
+                    setState { currentState ->
+                        currentState.copy(
+                            isLoading = false,
+                            isEditMode = true,
+                            originalIsActive = vehicle.isActive,
+                            make = vehicle.make,
+                            model = vehicle.model,
+                            year = vehicle.year.toString(),
+                            mileage = vehicle.mileage?.toString() ?: "",
+                            licensePlate = vehicle.licensePlate ?: "",
+                            selectedFuelType = fuelType,
+                            fuelTypeOptions = buildFuelTypeOptions(fuelType),
+                            isMakeSelected = true,
+                            isFormDirty = false,
+                        )
+                    }
+                    loadModelsForMake(vehicle.make)
+                }
+                .onFailure { error ->
+                    setState { it.copy(isLoading = false) }
+                    emitSideEffect(AddVehicleSideEffect.ShowError(error.asUiText()))
+                }
         }
     }
 
@@ -230,22 +273,44 @@ class AddVehicleViewModel(
         viewModelScope.launch {
             getCurrentUserUseCase(Unit)
                 .onSuccess { user ->
-                    addVehicleUseCase(
-                        AddVehicleParams(
-                            userId = user.id,
-                            make = currentState.make,
-                            model = currentState.model,
-                            year = parsedYear,
-                            fuelType = selectedFuelType,
-                            mileage = parsedMileage,
-                            licensePlate = currentState.licensePlate,
-                        )
-                    ).onSuccess {
-                        setState { it.copy(isLoading = false, isFormDirty = false) }
-                        emitSideEffect(AddVehicleSideEffect.NavigateBack)
-                    }.onFailure { error ->
-                        setState { it.copy(isLoading = false) }
-                        emitSideEffect(AddVehicleSideEffect.ShowError(error.asUiText()))
+                    if (vehicleId != null) {
+                        updateVehicleUseCase(
+                            UpdateVehicleParams(
+                                vehicleId = vehicleId,
+                                userId = user.id,
+                                make = currentState.make,
+                                model = currentState.model,
+                                year = parsedYear,
+                                fuelType = selectedFuelType,
+                                mileage = parsedMileage,
+                                licensePlate = currentState.licensePlate,
+                                isActive = currentState.originalIsActive,
+                            )
+                        ).onSuccess {
+                            setState { it.copy(isLoading = false, isFormDirty = false) }
+                            emitSideEffect(AddVehicleSideEffect.NavigateBack)
+                        }.onFailure { error ->
+                            setState { it.copy(isLoading = false) }
+                            emitSideEffect(AddVehicleSideEffect.ShowError(error.asUiText()))
+                        }
+                    } else {
+                        addVehicleUseCase(
+                            AddVehicleParams(
+                                userId = user.id,
+                                make = currentState.make,
+                                model = currentState.model,
+                                year = parsedYear,
+                                fuelType = selectedFuelType,
+                                mileage = parsedMileage,
+                                licensePlate = currentState.licensePlate,
+                            )
+                        ).onSuccess {
+                            setState { it.copy(isLoading = false, isFormDirty = false) }
+                            emitSideEffect(AddVehicleSideEffect.NavigateBack)
+                        }.onFailure { error ->
+                            setState { it.copy(isLoading = false) }
+                            emitSideEffect(AddVehicleSideEffect.ShowError(error.asUiText()))
+                        }
                     }
                 }
                 .onFailure { error ->

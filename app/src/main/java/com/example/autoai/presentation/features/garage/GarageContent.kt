@@ -13,11 +13,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -77,6 +84,7 @@ fun GarageContent(
                                 vehiclePlate = vehicle.subtitle.asString(),
                                 isActive = vehicle.isActive,
                                 onClick = {},
+                                onLongClick = {},
                             )
                         }
                     }
@@ -145,12 +153,46 @@ fun GarageContent(
                                 items = state.vehicles,
                                 key = { vehicle -> vehicle.id },
                             ) { vehicle ->
-                                VehicleCard(
-                                    vehicleName = vehicle.title.asString(),
-                                    vehiclePlate = vehicle.subtitle.asString(),
-                                    isActive = vehicle.isActive,
-                                    onClick = { onEvent(GarageEvent.OnVehicleSelected(vehicle.id)) },
-                                )
+                                Box {
+                                    VehicleCard(
+                                        vehicleName = vehicle.title.asString(),
+                                        vehiclePlate = vehicle.subtitle.asString(),
+                                        isActive = vehicle.isActive,
+                                        onClick = { onEvent(GarageEvent.OnVehicleSelected(vehicle.id)) },
+                                        onLongClick = { onEvent(GarageEvent.OnVehicleLongPressed(vehicle.id)) },
+                                    )
+                                    DropdownMenu(
+                                        expanded = state.vehicleMenuId == vehicle.id,
+                                        onDismissRequest = { onEvent(GarageEvent.OnDismissVehicleMenu) },
+                                    ) {
+                                        DropdownMenuItem(
+                                            text = { Text(AppStrings.Garage.vehicleMenuEdit) },
+                                            onClick = { onEvent(GarageEvent.OnEditVehicleClicked(vehicle.id)) },
+                                            leadingIcon = {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.Edit,
+                                                    contentDescription = null,
+                                                )
+                                            },
+                                        )
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    text = AppStrings.Garage.vehicleMenuDelete,
+                                                    color = MaterialTheme.colorScheme.error,
+                                                )
+                                            },
+                                            onClick = { onEvent(GarageEvent.OnDeleteVehicleClicked(vehicle.id)) },
+                                            leadingIcon = {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.Delete,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.error,
+                                                )
+                                            },
+                                        )
+                                    }
+                                }
                             }
 
                             item {
@@ -173,6 +215,27 @@ fun GarageContent(
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.TopCenter),
+        )
+    }
+
+    if (state.pendingDeleteVehicleId != null) {
+        AlertDialog(
+            onDismissRequest = { onEvent(GarageEvent.OnDismissDeleteDialog) },
+            title = { Text(AppStrings.Garage.vehicleDeleteDialogTitle) },
+            text = { Text(AppStrings.Garage.vehicleDeleteDialogMessage) },
+            confirmButton = {
+                TextButton(onClick = { onEvent(GarageEvent.OnConfirmDeleteVehicle) }) {
+                    Text(
+                        text = AppStrings.Garage.vehicleDeleteConfirm,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onEvent(GarageEvent.OnDismissDeleteDialog) }) {
+                    Text(AppStrings.Garage.vehicleDeleteCancel)
+                }
+            },
         )
     }
 }

@@ -25,10 +25,13 @@ import com.example.domain.usecase.reminder.GetRemindersUseCase
 import com.example.domain.usecase.reminder.UpdateReminderUseCase
 import com.example.domain.usecase.user.LogoutUseCase
 import com.example.domain.usecase.vehicle.AddVehicleUseCase
+import com.example.domain.usecase.vehicle.DeleteVehicleUseCase
 import com.example.domain.usecase.vehicle.GetCarMakesUseCase
 import com.example.domain.usecase.vehicle.GetModelsForMakeUseCase
+import com.example.domain.usecase.vehicle.GetVehicleByIdUseCase
 import com.example.domain.usecase.vehicle.GetVehiclesUseCase
 import com.example.domain.usecase.vehicle.SetActiveVehicleUseCase
+import com.example.domain.usecase.vehicle.UpdateVehicleUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
@@ -45,6 +48,9 @@ val domainModule = module {
     factoryOf(::CheckSessionUseCase)
     factoryOf(::AddVehicleUseCase)
     factoryOf(::GetVehiclesUseCase)
+    factoryOf(::GetVehicleByIdUseCase)
+    factoryOf(::UpdateVehicleUseCase)
+    factoryOf(::DeleteVehicleUseCase)
     factoryOf(::SetActiveVehicleUseCase)
     factoryOf(::AddCostUseCase)
     factoryOf(::GetCostsHistoryUseCase)

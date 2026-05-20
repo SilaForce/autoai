@@ -53,6 +53,7 @@ import com.example.autoai.presentation.features.garage.add.components.FuelTypeSe
 import com.example.autoai.presentation.features.garage.add.components.YearPickerDialog
 import com.example.autoai.presentation.theme.AutoAITheme
 import androidx.compose.material3.MaterialTheme
+import java.time.Year
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,7 +69,7 @@ fun AddVehicleContent(
     }
 
     LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
+        if (!state.isEditMode) focusRequester.requestFocus()
     }
 
     Box(
@@ -99,7 +100,7 @@ fun AddVehicleContent(
                 }
 
                 Text(
-                    text = AppStrings.AddVehicle.title,
+                    text = if (state.isEditMode) AppStrings.AddVehicle.editTitle else AppStrings.AddVehicle.title,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -109,7 +110,7 @@ fun AddVehicleContent(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = AppStrings.AddVehicle.subtitle,
+                text = if (state.isEditMode) AppStrings.AddVehicle.editSubtitle else AppStrings.AddVehicle.subtitle,
                 fontSize = 15.sp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
             )
@@ -258,7 +259,7 @@ fun AddVehicleContent(
             Spacer(modifier = Modifier.height(24.dp))
 
             MainButton(
-                text = AppStrings.AddVehicle.saveButton,
+                text = if (state.isEditMode) AppStrings.AddVehicle.editSaveButton else AppStrings.AddVehicle.saveButton,
                 onClick = { onEvent(AddVehicleEvent.OnSaveClicked) },
                 enabled = !state.isLoading,
             )
@@ -300,6 +301,7 @@ fun AddVehicleContent(
                 title = AppStrings.AddVehicle.yearPickerTitle,
                 cancelText = AppStrings.AddVehicle.yearPickerCancel,
                 confirmText = AppStrings.AddVehicle.yearPickerConfirm,
+                initialYear = state.year.toIntOrNull() ?: Year.now().value,
             )
         }
     }

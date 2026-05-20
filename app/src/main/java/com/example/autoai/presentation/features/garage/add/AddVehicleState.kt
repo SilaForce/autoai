@@ -31,4 +31,7 @@ data class AddVehicleState(
 
     // Drives whether the Model field is enabled
     val isMakeSelected: Boolean = false,
+
+    val isEditMode: Boolean = false,
+    val originalIsActive: Boolean = false,
 )
