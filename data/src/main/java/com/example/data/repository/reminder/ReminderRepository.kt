@@ -80,13 +80,13 @@ class FirestoreReminderRepository(
         }
     }
 
-    override suspend fun getActiveRemindersForUser(userId: String): AppResult<List<Reminder>> {
-        // Query by userId only — filter isCompleted in memory
+    override suspend fun getActiveRemindersForVehicle(vehicleId: String): AppResult<List<Reminder>> {
+        // Query by vehicleId only — filter isCompleted in memory
         // because old documents may not have the isCompleted field at all,
         // and Firestore's whereEqualTo won't match missing fields.
         return safeFirebaseCall {
             firestore.collection(REMINDERS_COLLECTION)
-                .whereEqualTo(FIELD_USER_ID, userId)
+                .whereEqualTo(FIELD_VEHICLE_ID, vehicleId)
                 .get()
                 .await()
         }.andThen { querySnapshot ->
@@ -116,8 +116,6 @@ class FirestoreReminderRepository(
     private companion object {
         const val REMINDERS_COLLECTION = "reminders"
         const val FIELD_VEHICLE_ID = "vehicleId"
-        const val FIELD_USER_ID = "userId"
-        const val FIELD_IS_COMPLETED = "isCompleted"
         const val FIELD_DUE_DATE = "dueDateMillis"
     }
 }
