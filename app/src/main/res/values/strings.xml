@@ -134,6 +134,17 @@
     <string name="costs_no_active_vehicle_title">No active vehicle</string>
     <string name="costs_no_active_vehicle_subtitle">Select an active vehicle in the Garage.</string>
 
+    <string name="costs_menu_edit">Edit</string>
+    <string name="costs_menu_delete">Delete</string>
+    <string name="costs_edit_sheet_title">Edit cost</string>
+    <string name="costs_update_button">Update Cost</string>
+    <string name="costs_update_success">Cost updated successfully.</string>
+    <string name="costs_delete_dialog_title">Delete cost?</string>
+    <string name="costs_delete_dialog_message">This cost entry will be permanently removed.</string>
+    <string name="costs_delete_confirm">Delete</string>
+    <string name="costs_delete_cancel">Cancel</string>
+    <string name="costs_delete_success">Cost deleted.</string>
+
     <string name="chat_title">AI Advice</string>
     <string name="chat_subtitle">Online</string>
     <string name="chat_placeholder">Ask something...</string>

@@ -91,6 +91,21 @@ class FirestoreCostRepository(
         }
     }
 
+    override suspend fun updateCost(cost: Cost): AppResult<Cost> {
+        return safeFirebaseCall {
+            firestore.collection(COSTS_COLLECTION).document(cost.id)
+                .set(cost.toCostDto())
+                .await()
+            cost
+        }
+    }
+
+    override suspend fun deleteCost(costId: String): AppResult<Unit> {
+        return safeFirebaseCall {
+            firestore.collection(COSTS_COLLECTION).document(costId).delete().await()
+        }
+    }
+
     private companion object {
         const val COSTS_COLLECTION = "costs"
         const val FIELD_VEHICLE_ID = "vehicleId"

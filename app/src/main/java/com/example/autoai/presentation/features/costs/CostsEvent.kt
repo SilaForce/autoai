@@ -13,5 +13,12 @@ sealed interface CostsEvent {
     data class OnDescriptionChanged(val value: String) : CostsEvent
     data object OnSaveCostClicked : CostsEvent
     data class OnNavItemSelected(val item: BottomNavItem) : CostsEvent
+
+    data class OnCostLongPressed(val costId: String) : CostsEvent
+    data object OnDismissCostMenu : CostsEvent
+    data class OnEditCostClicked(val costId: String) : CostsEvent
+    data class OnDeleteCostClicked(val costId: String) : CostsEvent
+    data object OnConfirmDeleteCost : CostsEvent
+    data object OnDismissDeleteDialog : CostsEvent
 }
 

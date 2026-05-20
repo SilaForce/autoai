@@ -20,5 +20,11 @@ data class CostsState(
     val locationInput: String = "",
     val descriptionInput: String = "",
     val isSaving: Boolean = false,
+
+    // Edit/Delete
+    val costMenuId: String? = null,
+    val pendingDeleteCostId: String? = null,
+    val editingCostId: String? = null,
+    val editingCostOriginalDateMillis: Long? = null,
 )
 

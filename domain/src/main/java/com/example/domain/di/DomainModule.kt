@@ -15,10 +15,12 @@ import com.example.domain.usecase.user.DeleteUserUseCase
 import com.example.domain.usecase.user.GetCurrentUserUseCase
 import com.example.domain.usecase.user.UpdateUserUseCase
 import com.example.domain.usecase.cost.AddCostUseCase
+import com.example.domain.usecase.cost.DeleteCostUseCase
 import com.example.domain.usecase.cost.GetAllCostsByUserIdUseCase
 import com.example.domain.usecase.cost.GetCostsHistoryUseCase
 import com.example.domain.usecase.cost.GetCostStatisticsForPeriodUseCase
 import com.example.domain.usecase.cost.GetCostStatisticsUseCase
+import com.example.domain.usecase.cost.UpdateCostUseCase
 import com.example.domain.usecase.reminder.AddReminderUseCase
 import com.example.domain.usecase.reminder.DeleteReminderUseCase
 import com.example.domain.usecase.reminder.GetRemindersUseCase
@@ -53,6 +55,8 @@ val domainModule = module {
     factoryOf(::DeleteVehicleUseCase)
     factoryOf(::SetActiveVehicleUseCase)
     factoryOf(::AddCostUseCase)
+    factoryOf(::UpdateCostUseCase)
+    factoryOf(::DeleteCostUseCase)
     factoryOf(::GetCostsHistoryUseCase)
     factoryOf(::GetCostStatisticsUseCase)
     factoryOf(::GetCostStatisticsForPeriodUseCase)

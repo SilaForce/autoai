@@ -19,9 +19,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -33,6 +38,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -135,7 +141,7 @@ fun CostsContent(
                     }
                 } else {
                     when (state.selectedTab) {
-                        CostsTab.HISTORY -> HistoryTab(state = state)
+                        CostsTab.HISTORY -> HistoryTab(state = state, onEvent = onEvent)
                         CostsTab.STATISTICS -> StatisticsTab(state = state)
                     }
                 }
@@ -156,6 +162,27 @@ fun CostsContent(
                 AddCostSheetContent(state = state, onEvent = onEvent)
             }
         }
+    }
+
+    if (state.pendingDeleteCostId != null) {
+        AlertDialog(
+            onDismissRequest = { onEvent(CostsEvent.OnDismissDeleteDialog) },
+            title = { Text(AppStrings.Costs.deleteDialogTitle) },
+            text = { Text(AppStrings.Costs.deleteDialogMessage) },
+            confirmButton = {
+                TextButton(onClick = { onEvent(CostsEvent.OnConfirmDeleteCost) }) {
+                    Text(
+                        text = AppStrings.Costs.deleteConfirm,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onEvent(CostsEvent.OnDismissDeleteDialog) }) {
+                    Text(AppStrings.Costs.deleteCancel)
+                }
+            },
+        )
     }
 }
 
@@ -204,6 +231,7 @@ private fun CostsTabRow(
 @Composable
 private fun HistoryTab(
     state: CostsState,
+    onEvent: (CostsEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (state.history.isEmpty()) {
@@ -237,12 +265,46 @@ private fun HistoryTab(
                     items = state.history,
                     key = { _, item -> item.id },
                 ) { index, item ->
-                    CostHistoryCard(
-                        title = item.title,
-                        subtitle = item.subtitle,
-                        amount = item.amount,
-                        categoryIcon = item.categoryIcon,
-                    )
+                    Box {
+                        CostHistoryCard(
+                            title = item.title,
+                            subtitle = item.subtitle,
+                            amount = item.amount,
+                            categoryIcon = item.categoryIcon,
+                            onLongClick = { onEvent(CostsEvent.OnCostLongPressed(item.id)) },
+                        )
+                        DropdownMenu(
+                            expanded = state.costMenuId == item.id,
+                            onDismissRequest = { onEvent(CostsEvent.OnDismissCostMenu) },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(AppStrings.Costs.menuEdit) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Edit,
+                                        contentDescription = null,
+                                    )
+                                },
+                                onClick = { onEvent(CostsEvent.OnEditCostClicked(item.id)) },
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = AppStrings.Costs.menuDelete,
+                                        color = MaterialTheme.colorScheme.error,
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Delete,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                    )
+                                },
+                                onClick = { onEvent(CostsEvent.OnDeleteCostClicked(item.id)) },
+                            )
+                        }
+                    }
                     if (index < state.history.lastIndex) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     }
@@ -342,7 +404,7 @@ private fun AddCostSheetContent(
             .imePadding(),
     ) {
         Text(
-            text = AppStrings.Costs.addSheetTitle,
+            text = if (state.editingCostId != null) AppStrings.Costs.editSheetTitle else AppStrings.Costs.addSheetTitle,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
@@ -400,7 +462,7 @@ private fun AddCostSheetContent(
         Spacer(modifier = Modifier.height(24.dp))
 
         MainButton(
-            text = AppStrings.Costs.saveButton,
+            text = if (state.editingCostId != null) AppStrings.Costs.updateButton else AppStrings.Costs.saveButton,
             onClick = { onEvent(CostsEvent.OnSaveCostClicked) },
             enabled = !state.isSaving,
         )

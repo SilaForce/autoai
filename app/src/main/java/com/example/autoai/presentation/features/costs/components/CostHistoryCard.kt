@@ -1,6 +1,8 @@
 package com.example.autoai.presentation.features.costs.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.MaterialTheme
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CostHistoryCard(
     title: String,
@@ -28,9 +31,12 @@ fun CostHistoryCard(
     amount: String,
     categoryIcon: ImageVector,
     modifier: Modifier = Modifier,
+    onLongClick: () -> Unit = {},
 ) {
     Row(
-        modifier = modifier.padding(vertical = 12.dp),
+        modifier = modifier
+            .combinedClickable(onClick = {}, onLongClick = onLongClick)
+            .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(

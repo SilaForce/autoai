@@ -680,6 +680,24 @@ object AppStrings {
         val statsByCategoryLabel: String @Composable @ReadOnlyComposable get() = stringResource(statsByCategoryLabelRes)
         val noActiveVehicleTitle: String @Composable @ReadOnlyComposable get() = stringResource(noActiveVehicleTitleRes)
         val noActiveVehicleSubtitle: String @Composable @ReadOnlyComposable get() = stringResource(noActiveVehicleSubtitleRes)
+
+        @StringRes val menuEditRes = R.string.costs_menu_edit
+        @StringRes val menuDeleteRes = R.string.costs_menu_delete
+        @StringRes val editSheetTitleRes = R.string.costs_edit_sheet_title
+        @StringRes val updateButtonRes = R.string.costs_update_button
+        @StringRes val deleteDialogTitleRes = R.string.costs_delete_dialog_title
+        @StringRes val deleteDialogMessageRes = R.string.costs_delete_dialog_message
+        @StringRes val deleteConfirmRes = R.string.costs_delete_confirm
+        @StringRes val deleteCancelRes = R.string.costs_delete_cancel
+
+        val menuEdit: String @Composable @ReadOnlyComposable get() = stringResource(menuEditRes)
+        val menuDelete: String @Composable @ReadOnlyComposable get() = stringResource(menuDeleteRes)
+        val editSheetTitle: String @Composable @ReadOnlyComposable get() = stringResource(editSheetTitleRes)
+        val updateButton: String @Composable @ReadOnlyComposable get() = stringResource(updateButtonRes)
+        val deleteDialogTitle: String @Composable @ReadOnlyComposable get() = stringResource(deleteDialogTitleRes)
+        val deleteDialogMessage: String @Composable @ReadOnlyComposable get() = stringResource(deleteDialogMessageRes)
+        val deleteConfirm: String @Composable @ReadOnlyComposable get() = stringResource(deleteConfirmRes)
+        val deleteCancel: String @Composable @ReadOnlyComposable get() = stringResource(deleteCancelRes)
     }
 
     object Profile {
