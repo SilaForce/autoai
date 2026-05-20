@@ -34,6 +34,7 @@ fun DataError.asUiText(): UiText = when (this) {
     is DataError.Network.Http                       -> when (code) {
         401  -> UiText.StringResource(R.string.error_unauthorized)
         404  -> UiText.StringResource(R.string.error_account_not_found)
+        429  -> UiText.StringResource(R.string.error_rate_limited)
         else -> UiText.StringResource(R.string.error_unknown)
     }
 }

@@ -9,6 +9,7 @@
     <string name="error_unauthorized">Invalid password</string>
     <string name="error_timeout">Request timed out. Please try again.</string>
     <string name="error_unknown">Something went wrong. Please try again.</string>
+    <string name="error_rate_limited">You\'re sending messages too fast. Please wait a moment and try again.</string>
 
     <!-- Validation errors -->
     <string name="error_field_empty">Please fill in all required fields.</string>
@@ -127,6 +128,16 @@
     <string name="chat_subtitle">Online</string>
     <string name="chat_placeholder">Ask something...</string>
     <string name="chat_send_description">Send message</string>
+    <string name="chat_default_title">AI Chat</string>
+    <string name="chat_drawer_new_chat">New chat</string>
+    <string name="chat_drawer_open_history">Open chat history</string>
+    <string name="chat_drawer_empty">No previous chats yet</string>
+    <string name="chat_drawer_header">Conversations</string>
+    <string name="chat_thread_menu_delete">Delete</string>
+    <string name="chat_delete_dialog_title">Delete chat?</string>
+    <string name="chat_delete_dialog_message">This conversation will be permanently removed.</string>
+    <string name="chat_delete_confirm">Delete</string>
+    <string name="chat_delete_cancel">Cancel</string>
 
     <string name="reminders_title">Reminders</string>
     <string name="reminders_empty_title">You have no active reminders.</string>

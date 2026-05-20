@@ -7,9 +7,11 @@ import com.example.autoai.navigation.Route
 import com.example.autoai.presentation.components.BottomNavItem
 import com.example.autoai.presentation.util.ImageUtils
 import com.example.autoai.presentation.util.asUiText
+import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.onFailure
 import com.example.domain.model.app.onSuccess
 import com.example.domain.model.chat.ChatMessage
+import com.example.domain.model.chat.ChatThread
 import com.example.domain.model.chat.ChatTool
 import com.example.domain.model.chat.ChatToolParam
 import com.example.domain.model.chat.ChatToolParamType
@@ -18,8 +20,20 @@ import com.example.domain.model.cost.Cost
 import com.example.domain.model.cost.CostCategory
 import com.example.domain.model.cost.CostStatistics
 import com.example.domain.repository.IPreferencesRepository
+import com.example.domain.usecase.chat.CreateChatThreadParams
+import com.example.domain.usecase.chat.CreateChatThreadUseCase
+import com.example.domain.usecase.chat.DeleteChatThreadParams
+import com.example.domain.usecase.chat.DeleteChatThreadUseCase
+import com.example.domain.usecase.chat.LoadChatHistoryParams
+import com.example.domain.usecase.chat.LoadChatHistoryUseCase
+import com.example.domain.usecase.chat.LoadChatThreadsParams
+import com.example.domain.usecase.chat.LoadChatThreadsUseCase
+import com.example.domain.usecase.chat.SaveChatMessageParams
+import com.example.domain.usecase.chat.SaveChatMessageUseCase
 import com.example.domain.usecase.chat.SendMessageParams
 import com.example.domain.usecase.chat.SendMessageUseCase
+import com.example.domain.usecase.chat.UpdateChatThreadParams
+import com.example.domain.usecase.chat.UpdateChatThreadUseCase
 import com.example.domain.usecase.cost.GetCostStatisticsForPeriodParams
 import com.example.domain.usecase.cost.GetCostStatisticsForPeriodUseCase
 import com.example.domain.usecase.cost.GetCostStatisticsParams
@@ -47,10 +61,21 @@ class AiChatViewModel(
     private val getCostsHistoryUseCase: GetCostsHistoryUseCase,
     private val getCostStatisticsUseCase: GetCostStatisticsUseCase,
     private val getCostStatisticsForPeriodUseCase: GetCostStatisticsForPeriodUseCase,
+    private val loadChatHistoryUseCase: LoadChatHistoryUseCase,
+    private val saveChatMessageUseCase: SaveChatMessageUseCase,
+    private val loadChatThreadsUseCase: LoadChatThreadsUseCase,
+    private val createChatThreadUseCase: CreateChatThreadUseCase,
+    private val updateChatThreadUseCase: UpdateChatThreadUseCase,
+    private val deleteChatThreadUseCase: DeleteChatThreadUseCase,
     private val preferencesRepository: IPreferencesRepository,
     private val addReminderUseCase: AddReminderUseCase,
     private val navigator: IAppNavigator
 ) : BaseViewModel<AiChatState, AiChatEvent, AiChatSideEffect>(AiChatState()) {
+
+    private companion object {
+        const val AI_CONTEXT_MESSAGES = 30
+        const val WELCOME_TEXT = "Dobar dan! Ja sam tvoj lični AI mehaničar. Kako ti mogu pomoći danas?"
+    }
 
     // Čuvamo čiste Domain modele u ViewModelu za historiju razgovora
     private val apiChatHistory = mutableListOf<ChatMessage>()
@@ -64,20 +89,65 @@ class AiChatViewModel(
 
     private var currentUserId: String? = null
 
+    private var currentThreadId: String? = null
+
     init {
-        val welcomeMessage = ChatMessage(
-            text = "Dobar dan! Ja sam tvoj lični AI mehaničar. Kako ti mogu pomoći danas?",
-            role = MessageRole.AI
-        )
-        setState { it.copy(messages = listOf(welcomeMessage.toUiModel())) }
+        renderUiState()
 
         viewModelScope.launch { refreshSystemInstruction() }
+        viewModelScope.launch { hydrateHistory() }
 
         viewModelScope.launch {
             preferencesRepository.isAiAutoRemindersEnabled.collect { enabled ->
                 aiAutoReminderEnabled = enabled
             }
         }
+    }
+
+    private suspend fun hydrateHistory() {
+        getCurrentUserUseCase(Unit).onSuccess { user ->
+            currentUserId = user.id
+            // Always begin with a fresh, empty chat — the user can pick a past thread from the sidebar.
+            refreshThreadList(user.id)
+            apiChatHistory.clear()
+            currentThreadId = null
+            setState { it.copy(currentThreadId = null, currentThreadTitle = null) }
+            renderUiState()
+        }
+    }
+
+    private suspend fun refreshThreadList(userId: String): AppResult<List<ChatThread>> {
+        val result = loadChatThreadsUseCase(LoadChatThreadsParams(userId))
+        result.onSuccess { threads ->
+            setState { it.copy(threads = threads.map { thread -> thread.toUiModel() }) }
+        }
+        return result
+    }
+
+    private suspend fun loadThreadMessages(userId: String, thread: ChatThread) {
+        currentThreadId = thread.id
+        setState { it.copy(currentThreadId = thread.id, currentThreadTitle = thread.title) }
+        loadChatHistoryUseCase(LoadChatHistoryParams(userId, thread.id)).onSuccess { messages ->
+            apiChatHistory.clear()
+            apiChatHistory.addAll(messages)
+            renderUiState()
+        }
+    }
+
+    private fun renderUiState() {
+        val ui = if (apiChatHistory.isEmpty()) {
+            listOf(
+                ChatMessageUi(
+                    id = "welcome_msg",
+                    text = WELCOME_TEXT,
+                    isFromUser = false,
+                    formattedTime = ""
+                )
+            )
+        } else {
+            apiChatHistory.map { it.toUiModel() }
+        }
+        setState { it.copy(messages = ui) }
     }
 
     override fun onEvent(event: AiChatEvent) {
@@ -103,7 +173,65 @@ class AiChatViewModel(
                             .apply { removeAt(event.index) })
                 }
             }
+
+            is AiChatEvent.OnSelectThread -> selectThread(event.threadId)
+            AiChatEvent.OnStartNewChat -> startNewChat()
+            is AiChatEvent.OnLongPressThread ->
+                setState { it.copy(threadMenuAnchorId = event.threadId) }
+
+            AiChatEvent.OnDismissThreadMenu ->
+                setState { it.copy(threadMenuAnchorId = null) }
+
+            is AiChatEvent.OnDeleteThreadClicked ->
+                setState {
+                    it.copy(
+                        threadMenuAnchorId = null,
+                        pendingDeleteThreadId = event.threadId,
+                    )
+                }
+
+            AiChatEvent.OnDismissDeleteDialog ->
+                setState { it.copy(pendingDeleteThreadId = null) }
+
+            AiChatEvent.OnConfirmDeleteThread -> deletePendingThread()
         }
+    }
+
+    private fun deletePendingThread() {
+        val threadId = state.value.pendingDeleteThreadId ?: return
+        val userId = currentUserId ?: return
+        setState { it.copy(pendingDeleteThreadId = null) }
+
+        viewModelScope.launch {
+            deleteChatThreadUseCase(DeleteChatThreadParams(threadId, userId))
+                .onSuccess {
+                    if (currentThreadId == threadId) {
+                        startNewChat()
+                    }
+                    refreshThreadList(userId)
+                }
+                .onFailure { error ->
+                    emitSideEffect(AiChatSideEffect.ShowError(error.asUiText()))
+                }
+        }
+    }
+
+    private fun selectThread(threadId: String) {
+        val userId = currentUserId ?: return
+        viewModelScope.launch {
+            loadChatThreadsUseCase(LoadChatThreadsParams(userId)).onSuccess { threads ->
+                val thread = threads.firstOrNull { it.id == threadId } ?: return@onSuccess
+                setState { it.copy(threads = threads.map { t -> t.toUiModel() }) }
+                loadThreadMessages(userId, thread)
+            }
+        }
+    }
+
+    private fun startNewChat() {
+        currentThreadId = null
+        apiChatHistory.clear()
+        setState { it.copy(currentThreadId = null, currentThreadTitle = null) }
+        renderUiState()
     }
 
     private suspend fun refreshSystemInstruction() {
@@ -213,16 +341,38 @@ class AiChatViewModel(
 
         setState { it.copy(inputText = "", isAiTyping = true, selectedImages = emptyList()) }
 
-        val userMessage = ChatMessage(text = prompt, role = MessageRole.USER, images = images)
-
-        // 3. We take a snapshot of the current API history BEFORE adding the new message
-        val previousApiHistory = apiChatHistory.toList()
-
-        // Add to both API history and UI
-        addMessageToApiAndUi(userMessage)
-
         viewModelScope.launch {
             refreshSystemInstruction()
+
+            // Lazy thread creation — if no active thread, spin one up now using the prompt as title.
+            val uid = currentUserId
+            if (uid.isNullOrBlank()) {
+                setState { it.copy(isAiTyping = false) }
+                return@launch
+            }
+
+            val threadId = ensureCurrentThread(uid, prompt) ?: run {
+                setState { it.copy(isAiTyping = false) }
+                return@launch
+            }
+
+            val userMessage = ChatMessage(
+                text = prompt,
+                role = MessageRole.USER,
+                images = images,
+                threadId = threadId,
+            )
+
+            // Snapshot for the AI call BEFORE adding the new message, capped to the context window.
+            val previousApiHistory = apiChatHistory.toList().takeLast(AI_CONTEXT_MESSAGES)
+
+            addMessageToApiAndUi(userMessage)
+
+            saveChatMessageUseCase(SaveChatMessageParams(userMessage, uid))
+                .onFailure { error ->
+                    println("[AiChatViewModel] failed to persist user message: ${error::class.simpleName}")
+                }
+
             sendMessageUseCase(
                 SendMessageParams(
                     prompt = prompt,
@@ -232,13 +382,65 @@ class AiChatViewModel(
                     tools = buildTools(),
                 )
             ).onSuccess { aiReply ->
-                addMessageToApiAndUi(ChatMessage(text = aiReply, role = MessageRole.AI))
+                val aiMessage = ChatMessage(
+                    text = aiReply,
+                    role = MessageRole.AI,
+                    threadId = threadId,
+                )
+                addMessageToApiAndUi(aiMessage)
                 setState { it.copy(isAiTyping = false) }
+
+                saveChatMessageUseCase(SaveChatMessageParams(aiMessage, uid))
+                    .onFailure { error ->
+                        println("[AiChatViewModel] failed to persist AI message: ${error::class.simpleName}")
+                    }
+
+                bumpThreadUpdatedAt(uid, threadId)
             }.onFailure { error ->
                 setState { it.copy(isAiTyping = false) }
                 emitSideEffect(AiChatSideEffect.ShowError(error.asUiText()))
             }
         }
+    }
+
+    /**
+     * Returns the active threadId — either the existing [currentThreadId] or a newly created thread
+     * whose title is taken from the prompt. Returns null on creation failure.
+     */
+    private suspend fun ensureCurrentThread(userId: String, prompt: String): String? {
+        currentThreadId?.let { return it }
+
+        val title = prompt.take(50).trim().ifBlank { "New chat" }
+        val newThread = ChatThread(userId = userId, title = title)
+        var createdId: String? = null
+        createChatThreadUseCase(CreateChatThreadParams(newThread)).onSuccess { saved ->
+            currentThreadId = saved.id
+            createdId = saved.id
+            setState { it.copy(currentThreadId = saved.id, currentThreadTitle = saved.title) }
+        }.onFailure { error ->
+            println("[AiChatViewModel] failed to create thread: ${error::class.simpleName}")
+        }
+        // Refresh the sidebar so the new thread is visible immediately.
+        refreshThreadList(userId)
+        return createdId
+    }
+
+    private suspend fun bumpThreadUpdatedAt(userId: String, threadId: String) {
+        val existing = state.value.threads.firstOrNull { it.id == threadId }
+        val title = existing?.title ?: state.value.currentThreadTitle ?: "New chat"
+        updateChatThreadUseCase(
+            UpdateChatThreadParams(
+                ChatThread(
+                    id = threadId,
+                    userId = userId,
+                    title = title,
+                    updatedAt = System.currentTimeMillis(),
+                )
+            )
+        ).onFailure { error ->
+            println("[AiChatViewModel] failed to update thread metadata: ${error::class.simpleName}")
+        }
+        refreshThreadList(userId)
     }
 
     private fun buildCostsBlock(costs: List<Cost>, stats: CostStatistics?): String {
@@ -508,17 +710,7 @@ class AiChatViewModel(
 
     private fun addMessageToApiAndUi(message: ChatMessage) {
         apiChatHistory.add(message)
-
-        // We take the existing UI messages and append the new one
-        val welcomeMessage = ChatMessageUi(
-            id = "welcome_msg",
-            text = "Pozdrav! Ja sam tvoj lični AI mehaničar. Kako ti mogu pomoći danas?",
-            isFromUser = false,
-            formattedTime = ""
-        )
-        val currentUiMessages = listOf(welcomeMessage) + apiChatHistory.map { it.toUiModel() }
-
-        setState { it.copy(messages = currentUiMessages) }
+        renderUiState()
     }
 
     private fun handleBottomNavigation(item: BottomNavItem) {

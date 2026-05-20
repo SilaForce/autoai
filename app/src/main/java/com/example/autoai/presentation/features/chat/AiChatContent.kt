@@ -15,10 +15,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,11 +34,14 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
+import com.example.autoai.R
 import com.example.autoai.localization.AppStrings
 import com.example.autoai.presentation.components.BottomNavigationBar
 import com.example.autoai.presentation.features.chat.components.ChatMessageItem
+import com.example.autoai.presentation.features.chat.components.ChatSidebarContent
 import com.example.autoai.presentation.theme.AutoAITheme
 import com.example.autoai.presentation.theme.VerdantGreen
+import kotlinx.coroutines.launch
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,9 +103,54 @@ fun AiChatContent(
         }
     }
 
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val drawerScope = rememberCoroutineScope()
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                ChatSidebarContent(
+                    threads = state.threads,
+                    currentThreadId = state.currentThreadId,
+                    threadMenuAnchorId = state.threadMenuAnchorId,
+                    onStartNewChat = {
+                        onEvent(AiChatEvent.OnStartNewChat)
+                        drawerScope.launch { drawerState.close() }
+                    },
+                    onSelectThread = { id ->
+                        onEvent(AiChatEvent.OnSelectThread(id))
+                        drawerScope.launch { drawerState.close() }
+                    },
+                    onLongPressThread = { id -> onEvent(AiChatEvent.OnLongPressThread(id)) },
+                    onDismissThreadMenu = { onEvent(AiChatEvent.OnDismissThreadMenu) },
+                    onDeleteThread = { id -> onEvent(AiChatEvent.OnDeleteThreadClicked(id)) },
+                )
+            }
+        },
+    ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = state.currentThreadTitle
+                                ?: stringResource(R.string.chat_default_title),
+                            maxLines = 1,
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { drawerScope.launch { drawerState.open() } }) {
+                            Icon(
+                                imageVector = Icons.Default.Menu,
+                                contentDescription = stringResource(R.string.chat_drawer_open_history),
+                            )
+                        }
+                    },
+                )
+            },
             bottomBar = {
                 BottomNavigationBar(
                     selectedItem = state.selectedNavItem,
@@ -122,19 +172,7 @@ fun AiChatContent(
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp),
                 ) {
-                    // ── Header ────────────────────────────────────────
-                    item {
-                        Spacer(modifier = Modifier.height(28.dp))
-
-                        Text(
-                            text = AppStrings.Chat.title,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-
-                        Spacer(modifier = Modifier.height(20.dp))
-                    }
+                    item { Spacer(modifier = Modifier.height(12.dp)) }
 
                     items(state.messages) { message ->
                         ChatMessageItem(message = message)
@@ -279,6 +317,28 @@ fun AiChatContent(
                 modifier = Modifier.align(Alignment.TopCenter),
             )
         }
+
+        if (state.pendingDeleteThreadId != null) {
+            AlertDialog(
+                onDismissRequest = { onEvent(AiChatEvent.OnDismissDeleteDialog) },
+                title = { Text(stringResource(R.string.chat_delete_dialog_title)) },
+                text = { Text(stringResource(R.string.chat_delete_dialog_message)) },
+                confirmButton = {
+                    TextButton(onClick = { onEvent(AiChatEvent.OnConfirmDeleteThread) }) {
+                        Text(
+                            text = stringResource(R.string.chat_delete_confirm),
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { onEvent(AiChatEvent.OnDismissDeleteDialog) }) {
+                        Text(stringResource(R.string.chat_delete_cancel))
+                    }
+                },
+            )
+        }
+    }
     }
 }
 

@@ -1,7 +1,13 @@
 package com.example.domain.di
 
 import com.example.domain.dispatcher.DispatcherProvider
+import com.example.domain.usecase.chat.CreateChatThreadUseCase
+import com.example.domain.usecase.chat.DeleteChatThreadUseCase
+import com.example.domain.usecase.chat.LoadChatHistoryUseCase
+import com.example.domain.usecase.chat.LoadChatThreadsUseCase
+import com.example.domain.usecase.chat.SaveChatMessageUseCase
 import com.example.domain.usecase.chat.SendMessageUseCase
+import com.example.domain.usecase.chat.UpdateChatThreadUseCase
 import com.example.domain.usecase.login.LoginUseCase
 import com.example.domain.usecase.register.RegisterUseCase
 import com.example.domain.usecase.session.CheckSessionUseCase
@@ -50,6 +56,12 @@ val domainModule = module {
     factoryOf(::UpdateReminderUseCase)
     factoryOf(::DeleteReminderUseCase)
     factoryOf(::SendMessageUseCase)
+    factoryOf(::LoadChatHistoryUseCase)
+    factoryOf(::SaveChatMessageUseCase)
+    factoryOf(::LoadChatThreadsUseCase)
+    factoryOf(::CreateChatThreadUseCase)
+    factoryOf(::UpdateChatThreadUseCase)
+    factoryOf(::DeleteChatThreadUseCase)
     // factoryOf(::UploadProfilePictureUseCase)
     factoryOf(::LogoutUseCase)
     factoryOf(::GetCarMakesUseCase)

@@ -63,6 +63,18 @@ suspend fun <T> safeGenerativeAiCall(
 }
 
 private fun mapToNetworkError(message: String?): AppResult.Failure {
+    // Gemini's free-tier quota error message looks like:
+    //   "Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20…"
+    // and rarely contains a literal "HTTP 429" / `"code": 429` substring. Detect by keyword
+    // so the user gets the proper rate-limit UiText instead of a generic "Unknown".
+    if (message != null && (
+            message.contains("quota", ignoreCase = true) ||
+            message.contains("rate limit", ignoreCase = true) ||
+            message.contains("RESOURCE_EXHAUSTED", ignoreCase = true)
+        )) {
+        return AppResult.Failure(DataError.Network.Http(429))
+    }
+
     val code = message?.let { HTTP_CODE_REGEX.find(it)?.groupValues?.getOrNull(1)?.toIntOrNull() }
     return when (code) {
         401, 403 -> AppResult.Failure(DataError.Network.Unauthorized)

@@ -22,8 +22,8 @@ import kotlinx.coroutines.CancellationException
 class GeminiChatRepository : IAiChatRepository {
 
     companion object {
-        private const val DEFAULT_MODEL = "gemini-2.5-flash"
-        private const val MAX_TOOL_ITERATIONS = 4
+        private const val DEFAULT_MODEL = "gemini-2.5-flash-lite"
+        private const val MAX_TOOL_ITERATIONS = 2
         private const val IMAGE_MIME = "image/jpeg"
     }
 
