@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,7 +46,7 @@ import com.example.autoai.presentation.theme.VerdantGreen
 import kotlinx.coroutines.launch
 import java.io.File
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AiChatContent(
     state: AiChatState,
@@ -52,6 +54,7 @@ fun AiChatContent(
     onEvent: (AiChatEvent) -> Unit
 ) {
     val listState = rememberLazyListState()
+    val imeVisible = WindowInsets.isImeVisible
     val context = LocalContext.current
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -149,13 +152,18 @@ fun AiChatContent(
                             )
                         }
                     },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                    ),
                 )
             },
             bottomBar = {
-                BottomNavigationBar(
-                    selectedItem = state.selectedNavItem,
-                    onItemSelected = { onEvent(AiChatEvent.OnNavItemSelected(it)) }
-                )
+                AnimatedVisibility(visible = !imeVisible) {
+                    BottomNavigationBar(
+                        selectedItem = state.selectedNavItem,
+                        onItemSelected = { onEvent(AiChatEvent.OnNavItemSelected(it)) }
+                    )
+                }
             },
             snackbarHost = { SnackbarHost(snackbarHostState) }
         ) { paddingValues ->
@@ -163,34 +171,55 @@ fun AiChatContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
+                    .imePadding()
             ) {
-                // Lista poruka
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
-                ) {
-                    item { Spacer(modifier = Modifier.height(12.dp)) }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                    items(state.messages) { message ->
-                        ChatMessageItem(message = message)
+                if (state.messages.isEmpty() && !state.isAiTyping) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .padding(horizontal = 32.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = AppStrings.Chat.emptyStateTitle,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center,
+                        )
                     }
+                } else {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
+                        verticalArrangement = Arrangement.Bottom,
+                    ) {
+                        item { Spacer(modifier = Modifier.height(12.dp)) }
 
-                    if (state.isAiTyping) {
-                        item {
-                            Text(
-                                text = "AI kuca...",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                                modifier = Modifier.padding(start = 40.dp, top = 8.dp)
-                            )
+                        items(state.messages) { message ->
+                            ChatMessageItem(message = message)
                         }
-                    }
 
-                    item {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        if (state.isAiTyping) {
+                            item {
+                                Text(
+                                    text = "AI...",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                    modifier = Modifier.padding(start = 40.dp, top = 8.dp)
+                                )
+                            }
+                        }
+
+                        item {
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
                     }
                 }
 
@@ -240,7 +269,7 @@ fun AiChatContent(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                                .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             // Gallery button

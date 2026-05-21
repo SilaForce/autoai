@@ -621,11 +621,13 @@ object AppStrings {
         @StringRes val subtitleRes = R.string.chat_subtitle
         @StringRes val placeholderRes = R.string.chat_placeholder
         @StringRes val sendDescriptionRes = R.string.chat_send_description
+        @StringRes val emptyStateTitleRes = R.string.chat_empty_state_title
 
         val title: String @Composable @ReadOnlyComposable get() = stringResource(titleRes)
         val subtitle: String @Composable @ReadOnlyComposable get() = stringResource(subtitleRes)
         val placeholder: String @Composable @ReadOnlyComposable get() = stringResource(placeholderRes)
         val sendDescription: String @Composable @ReadOnlyComposable get() = stringResource(sendDescriptionRes)
+        val emptyStateTitle: String @Composable @ReadOnlyComposable get() = stringResource(emptyStateTitleRes)
     }
 
     object Costs {

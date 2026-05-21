@@ -161,6 +161,7 @@
     <string name="chat_placeholder">Ask something...</string>
     <string name="chat_send_description">Send message</string>
     <string name="chat_default_title">AI Chat</string>
+    <string name="chat_empty_state_title">How can I help you?</string>
     <string name="chat_drawer_new_chat">New chat</string>
     <string name="chat_drawer_open_history">Open chat history</string>
     <string name="chat_drawer_empty">No previous chats yet</string>

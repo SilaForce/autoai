@@ -1,9 +1,12 @@
 package com.example.autoai
 
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,6 +37,21 @@ class MainActivity : ComponentActivity() {
             val splashState = splashViewModel.state.collectAsStateWithLifecycle()
             val isDarkMode by preferencesRepository.isDarkModeEnabled
                 .collectAsStateWithLifecycle(initialValue = false)
+
+            DisposableEffect(isDarkMode) {
+                val statusStyle = if (isDarkMode) {
+                    SystemBarStyle.dark(Color.TRANSPARENT)
+                } else {
+                    SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+                }
+                val navStyle = if (isDarkMode) {
+                    SystemBarStyle.dark(Color.TRANSPARENT)
+                } else {
+                    SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+                }
+                enableEdgeToEdge(statusBarStyle = statusStyle, navigationBarStyle = navStyle)
+                onDispose {}
+            }
 
             AutoAITheme(darkTheme = isDarkMode) {
                 splashState.value.startDestination?.let { startDestination ->

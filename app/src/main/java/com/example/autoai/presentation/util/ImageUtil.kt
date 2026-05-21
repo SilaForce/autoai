@@ -2,8 +2,11 @@ package com.example.autoai.presentation.util
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.media.ExifInterface
 import android.util.Base64
 import coil.size.Dimension
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import androidx.core.graphics.scale
 import kotlin.math.roundToInt
@@ -37,20 +40,46 @@ object ImageUtils {
 
     fun compressForAi(imageBytes: ByteArray, maxDimension: Int = 1024, quality: Int = 80): ByteArray? {
         return try {
-            val bitmap = BitmapFactory.decodeByteArray(imageBytes,0,imageBytes.size)
-            val ratio = maxDimension.toFloat() / maxOf(bitmap.width, bitmap.height)
-            if (ratio >= 1f) return imageBytes
+            val rotation = rotationDegreesFromExif(imageBytes)
+            val source = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+            val ratio = maxDimension.toFloat() / maxOf(source.width, source.height)
+            val needsScale = ratio < 1f
 
-            val width = (bitmap.width * ratio).roundToInt()
-            val height = (bitmap.height * ratio).roundToInt()
-            val scaledBitmap = bitmap.scale(width, height)
+            if (!needsScale && rotation == 0) return imageBytes
+
+            val scaled = if (needsScale) {
+                source.scale((source.width * ratio).roundToInt(), (source.height * ratio).roundToInt())
+            } else source
+            val oriented = if (rotation != 0) scaled.rotated(rotation) else scaled
 
             val outputStream = ByteArrayOutputStream()
-            scaledBitmap.compress(Bitmap.CompressFormat.JPEG,quality,outputStream)
+            oriented.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
             outputStream.toByteArray()
-        } catch (e: Exception){
-          null
+        } catch (e: Exception) {
+            null
         }
+    }
+
+    private fun rotationDegreesFromExif(imageBytes: ByteArray): Int = try {
+        val orientation = ByteArrayInputStream(imageBytes).use { stream ->
+            ExifInterface(stream).getAttributeInt(
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_NORMAL,
+            )
+        }
+        when (orientation) {
+            ExifInterface.ORIENTATION_ROTATE_90 -> 90
+            ExifInterface.ORIENTATION_ROTATE_180 -> 180
+            ExifInterface.ORIENTATION_ROTATE_270 -> 270
+            else -> 0
+        }
+    } catch (e: Exception) {
+        0
+    }
+
+    private fun Bitmap.rotated(degrees: Int): Bitmap {
+        val matrix = Matrix().apply { postRotate(degrees.toFloat()) }
+        return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
     }
 
     /**

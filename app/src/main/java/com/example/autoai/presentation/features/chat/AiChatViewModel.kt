@@ -74,7 +74,6 @@ class AiChatViewModel(
 
     private companion object {
         const val AI_CONTEXT_MESSAGES = 30
-        const val WELCOME_TEXT = "Dobar dan! Ja sam tvoj lični AI mehaničar. Kako ti mogu pomoći danas?"
     }
 
     // Čuvamo čiste Domain modele u ViewModelu za historiju razgovora
@@ -135,19 +134,7 @@ class AiChatViewModel(
     }
 
     private fun renderUiState() {
-        val ui = if (apiChatHistory.isEmpty()) {
-            listOf(
-                ChatMessageUi(
-                    id = "welcome_msg",
-                    text = WELCOME_TEXT,
-                    isFromUser = false,
-                    formattedTime = ""
-                )
-            )
-        } else {
-            apiChatHistory.map { it.toUiModel() }
-        }
-        setState { it.copy(messages = ui) }
+        setState { it.copy(messages = apiChatHistory.map { msg -> msg.toUiModel() }) }
     }
 
     override fun onEvent(event: AiChatEvent) {
