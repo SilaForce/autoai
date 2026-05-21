@@ -23,14 +23,11 @@ class GetCostStatisticsUseCase(
         }
 
         return repository.getCosts(vehicleId = params.vehicleId.trim()).map { costs ->
-            val totalAmount = costs.sumOf { it.amount }
-            val amountByCategory = costs
-                .groupBy { it.category }
-                .mapValues { (_, entries) -> entries.sumOf { it.amount } }
-
+            val grouped = costs.groupBy { it.category }
             CostStatistics(
-                totalAmount = totalAmount,
-                amountByCategory = amountByCategory,
+                totalAmount = costs.sumOf { it.amount },
+                amountByCategory = grouped.mapValues { (_, entries) -> entries.sumOf { it.amount } },
+                countByCategory = grouped.mapValues { (_, entries) -> entries.size },
             )
         }
     }

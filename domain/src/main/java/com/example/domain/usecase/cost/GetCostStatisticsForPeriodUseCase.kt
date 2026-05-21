@@ -28,13 +28,11 @@ class GetCostStatisticsForPeriodUseCase(
                 (params.sinceMillis == null || cost.dateMillis >= params.sinceMillis) &&
                     (params.untilMillis == null || cost.dateMillis <= params.untilMillis)
             }
-            val totalAmount = filtered.sumOf { it.amount }
-            val amountByCategory = filtered
-                .groupBy { it.category }
-                .mapValues { (_, entries) -> entries.sumOf { it.amount } }
+            val grouped = filtered.groupBy { it.category }
             CostStatistics(
-                totalAmount = totalAmount,
-                amountByCategory = amountByCategory,
+                totalAmount = filtered.sumOf { it.amount },
+                amountByCategory = grouped.mapValues { (_, entries) -> entries.sumOf { it.amount } },
+                countByCategory = grouped.mapValues { (_, entries) -> entries.size },
             )
         }
     }

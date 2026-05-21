@@ -5,6 +5,7 @@ import com.example.domain.model.cost.CostCategory
 
 sealed interface CostsEvent {
     data class OnTabSelected(val tab: CostsTab) : CostsEvent
+    data class OnPeriodSelected(val period: StatsPeriod) : CostsEvent
     data object OnAddCostClicked : CostsEvent
     data object OnAddSheetDismissed : CostsEvent
     data class OnCategorySelected(val category: CostCategory) : CostsEvent

@@ -1,5 +1,6 @@
 package com.example.autoai.presentation.features.costs
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -40,6 +43,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.example.autoai.R
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -60,6 +66,7 @@ import com.example.autoai.presentation.features.costs.components.CostHistoryCard
 import com.example.autoai.presentation.features.costs.components.CostProgressBar
 import com.example.autoai.presentation.theme.AutoAITheme
 import com.example.autoai.presentation.theme.VerdantGreen
+import com.example.autoai.presentation.util.UiText
 import com.example.domain.model.cost.CostCategory
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -142,7 +149,7 @@ fun CostsContent(
                 } else {
                     when (state.selectedTab) {
                         CostsTab.HISTORY -> HistoryTab(state = state, onEvent = onEvent)
-                        CostsTab.STATISTICS -> StatisticsTab(state = state)
+                        CostsTab.STATISTICS -> StatisticsTab(state = state, onEvent = onEvent)
                     }
                 }
             }
@@ -252,22 +259,23 @@ private fun HistoryTab(
             }
         }
     } else {
-        Card(
+        LazyColumn(
             modifier = modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            LazyColumn(
-                modifier = Modifier.padding(horizontal = 16.dp),
-            ) {
-                itemsIndexed(
-                    items = state.history,
-                    key = { _, item -> item.id },
-                ) { index, item ->
-                    Box {
+            itemsIndexed(
+                items = state.history,
+                key = { _, item -> item.id },
+            ) { _, item ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                ) {
+                    Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                         CostHistoryCard(
-                            title = item.title,
+                            title = item.title.asString(),
                             subtitle = item.subtitle,
                             amount = item.amount,
                             categoryIcon = item.categoryIcon,
@@ -305,23 +313,32 @@ private fun HistoryTab(
                             )
                         }
                     }
-                    if (index < state.history.lastIndex) {
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    }
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun StatisticsTab(
     state: CostsState,
+    onEvent: (CostsEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val stats = state.stats
 
-    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        PeriodChipRow(
+            selected = state.selectedPeriod,
+            onSelected = { onEvent(CostsEvent.OnPeriodSelected(it)) },
+        )
+
         // Total card
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -345,7 +362,6 @@ private fun StatisticsTab(
             }
         }
 
-        // Per-category card
         if (stats != null && stats.categoryBreakdowns.isNotEmpty()) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -364,27 +380,88 @@ private fun StatisticsTab(
 
                     stats.categoryBreakdowns.forEachIndexed { index, breakdown ->
                         if (index > 0) Spacer(modifier = Modifier.height(16.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                        ) {
-                            Text(
-                                text = breakdown.categoryName,
-                                fontSize = 14.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                            )
-                            Text(
-                                text = breakdown.amount,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(6.dp))
-                        CostProgressBar(progress = breakdown.progress)
+                        CategoryStatRow(breakdown = breakdown)
                     }
                 }
             }
+        }
+
+        // Bottom spacer so the FAB doesn't overlap the last row when scrolled
+        Spacer(modifier = Modifier.height(80.dp))
+    }
+}
+
+@Composable
+private fun CategoryStatRow(breakdown: CostStatsByCategoryUi) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = breakdown.categoryName.asString(),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = "${breakdown.percentage}%",
+            fontSize = 13.sp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+            modifier = Modifier.padding(end = 12.dp),
+        )
+        Text(
+            text = breakdown.amount,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
+    Spacer(modifier = Modifier.height(4.dp))
+    Text(
+        text = "${pluralStringResource(R.plurals.costs_stats_entries, breakdown.count, breakdown.count)} · ${stringResource(R.string.costs_stats_avg_format, breakdown.averagePerEntry)}",
+        fontSize = 12.sp,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+    )
+    Spacer(modifier = Modifier.height(6.dp))
+    CostProgressBar(progress = breakdown.progress)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PeriodChipRow(
+    selected: StatsPeriod,
+    onSelected: (StatsPeriod) -> Unit,
+) {
+    val periods = listOf(
+        StatsPeriod.MONTH to AppStrings.Costs.periodMonth,
+        StatsPeriod.LAST_3_MONTHS to AppStrings.Costs.period3Months,
+        StatsPeriod.YEAR to AppStrings.Costs.periodYear,
+        StatsPeriod.ALL_TIME to AppStrings.Costs.periodAll,
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        periods.forEach { (period, label) ->
+            FilterChip(
+                selected = selected == period,
+                onClick = { onSelected(period) },
+                label = {
+                    Text(
+                        text = label,
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        softWrap = false,
+                    )
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = VerdantGreen.copy(alpha = 0.15f),
+                    selectedLabelColor = VerdantGreen,
+                ),
+            )
         }
     }
 }
@@ -484,14 +561,14 @@ private fun CostsContentPreview() {
                 history = listOf(
                     CostItemUi(
                         id = "1",
-                        title = "Punjenje rezervoara - Shell",
+                        title = UiText.DynamicString("Fuel up - Shell"),
                         subtitle = "Apr 25",
                         amount = "120 KM",
                         categoryIcon = CostCategory.FUEL.toIcon(),
                     ),
                     CostItemUi(
                         id = "2",
-                        title = "Mali servis - zamjena ulja i filtera",
+                        title = UiText.DynamicString("Oil change service"),
                         subtitle = "Apr 20",
                         amount = "350 KM",
                         categoryIcon = CostCategory.SERVICE.toIcon(),
@@ -515,9 +592,33 @@ private fun CostsStatisticsPreview() {
                 stats = CostStatsUi(
                     totalAmount = "1045 KM",
                     categoryBreakdowns = listOf(
-                        CostStatsByCategoryUi("Gorivo", "215 KM", 0.45f),
-                        CostStatsByCategoryUi("Servis", "350 KM", 0.73f),
-                        CostStatsByCategoryUi("Ostalo", "480 KM", 1.0f),
+                        CostStatsByCategoryUi(
+                            category = CostCategory.OTHER,
+                            categoryName = UiText.DynamicString("Other"),
+                            amount = "480 KM",
+                            percentage = 46,
+                            count = 5,
+                            averagePerEntry = "96 KM",
+                            progress = 0.46f,
+                        ),
+                        CostStatsByCategoryUi(
+                            category = CostCategory.SERVICE,
+                            categoryName = UiText.DynamicString("Service"),
+                            amount = "350 KM",
+                            percentage = 33,
+                            count = 4,
+                            averagePerEntry = "87 KM",
+                            progress = 0.33f,
+                        ),
+                        CostStatsByCategoryUi(
+                            category = CostCategory.FUEL,
+                            categoryName = UiText.DynamicString("Fuel"),
+                            amount = "215 KM",
+                            percentage = 21,
+                            count = 7,
+                            averagePerEntry = "31 KM",
+                            progress = 0.21f,
+                        ),
                     ),
                 ),
             ),

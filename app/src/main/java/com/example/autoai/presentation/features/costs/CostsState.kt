@@ -9,6 +9,7 @@ data class CostsState(
     val isLoading: Boolean = false,
     val hasNoActiveVehicle: Boolean = false,
     val selectedTab: CostsTab = CostsTab.HISTORY,
+    val selectedPeriod: StatsPeriod = StatsPeriod.ALL_TIME,
     val history: List<CostItemUi> = emptyList(),
     val stats: CostStatsUi? = null,
     val selectedNavItem: BottomNavItem = BottomNavItem.COSTS,

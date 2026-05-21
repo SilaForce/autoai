@@ -698,6 +698,16 @@ object AppStrings {
         val deleteDialogMessage: String @Composable @ReadOnlyComposable get() = stringResource(deleteDialogMessageRes)
         val deleteConfirm: String @Composable @ReadOnlyComposable get() = stringResource(deleteConfirmRes)
         val deleteCancel: String @Composable @ReadOnlyComposable get() = stringResource(deleteCancelRes)
+
+        @StringRes val periodMonthRes = R.string.costs_period_month
+        @StringRes val period3MonthsRes = R.string.costs_period_3_months
+        @StringRes val periodYearRes = R.string.costs_period_year
+        @StringRes val periodAllRes = R.string.costs_period_all
+
+        val periodMonth: String @Composable @ReadOnlyComposable get() = stringResource(periodMonthRes)
+        val period3Months: String @Composable @ReadOnlyComposable get() = stringResource(period3MonthsRes)
+        val periodYear: String @Composable @ReadOnlyComposable get() = stringResource(periodYearRes)
+        val periodAll: String @Composable @ReadOnlyComposable get() = stringResource(periodAllRes)
     }
 
     object Profile {

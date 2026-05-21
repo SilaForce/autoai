@@ -6,6 +6,8 @@ import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.LocalGasStation
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.TireRepair
+import com.example.autoai.R
+import com.example.autoai.presentation.util.UiText
 import com.example.domain.model.cost.Cost
 import com.example.domain.model.cost.CostCategory
 import com.example.domain.model.cost.CostStatistics
@@ -16,35 +18,42 @@ import java.util.Locale
 private fun dateFormatter() = SimpleDateFormat("MMM d", Locale.getDefault())
 
 fun Cost.toCostItemUi(): CostItemUi {
-    val titleParts = listOfNotNull(
-        description?.takeIf { it.isNotBlank() },
-        location?.takeIf { it.isNotBlank() },
-    )
-    val title = when {
-        titleParts.isNotEmpty() -> titleParts.joinToString(" - ")
-        else -> category.toDisplayName()
+    val trimmedDescription = description?.takeIf { it.isNotBlank() }
+    val title: UiText = if (trimmedDescription != null) {
+        UiText.DynamicString(trimmedDescription)
+    } else {
+        UiText.StringResource(category.toCategoryStringRes())
     }
+
+    val date = dateFormatter().format(Date(dateMillis))
+    val trimmedLocation = location?.takeIf { it.isNotBlank() }
+    val subtitle = if (trimmedLocation != null) "$date · $trimmedLocation" else date
 
     return CostItemUi(
         id = id,
         title = title,
-        subtitle = dateFormatter().format(Date(dateMillis)),
+        subtitle = subtitle,
         amount = "${amount.toFormattedAmount()} KM",
         categoryIcon = category.toIcon(),
     )
 }
 
 fun CostStatistics.toCostStatsUi(): CostStatsUi {
-    val maxAmount = amountByCategory.values.maxOrNull()?.takeIf { it > 0 } ?: 1.0
+    val total = totalAmount
 
-    val breakdowns = amountByCategory
-        .entries
+    val breakdowns = amountByCategory.entries
         .sortedByDescending { it.value }
         .map { (category, amount) ->
+            val count = countByCategory[category] ?: 0
+            val avg = if (count > 0) amount / count else 0.0
             CostStatsByCategoryUi(
-                categoryName = category.toDisplayName(),
+                category = category,
+                categoryName = UiText.StringResource(category.toCategoryStringRes()),
                 amount = "${amount.toFormattedAmount()} KM",
-                progress = (amount / maxAmount).toFloat().coerceIn(0f, 1f),
+                percentage = if (total > 0) ((amount / total) * 100).toInt() else 0,
+                count = count,
+                averagePerEntry = "${avg.toFormattedAmount()} KM",
+                progress = if (total > 0) (amount / total).toFloat().coerceIn(0f, 1f) else 0f,
             )
         }
 
@@ -54,12 +63,12 @@ fun CostStatistics.toCostStatsUi(): CostStatsUi {
     )
 }
 
-private fun CostCategory.toDisplayName(): String = when (this) {
-    CostCategory.FUEL -> "Gorivo"
-    CostCategory.SERVICE -> "Servis"
-    CostCategory.TIRES -> "Gume"
-    CostCategory.EQUIPMENT -> "Oprema"
-    CostCategory.OTHER -> "Ostalo"
+fun CostCategory.toCategoryStringRes(): Int = when (this) {
+    CostCategory.FUEL -> R.string.costs_category_fuel
+    CostCategory.SERVICE -> R.string.costs_category_service
+    CostCategory.TIRES -> R.string.costs_category_tires
+    CostCategory.EQUIPMENT -> R.string.costs_category_equipment
+    CostCategory.OTHER -> R.string.costs_category_other
 }
 
 fun CostCategory.toIcon() = when (this) {
@@ -77,7 +86,3 @@ private fun Double.toFormattedAmount(): String {
         String.format(Locale.getDefault(), "%.2f", this)
     }
 }
-
-
-
-

@@ -17,8 +17,8 @@ import com.example.domain.usecase.cost.AddCostUseCase
 import com.example.domain.usecase.cost.DeleteCostUseCase
 import com.example.domain.usecase.cost.GetCostsHistoryParams
 import com.example.domain.usecase.cost.GetCostsHistoryUseCase
-import com.example.domain.usecase.cost.GetCostStatisticsParams
-import com.example.domain.usecase.cost.GetCostStatisticsUseCase
+import com.example.domain.usecase.cost.GetCostStatisticsForPeriodParams
+import com.example.domain.usecase.cost.GetCostStatisticsForPeriodUseCase
 import com.example.domain.usecase.cost.UpdateCostParams
 import com.example.domain.usecase.cost.UpdateCostUseCase
 import com.example.domain.usecase.user.GetCurrentUserUseCase
@@ -31,7 +31,7 @@ class CostsViewModel(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val getVehiclesUseCase: GetVehiclesUseCase,
     private val getCostsHistoryUseCase: GetCostsHistoryUseCase,
-    private val getCostStatisticsUseCase: GetCostStatisticsUseCase,
+    private val getCostStatisticsForPeriodUseCase: GetCostStatisticsForPeriodUseCase,
     private val addCostUseCase: AddCostUseCase,
     private val updateCostUseCase: UpdateCostUseCase,
     private val deleteCostUseCase: DeleteCostUseCase,
@@ -48,7 +48,21 @@ class CostsViewModel(
 
     override fun onEvent(event: CostsEvent) {
         when (event) {
-            is CostsEvent.OnTabSelected -> setState { it.copy(selectedTab = event.tab) }
+            is CostsEvent.OnTabSelected -> {
+                setState { it.copy(selectedTab = event.tab) }
+                if (event.tab == CostsTab.STATISTICS) {
+                    val vehicleId = activeVehicleId
+                    if (vehicleId != null && !state.value.isLoading) {
+                        viewModelScope.launch { reloadStats(vehicleId, state.value.selectedPeriod) }
+                    }
+                }
+            }
+
+            is CostsEvent.OnPeriodSelected -> {
+                setState { it.copy(selectedPeriod = event.period) }
+                val vehicleId = activeVehicleId ?: return
+                viewModelScope.launch { reloadStats(vehicleId, event.period) }
+            }
 
             CostsEvent.OnAddCostClicked -> setState { it.copy(isSheetOpen = true) }
 
@@ -161,8 +175,17 @@ class CostsViewModel(
         viewModelScope.launch {
             setState { it.copy(isLoading = true) }
 
+            val period = state.value.selectedPeriod
             val historyDeferred = async { getCostsHistoryUseCase(GetCostsHistoryParams(vehicleId)) }
-            val statsDeferred = async { getCostStatisticsUseCase(GetCostStatisticsParams(vehicleId)) }
+            val statsDeferred = async {
+                getCostStatisticsForPeriodUseCase(
+                    GetCostStatisticsForPeriodParams(
+                        vehicleId = vehicleId,
+                        sinceMillis = period.sinceMillis(),
+                        untilMillis = null,
+                    )
+                )
+            }
 
             val historyResult = historyDeferred.await()
             val statsResult = statsDeferred.await()
@@ -183,6 +206,18 @@ class CostsViewModel(
 
             setState { it.copy(isLoading = false, history = historyUi, stats = statsUi) }
         }
+    }
+
+    private suspend fun reloadStats(vehicleId: String, period: StatsPeriod) {
+        getCostStatisticsForPeriodUseCase(
+            GetCostStatisticsForPeriodParams(
+                vehicleId = vehicleId,
+                sinceMillis = period.sinceMillis(),
+                untilMillis = null,
+            )
+        )
+            .onSuccess { stats -> setState { it.copy(stats = stats.toCostStatsUi()) } }
+            .onFailure { error -> emitSideEffect(CostsSideEffect.ShowError(error.asUiText())) }
     }
 
     // ─── Saving ──────────────────────────────────────────────────────────────

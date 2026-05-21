@@ -1,13 +1,19 @@
 package com.example.autoai.presentation.features.costs
 
+import com.example.autoai.presentation.util.UiText
+import com.example.domain.model.cost.CostCategory
+
 data class CostStatsByCategoryUi(
-    val categoryName: String,
+    val category: CostCategory,
+    val categoryName: UiText,
     val amount: String,
-    val progress: Float, // 0.0 – 1.0 relative to the highest-value category
+    val percentage: Int,
+    val count: Int,
+    val averagePerEntry: String,
+    val progress: Float, // amount / totalAmount, 0f..1f
 )
 
 data class CostStatsUi(
     val totalAmount: String,
     val categoryBreakdowns: List<CostStatsByCategoryUi>,
 )
-

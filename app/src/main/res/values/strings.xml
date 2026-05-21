@@ -145,6 +145,17 @@
     <string name="costs_delete_cancel">Cancel</string>
     <string name="costs_delete_success">Cost deleted.</string>
 
+    <string name="costs_period_month">This month</string>
+    <string name="costs_period_3_months">Last 3 months</string>
+    <string name="costs_period_year">This year</string>
+    <string name="costs_period_all">All time</string>
+    <string name="costs_stats_avg_format">avg %1$s</string>
+
+    <plurals name="costs_stats_entries">
+        <item quantity="one">1 entry</item>
+        <item quantity="other">%d entries</item>
+    </plurals>
+
     <string name="chat_title">AI Advice</string>
     <string name="chat_subtitle">Online</string>
     <string name="chat_placeholder">Ask something...</string>
