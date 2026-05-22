@@ -13,6 +13,7 @@ sealed interface CostsEvent {
     data class OnLocationChanged(val value: String) : CostsEvent
     data class OnDescriptionChanged(val value: String) : CostsEvent
     data object OnSaveCostClicked : CostsEvent
+    data object OnScreenResumed : CostsEvent
     data class OnNavItemSelected(val item: BottomNavItem) : CostsEvent
 
     data class OnCostLongPressed(val costId: String) : CostsEvent

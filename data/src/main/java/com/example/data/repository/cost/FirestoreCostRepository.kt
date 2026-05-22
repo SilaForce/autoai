@@ -6,7 +6,6 @@ import com.example.data.mapper.toCost
 import com.example.data.mapper.toCostDto
 import com.example.data.model.cost.CostDto
 import com.example.domain.model.app.AppResult
-import com.example.domain.model.app.DataError
 import com.example.domain.model.app.andThen
 import com.example.domain.model.cost.Cost
 import com.example.domain.repository.ICostRepository
@@ -46,11 +45,17 @@ class FirestoreCostRepository(
                         if (currentDto.id.isBlank()) currentDto.copy(id = document.id)
                         else currentDto
                     }
-                    ?: return@andThen AppResult.Failure(DataError.Network.Serialization)
+
+                if (dto == null) {
+                    Log.w(TAG, "Skipping malformed cost document: ${document.id}")
+                    continue
+                }
 
                 when (val costResult = dto.toCost()) {
                     is AppResult.Success -> costs.add(costResult.data)
-                    is AppResult.Failure -> return@andThen AppResult.Failure(costResult.error)
+                    is AppResult.Failure -> {
+                        Log.w(TAG, "Skipping cost document with mapping error: ${document.id}")
+                    }
                 }
             }
 
@@ -75,14 +80,14 @@ class FirestoreCostRepository(
                     }
 
                 if (dto == null) {
-                    Log.w("FirestoreCostRepository", "Skipping malformed cost document: ${document.id}")
+                    Log.w(TAG, "Skipping malformed cost document: ${document.id}")
                     continue
                 }
 
                 when (val costResult = dto.toCost()) {
                     is AppResult.Success -> costs.add(costResult.data)
                     is AppResult.Failure -> {
-                        Log.w("FirestoreCostRepository", "Skipping cost document with mapping error: ${document.id}")
+                        Log.w(TAG, "Skipping cost document with mapping error: ${document.id}")
                     }
                 }
             }
@@ -92,11 +97,13 @@ class FirestoreCostRepository(
     }
 
     override suspend fun updateCost(cost: Cost): AppResult<Cost> {
+        val documentReference = firestore.collection(COSTS_COLLECTION).document(cost.id)
+        val costWithId = cost.copy(id = documentReference.id)
         return safeFirebaseCall {
-            firestore.collection(COSTS_COLLECTION).document(cost.id)
-                .set(cost.toCostDto())
+            documentReference
+                .set(costWithId.toCostDto())
                 .await()
-            cost
+            costWithId
         }
     }
 
@@ -107,6 +114,7 @@ class FirestoreCostRepository(
     }
 
     private companion object {
+        const val TAG = "FirestoreCostRepository"
         const val COSTS_COLLECTION = "costs"
         const val FIELD_VEHICLE_ID = "vehicleId"
         const val FIELD_USER_ID = "userId"

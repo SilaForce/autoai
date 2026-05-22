@@ -574,25 +574,31 @@ class AiChatViewModel(
         }
 
         var outcome = "Failure: could not load statistics."
-        getCostStatisticsForPeriodUseCase(
-            GetCostStatisticsForPeriodParams(
-                vehicleId = vehicleId,
-                sinceMillis = sinceMillis,
-                untilMillis = untilMillis,
-            )
-        ).onSuccess { stats ->
-            val rangeLabel = formatRangeLabel(args["since"], args["until"])
-            outcome = if (stats.totalAmount == 0.0 && stats.amountByCategory.isEmpty()) {
-                "No costs logged $rangeLabel."
-            } else {
-                val perCategory = CostCategory.entries.joinToString(", ") { category ->
-                    "${category.name} ${money(stats.amountByCategory[category] ?: 0.0)}"
+        getCostsHistoryUseCase(GetCostsHistoryParams(vehicleId))
+            .onSuccess { costs ->
+                getCostStatisticsForPeriodUseCase(
+                    GetCostStatisticsForPeriodParams(
+                        costs = costs,
+                        sinceMillis = sinceMillis,
+                        untilMillis = untilMillis,
+                    )
+                ).onSuccess { stats ->
+                    val rangeLabel = formatRangeLabel(args["since"], args["until"])
+                    outcome = if (stats.totalAmount == 0.0 && stats.amountByCategory.isEmpty()) {
+                        "No costs logged $rangeLabel."
+                    } else {
+                        val perCategory = CostCategory.entries.joinToString(", ") { category ->
+                            "${category.name} ${money(stats.amountByCategory[category] ?: 0.0)}"
+                        }
+                        "Spending $rangeLabel: total ${money(stats.totalAmount)}. By category: $perCategory."
+                    }
+                }.onFailure { error ->
+                    outcome = "Failure: could not load statistics (${error::class.simpleName})."
                 }
-                "Spending $rangeLabel: total ${money(stats.totalAmount)}. By category: $perCategory."
             }
-        }.onFailure { error ->
-            outcome = "Failure: could not load statistics (${error::class.simpleName})."
-        }
+            .onFailure { error ->
+                outcome = "Failure: could not load statistics (${error::class.simpleName})."
+            }
         return outcome
     }
 

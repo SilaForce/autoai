@@ -1,18 +1,17 @@
 package com.example.autoai.presentation.features.costs
 
 import androidx.compose.runtime.Stable
-import com.example.autoai.presentation.components.BottomNavItem
 import com.example.domain.model.cost.CostCategory
 
 @Stable
 data class CostsState(
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val hasNoActiveVehicle: Boolean = false,
     val selectedTab: CostsTab = CostsTab.HISTORY,
     val selectedPeriod: StatsPeriod = StatsPeriod.ALL_TIME,
     val history: List<CostItemUi> = emptyList(),
     val stats: CostStatsUi? = null,
-    val selectedNavItem: BottomNavItem = BottomNavItem.COSTS,
 
     // Add-cost bottom sheet
     val isSheetOpen: Boolean = false,

@@ -13,7 +13,7 @@ fun CostDto.toCost(): AppResult<Cost> {
         return AppResult.Failure(DataError.Network.Serialization)
     }
 
-    if (vehicleId.isBlank()) {
+    if (vehicleId.isBlank() || userId.isBlank()) {
         return AppResult.Failure(DataError.Network.Serialization)
     }
 

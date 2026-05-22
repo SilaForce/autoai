@@ -96,7 +96,7 @@ fun CostsContent(
             },
             bottomBar = {
                 BottomNavigationBar(
-                    selectedItem = state.selectedNavItem,
+                    selectedItem = BottomNavItem.COSTS,
                     onItemSelected = { onEvent(CostsEvent.OnNavItemSelected(it)) },
                 )
             },
@@ -557,7 +557,6 @@ private fun CostsContentPreview() {
         CostsContent(
             state = CostsState(
                 selectedTab = CostsTab.HISTORY,
-                selectedNavItem = BottomNavItem.COSTS,
                 history = listOf(
                     CostItemUi(
                         id = "1",
@@ -588,7 +587,6 @@ private fun CostsStatisticsPreview() {
         CostsContent(
             state = CostsState(
                 selectedTab = CostsTab.STATISTICS,
-                selectedNavItem = BottomNavItem.COSTS,
                 stats = CostStatsUi(
                     totalAmount = "1045 KM",
                     categoryBreakdowns = listOf(

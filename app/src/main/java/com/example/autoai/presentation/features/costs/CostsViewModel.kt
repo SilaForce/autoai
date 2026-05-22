@@ -1,5 +1,6 @@
 package com.example.autoai.presentation.features.costs
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.example.autoai.R
 import com.example.autoai.base.BaseViewModel
@@ -8,6 +9,7 @@ import com.example.autoai.navigation.Route
 import com.example.autoai.presentation.components.BottomNavItem
 import com.example.autoai.presentation.util.UiText
 import com.example.autoai.presentation.util.asUiText
+import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.onFailure
 import com.example.domain.model.app.onSuccess
 import com.example.domain.model.cost.Cost
@@ -24,10 +26,14 @@ import com.example.domain.usecase.cost.UpdateCostUseCase
 import com.example.domain.usecase.user.GetCurrentUserUseCase
 import com.example.domain.usecase.vehicle.GetVehiclesParams
 import com.example.domain.usecase.vehicle.GetVehiclesUseCase
-import kotlinx.coroutines.async
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import java.text.NumberFormat
+import java.text.ParsePosition
+import java.util.Locale
 
 class CostsViewModel(
+    private val savedStateHandle: SavedStateHandle,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val getVehiclesUseCase: GetVehiclesUseCase,
     private val getCostsHistoryUseCase: GetCostsHistoryUseCase,
@@ -36,32 +42,33 @@ class CostsViewModel(
     private val updateCostUseCase: UpdateCostUseCase,
     private val deleteCostUseCase: DeleteCostUseCase,
     private val navigator: IAppNavigator,
-) : BaseViewModel<CostsState, CostsEvent, CostsSideEffect>(CostsState()) {
+) : BaseViewModel<CostsState, CostsEvent, CostsSideEffect>(createInitialState(savedStateHandle)) {
 
     private var currentUserId: String? = null
     private var activeVehicleId: String? = null
     private var domainCosts: List<Cost> = emptyList()
-
-    init {
-        loadData()
-    }
+    private var statsReloadJob: Job? = null
+    private var statsLoadedForPeriod: StatsPeriod? = null
 
     override fun onEvent(event: CostsEvent) {
         when (event) {
+            CostsEvent.OnScreenResumed -> loadData()
+
             is CostsEvent.OnTabSelected -> {
                 setState { it.copy(selectedTab = event.tab) }
-                if (event.tab == CostsTab.STATISTICS) {
-                    val vehicleId = activeVehicleId
-                    if (vehicleId != null && !state.value.isLoading) {
-                        viewModelScope.launch { reloadStats(vehicleId, state.value.selectedPeriod) }
-                    }
+                val period = state.value.selectedPeriod
+                if (event.tab == CostsTab.STATISTICS &&
+                    activeVehicleId != null &&
+                    !state.value.isLoading &&
+                    statsLoadedForPeriod != period
+                ) {
+                    launchStatsReload(period)
                 }
             }
 
             is CostsEvent.OnPeriodSelected -> {
                 setState { it.copy(selectedPeriod = event.period) }
-                val vehicleId = activeVehicleId ?: return
-                viewModelScope.launch { reloadStats(vehicleId, event.period) }
+                launchStatsReload(event.period)
             }
 
             CostsEvent.OnAddCostClicked -> setState { it.copy(isSheetOpen = true) }
@@ -100,12 +107,14 @@ class CostsViewModel(
 
     private fun startEditingCost(costId: String) {
         val cost = domainCosts.firstOrNull { it.id == costId } ?: return
+        savedStateHandle[KEY_EDITING_COST_ID] = cost.id
+        savedStateHandle[KEY_EDITING_ORIGINAL_DATE_MILLIS] = cost.dateMillis
         setState {
             it.copy(
                 costMenuId = null,
                 isSheetOpen = true,
                 selectedCategory = cost.category,
-                amountInput = cost.amount.toString(),
+                amountInput = formatAmountForInput(cost.amount),
                 locationInput = cost.location.orEmpty(),
                 descriptionInput = cost.description.orEmpty(),
                 editingCostId = cost.id,
@@ -137,86 +146,88 @@ class CostsViewModel(
         setState { it.copy(isLoading = true) }
 
         viewModelScope.launch {
-            // Step 1: resolve the current user
-            getCurrentUserUseCase(Unit)
-                .onFailure { error ->
+            val user = when (val result = getCurrentUserUseCase(Unit)) {
+                is AppResult.Success -> result.data
+                is AppResult.Failure -> {
                     setState { it.copy(isLoading = false) }
-                    emitSideEffect(CostsSideEffect.ShowError(error.asUiText()))
+                    emitSideEffect(CostsSideEffect.ShowError(result.error.asUiText()))
                     return@launch
                 }
-                .onSuccess { user ->
-                    currentUserId = user.id
+            }
+            currentUserId = user.id
 
-                    // Step 2: find the active vehicle for this user
-                    getVehiclesUseCase(GetVehiclesParams(user.id))
-                        .onFailure { error ->
-                            setState { it.copy(isLoading = false) }
-                            emitSideEffect(CostsSideEffect.ShowError(error.asUiText()))
-                            return@launch
-                        }
-                        .onSuccess { vehicles ->
-                            val activeVehicle = vehicles.firstOrNull { it.isActive }
-
-                            if (activeVehicle == null) {
-                                // No active vehicle — show the empty/no-vehicle state
-                                setState { it.copy(isLoading = false, hasNoActiveVehicle = true) }
-                                return@launch
-                            }
-
-                            activeVehicleId = activeVehicle.id
-                            setState { it.copy(hasNoActiveVehicle = false) }
-                            refreshData(activeVehicle.id)
-                        }
+            val vehicles = when (val result = getVehiclesUseCase(GetVehiclesParams(user.id))) {
+                is AppResult.Success -> result.data
+                is AppResult.Failure -> {
+                    setState { it.copy(isLoading = false) }
+                    emitSideEffect(CostsSideEffect.ShowError(result.error.asUiText()))
+                    return@launch
                 }
+            }
+
+            val activeVehicle = vehicles.firstOrNull { it.isActive }
+            if (activeVehicle == null) {
+                setState { it.copy(isLoading = false, hasNoActiveVehicle = true) }
+                return@launch
+            }
+
+            activeVehicleId = activeVehicle.id
+            setState { it.copy(hasNoActiveVehicle = false) }
+            refreshData(activeVehicle.id)
+            setState { it.copy(isLoading = false) }
         }
     }
 
-    private fun refreshData(vehicleId: String) {
-        viewModelScope.launch {
-            setState { it.copy(isLoading = true) }
+    private suspend fun refreshData(vehicleId: String) {
+        setState { it.copy(isRefreshing = true) }
 
-            val period = state.value.selectedPeriod
-            val historyDeferred = async { getCostsHistoryUseCase(GetCostsHistoryParams(vehicleId)) }
-            val statsDeferred = async {
+        val period = state.value.selectedPeriod
+        var historyUi: List<CostItemUi>? = null
+        var statsUi: CostStatsUi? = null
+
+        getCostsHistoryUseCase(GetCostsHistoryParams(vehicleId))
+            .onSuccess { costs ->
+                domainCosts = costs
+                historyUi = costs.map { it.toCostItemUi() }
                 getCostStatisticsForPeriodUseCase(
                     GetCostStatisticsForPeriodParams(
-                        vehicleId = vehicleId,
+                        costs = costs,
                         sinceMillis = period.sinceMillis(),
                         untilMillis = null,
                     )
-                )
-            }
-
-            val historyResult = historyDeferred.await()
-            val statsResult = statsDeferred.await()
-
-            var historyUi = state.value.history
-            var statsUi = state.value.stats
-
-            historyResult
-                .onSuccess { costs ->
-                    domainCosts = costs
-                    historyUi = costs.map { it.toCostItemUi() }
+                ).onSuccess { stats ->
+                    statsUi = stats.toCostStatsUi()
+                    statsLoadedForPeriod = period
                 }
-                .onFailure { error -> emitSideEffect(CostsSideEffect.ShowError(error.asUiText())) }
+            }
+            .onFailure { error -> emitSideEffect(CostsSideEffect.ShowError(error.asUiText())) }
 
-            statsResult
-                .onSuccess { stats -> statsUi = stats.toCostStatsUi() }
-                .onFailure { error -> emitSideEffect(CostsSideEffect.ShowError(error.asUiText())) }
-
-            setState { it.copy(isLoading = false, history = historyUi, stats = statsUi) }
+        setState { current ->
+            current.copy(
+                isRefreshing = false,
+                history = historyUi ?: current.history,
+                stats = statsUi ?: current.stats,
+            )
         }
     }
 
-    private suspend fun reloadStats(vehicleId: String, period: StatsPeriod) {
+    private fun launchStatsReload(period: StatsPeriod) {
+        statsReloadJob?.cancel()
+        statsReloadJob = viewModelScope.launch { reloadStats(period) }
+    }
+
+    private suspend fun reloadStats(period: StatsPeriod) {
         getCostStatisticsForPeriodUseCase(
             GetCostStatisticsForPeriodParams(
-                vehicleId = vehicleId,
+                costs = domainCosts,
                 sinceMillis = period.sinceMillis(),
                 untilMillis = null,
             )
         )
-            .onSuccess { stats -> setState { it.copy(stats = stats.toCostStatsUi()) } }
+            .onSuccess { stats ->
+                setState { it.copy(stats = stats.toCostStatsUi()) }
+                statsLoadedForPeriod = period
+            }
             .onFailure { error -> emitSideEffect(CostsSideEffect.ShowError(error.asUiText())) }
     }
 
@@ -233,7 +244,7 @@ class CostsViewModel(
             return
         }
 
-        val amount = state.value.amountInput.toDoubleOrNull()
+        val amount = parseAmount(state.value.amountInput)
         if (amount == null || amount <= 0.0) {
             emitSideEffect(CostsSideEffect.ShowError(UiText.StringResource(R.string.costs_error_invalid_amount)))
             return
@@ -290,7 +301,26 @@ class CostsViewModel(
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
+    private fun parseAmount(input: String): Double? {
+        val trimmed = input.trim()
+        if (trimmed.isEmpty()) return null
+        val format = NumberFormat.getInstance(Locale.getDefault())
+        val position = ParsePosition(0)
+        val parsed = format.parse(trimmed, position) ?: return null
+        return if (position.index == trimmed.length) parsed.toDouble() else null
+    }
+
+    private fun formatAmountForInput(amount: Double): String {
+        val format = NumberFormat.getInstance(Locale.getDefault()).apply {
+            isGroupingUsed = false
+            maximumFractionDigits = 2
+        }
+        return format.format(amount)
+    }
+
     private fun resetSheet(isSaving: Boolean = false) {
+        savedStateHandle.remove<String>(KEY_EDITING_COST_ID)
+        savedStateHandle.remove<Long>(KEY_EDITING_ORIGINAL_DATE_MILLIS)
         setState {
             it.copy(
                 isSaving = isSaving,
@@ -307,24 +337,25 @@ class CostsViewModel(
 
     private fun handleBottomNavigation(item: BottomNavItem) {
         when (item) {
-            BottomNavItem.HOME -> {
-                setState { it.copy(selectedNavItem = BottomNavItem.HOME) }
-                navigator.navigateTo(Route.Home)
-            }
-            BottomNavItem.GARAGE -> {
-                setState { it.copy(selectedNavItem = BottomNavItem.GARAGE) }
-                navigator.navigateTo(Route.Garage)
-            }
-            BottomNavItem.COSTS -> setState { it.copy(selectedNavItem = BottomNavItem.COSTS) }
-            BottomNavItem.REMINDERS -> {
-                setState { it.copy(selectedNavItem = BottomNavItem.REMINDERS) }
-                navigator.navigateTo(Route.Reminder)
-            }
-            BottomNavItem.AI_CHAT -> {
-                setState { it.copy(selectedNavItem = BottomNavItem.AI_CHAT) }
-                navigator.navigateTo(Route.AiChat)
+            BottomNavItem.HOME -> navigator.navigateTo(Route.Home)
+            BottomNavItem.GARAGE -> navigator.navigateTo(Route.Garage)
+            BottomNavItem.COSTS -> Unit
+            BottomNavItem.REMINDERS -> navigator.navigateTo(Route.Reminder)
+            BottomNavItem.AI_CHAT -> navigator.navigateTo(Route.AiChat)
+        }
+    }
 
-                }
+    private companion object {
+        const val KEY_EDITING_COST_ID = "costs_editing_cost_id"
+        const val KEY_EDITING_ORIGINAL_DATE_MILLIS = "costs_editing_original_date_millis"
+
+        fun createInitialState(savedStateHandle: SavedStateHandle): CostsState {
+            val editingId = savedStateHandle.get<String>(KEY_EDITING_COST_ID)
+            val editingDate = savedStateHandle.get<Long>(KEY_EDITING_ORIGINAL_DATE_MILLIS)
+            return CostsState(
+                editingCostId = editingId,
+                editingCostOriginalDateMillis = editingDate,
+            )
         }
     }
 }

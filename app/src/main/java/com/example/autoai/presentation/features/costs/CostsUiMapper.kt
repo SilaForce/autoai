@@ -15,7 +15,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private fun dateFormatter() = SimpleDateFormat("MMM d", Locale.getDefault())
+private val DATE_FORMATTER: SimpleDateFormat by lazy {
+    SimpleDateFormat("MMM d", Locale.getDefault())
+}
 
 fun Cost.toCostItemUi(): CostItemUi {
     val trimmedDescription = description?.takeIf { it.isNotBlank() }
@@ -25,7 +27,7 @@ fun Cost.toCostItemUi(): CostItemUi {
         UiText.StringResource(category.toCategoryStringRes())
     }
 
-    val date = dateFormatter().format(Date(dateMillis))
+    val date = DATE_FORMATTER.format(Date(dateMillis))
     val trimmedLocation = location?.takeIf { it.isNotBlank() }
     val subtitle = if (trimmedLocation != null) "$date · $trimmedLocation" else date
 

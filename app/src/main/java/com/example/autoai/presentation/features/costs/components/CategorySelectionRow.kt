@@ -37,6 +37,7 @@ fun CategorySelectionRow(
         CostCategory.SERVICE to AppStrings.Costs.categoryService,
         CostCategory.TIRES to AppStrings.Costs.categoryTires,
         CostCategory.EQUIPMENT to AppStrings.Costs.categoryEquipment,
+        CostCategory.OTHER to AppStrings.Costs.categoryOther,
     )
 
     Row(
