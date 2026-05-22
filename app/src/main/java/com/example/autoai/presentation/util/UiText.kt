@@ -3,8 +3,10 @@ package com.example.autoai.presentation.util
 import android.content.Context
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.res.stringResource
 
+@Stable
 sealed interface UiText {
 
     data class DynamicString(val value: String) : UiText

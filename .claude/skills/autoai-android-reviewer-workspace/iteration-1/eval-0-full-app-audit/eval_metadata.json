@@ -1,0 +1,39 @@
+{
+  "eval_id": 0,
+  "eval_name": "full-app-audit",
+  "prompt": "I want you to review the AutoAI app and tell me everything that needs fixing. Be thorough but only flag real issues with file paths.",
+  "assertions": [
+    {
+      "id": "has_assessment_line",
+      "text": "Output contains an explicit 'Assessment:' line with one of HEALTHY / NEEDS TUNING / HIGH IMPACT"
+    },
+    {
+      "id": "has_architecture_section",
+      "text": "Output has a section header for Architecture (e.g. 'A. Architecture Enforcement' or 'Architecture')"
+    },
+    {
+      "id": "has_state_section",
+      "text": "Output has a section header for State Management"
+    },
+    {
+      "id": "has_lifecycle_section",
+      "text": "Output has a section header for Lifecycle & Memory Safety"
+    },
+    {
+      "id": "has_performance_section",
+      "text": "Output has a section header for Performance & Stability"
+    },
+    {
+      "id": "has_confirmed_healthy_section",
+      "text": "Output includes a 'Confirmed Healthy' section listing patterns that were checked and found correct"
+    },
+    {
+      "id": "cites_three_plus_files",
+      "text": "Output cites at least 3 distinct .kt file paths under app/ or core/ or feature/"
+    },
+    {
+      "id": "flags_aichat_unbounded_history",
+      "text": "Output flags the unbounded mutable list in AiChatViewModel (apiChatHistory) OR a similarly real memory-growth issue with file:line evidence"
+    }
+  ]
+}

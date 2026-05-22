@@ -202,7 +202,7 @@ fun AiChatContent(
                     ) {
                         item { Spacer(modifier = Modifier.height(12.dp)) }
 
-                        items(state.messages) { message ->
+                        items(state.messages, key = { it.id }) { message ->
                             ChatMessageItem(message = message)
                         }
 

@@ -1,0 +1,53 @@
+{
+  "eval_id": 0,
+  "eval_name": "full-app-audit",
+  "variant": "without_skill",
+  "expectations": [
+    {
+      "text": "Output contains an explicit 'Assessment:' line with one of HEALTHY / NEEDS TUNING / HIGH IMPACT",
+      "passed": false,
+      "evidence": "Output uses severity tiers (CRITICAL/HIGH/MEDIUM/LOW) instead of an Assessment line"
+    },
+    {
+      "text": "Output has a section header for Architecture",
+      "passed": false,
+      "evidence": "No 'Architecture' section header \u2014 output organized by severity tiers"
+    },
+    {
+      "text": "Output has a section header for State Management",
+      "passed": false,
+      "evidence": "No 'State Management' section header"
+    },
+    {
+      "text": "Output has a section header for Lifecycle & Memory Safety",
+      "passed": false,
+      "evidence": "No 'Lifecycle' section header"
+    },
+    {
+      "text": "Output has a section header for Performance & Stability",
+      "passed": false,
+      "evidence": "No 'Performance' section header"
+    },
+    {
+      "text": "Output includes a 'Confirmed Healthy' section",
+      "passed": false,
+      "evidence": "No 'Confirmed Healthy' section \u2014 only complaints, no balance"
+    },
+    {
+      "text": "Output cites at least 3 distinct .kt file paths",
+      "passed": true,
+      "evidence": "44 distinct .kt files cited"
+    },
+    {
+      "text": "Output flags AiChatViewModel apiChatHistory unbounded mutable list OR similar memory-growth issue with file:line evidence",
+      "passed": false,
+      "evidence": "Output mentions List<ByteArray> stability but never flags apiChatHistory as an unbounded list / source-of-truth duplication issue"
+    }
+  ],
+  "summary": {
+    "pass_rate": 0.125,
+    "passed": 1,
+    "failed": 7,
+    "total": 8
+  }
+}

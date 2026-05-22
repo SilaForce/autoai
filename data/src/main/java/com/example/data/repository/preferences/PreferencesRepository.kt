@@ -43,7 +43,7 @@ class PreferencesRepository(
         context.dataStore.edit { it[PreferencesKeys.DARK_MODE_ENABLED] = enabled }
     }
 
-    override suspend fun isAiAutoRemindersEnabled(enabled: Boolean) {
+    override suspend fun setAiAutoRemindersEnabled(enabled: Boolean) {
         context.dataStore.edit { it[PreferencesKeys.AI_AUTO_REMINDERS_ENABLED] = enabled }
     }
 

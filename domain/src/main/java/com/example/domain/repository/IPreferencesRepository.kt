@@ -9,5 +9,5 @@ interface IPreferencesRepository {
     suspend fun setNotificationsEnabled(enabled: Boolean)
     suspend fun setDarkModeEnabled(enabled: Boolean)
 
-    suspend fun isAiAutoRemindersEnabled(enabled: Boolean)
+    suspend fun setAiAutoRemindersEnabled(enabled: Boolean)
 }

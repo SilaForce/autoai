@@ -56,7 +56,7 @@ class SettingsViewModel(
 
             is SettingsEvent.OnToggleAiAutoReminders -> {
                 viewModelScope.launch {
-                   preferencesRepository.isAiAutoRemindersEnabled(event.isEnabled)
+                   preferencesRepository.setAiAutoRemindersEnabled(event.isEnabled)
                 }
             }
 

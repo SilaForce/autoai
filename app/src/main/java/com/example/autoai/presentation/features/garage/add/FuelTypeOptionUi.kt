@@ -1,9 +1,11 @@
 package com.example.autoai.presentation.features.garage.add
 
+import androidx.compose.runtime.Immutable
 import com.example.autoai.R
 import com.example.autoai.presentation.util.UiText
 import com.example.domain.model.vehicle.FuelType
 
+@Immutable
 data class FuelTypeOptionUi(
     val fuelType: FuelType,
     val label: UiText,

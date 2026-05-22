@@ -1,0 +1,33 @@
+{
+  "eval_id": 1,
+  "eval_name": "costs-feature-scoped",
+  "variant": "with_skill",
+  "expectations": [
+    {
+      "text": "Output contains an explicit 'Assessment:' line",
+      "passed": true,
+      "evidence": "Line 3: **Assessment:** NEEDS TUNING"
+    },
+    {
+      "text": "Output uses the 4-category structure",
+      "passed": true,
+      "evidence": "All four sections present (A. Architecture, B. State Management, C. Lifecycle & Memory Safety, D. Performance & Stability)"
+    },
+    {
+      "text": "Output cites at least one .kt file path containing 'cost' or 'Cost'",
+      "passed": true,
+      "evidence": "12 distinct .kt files containing 'cost' cited"
+    },
+    {
+      "text": "Output does not flag findings in unrelated features",
+      "passed": true,
+      "evidence": "Zero file paths from features/chat, features/auth, features/garage, features/reminder, features/profile in any finding"
+    }
+  ],
+  "summary": {
+    "pass_rate": 1.0,
+    "passed": 4,
+    "failed": 0,
+    "total": 4
+  }
+}

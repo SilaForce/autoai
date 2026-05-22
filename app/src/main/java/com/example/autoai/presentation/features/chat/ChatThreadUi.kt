@@ -1,11 +1,13 @@
 package com.example.autoai.presentation.features.chat
 
+import androidx.compose.runtime.Immutable
 import com.example.domain.model.chat.ChatThread
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+@Immutable
 data class ChatThreadUi(
     val id: String,
     val title: String,
