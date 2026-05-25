@@ -12,6 +12,7 @@ data class AddVehicleSnapshot(
     val mileage: String,
     val licensePlate: String,
     val selectedFuelType: FuelType?,
+    val photoBase64: String?,
 )
 
 @Stable
@@ -48,4 +49,8 @@ data class AddVehicleState(
     // calculateIsFormDirty compares current field values against this snapshot, so
     // simply opening an edit form and touching no fields leaves isFormDirty = false.
     val originalSnapshot: AddVehicleSnapshot? = null,
+
+    val existingPhotoBase64: String? = null,
+    val selectedPhotoBytes: ByteArray? = null,
+    val showPhotoSourceSheet: Boolean = false,
 )

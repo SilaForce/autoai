@@ -19,4 +19,5 @@ data class VehicleDto(
     @get:PropertyName("isActive")
     @set:PropertyName("isActive")
     var isActive: Boolean = false,
+    val photoBase64: String? = null
 )

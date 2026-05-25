@@ -569,6 +569,27 @@ object AppStrings {
         @StringRes
         val editSaveButtonRes = R.string.edit_vehicle_save_button
 
+        @StringRes
+        val photoLabelRes = R.string.add_vehicle_photo_label
+
+        @StringRes
+        val photoAddRes = R.string.add_vehicle_photo_add
+
+        @StringRes
+        val photoChangeRes = R.string.add_vehicle_photo_change
+
+        @StringRes
+        val photoRemoveRes = R.string.add_vehicle_photo_remove
+
+        @StringRes
+        val photoSourceGalleryRes = R.string.add_vehicle_photo_source_gallery
+
+        @StringRes
+        val photoSourceCameraRes = R.string.add_vehicle_photo_source_camera
+
+        @StringRes
+        val photoErrorCompressionRes = R.string.add_vehicle_photo_error_compression
+
         val editTitle: String
             @Composable
             @ReadOnlyComposable
@@ -583,6 +604,36 @@ object AppStrings {
             @Composable
             @ReadOnlyComposable
             get() = stringResource(editSaveButtonRes)
+
+        val photoLabel: String
+            @Composable
+            @ReadOnlyComposable
+            get() = stringResource(photoLabelRes)
+
+        val photoAdd: String
+            @Composable
+            @ReadOnlyComposable
+            get() = stringResource(photoAddRes)
+
+        val photoChange: String
+            @Composable
+            @ReadOnlyComposable
+            get() = stringResource(photoChangeRes)
+
+        val photoRemove: String
+            @Composable
+            @ReadOnlyComposable
+            get() = stringResource(photoRemoveRes)
+
+        val photoSourceGallery: String
+            @Composable
+            @ReadOnlyComposable
+            get() = stringResource(photoSourceGalleryRes)
+
+        val photoSourceCamera: String
+            @Composable
+            @ReadOnlyComposable
+            get() = stringResource(photoSourceCameraRes)
     }
 
     object Reminders {

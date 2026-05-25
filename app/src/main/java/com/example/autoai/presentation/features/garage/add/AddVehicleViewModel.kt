@@ -6,6 +6,7 @@ import androidx.navigation.toRoute
 import com.example.autoai.R
 import com.example.autoai.base.BaseViewModel
 import com.example.autoai.navigation.Route
+import com.example.autoai.presentation.util.ImageUtils
 import com.example.autoai.presentation.util.UiText
 import com.example.autoai.presentation.util.asUiText
 import com.example.domain.model.app.onFailure
@@ -19,7 +20,9 @@ import com.example.domain.usecase.vehicle.GetModelsForMakeUseCase
 import com.example.domain.usecase.vehicle.GetVehicleByIdUseCase
 import com.example.domain.usecase.vehicle.UpdateVehicleParams
 import com.example.domain.usecase.vehicle.UpdateVehicleUseCase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class AddVehicleViewModel(
     private val savedStateHandle: SavedStateHandle,
@@ -62,6 +65,32 @@ class AddVehicleViewModel(
             is AddVehicleEvent.OnModelDropdownExpandedChange ->
                 setState { it.copy(isModelsDropdownExpanded = event.expanded) }
             is AddVehicleEvent.OnModelSelected -> handleModelSelected(event.model)
+            AddVehicleEvent.OnPhotoFieldClicked -> setState { it.copy(showPhotoSourceSheet = true) }
+            AddVehicleEvent.OnPhotoSourceSheetDismissed -> setState { it.copy(showPhotoSourceSheet = false) }
+            is AddVehicleEvent.OnPhotoSelected -> handlePhotoSelected(event.bytes)
+            AddVehicleEvent.OnRemovePhoto -> handleRemovePhoto()
+        }
+    }
+
+    private fun handlePhotoSelected(bytes: ByteArray) {
+        // Compression happens on Default at save time (matches EditProfileViewModel). Storing
+        // raw bytes here keeps the preview render instant and avoids work the user might
+        // throw away by picking a different photo before tapping Save.
+        updateFormState {
+            it.copy(
+                selectedPhotoBytes = bytes,
+                existingPhotoBase64 = null,
+                showPhotoSourceSheet = false,
+            )
+        }
+    }
+
+    private fun handleRemovePhoto() {
+        updateFormState {
+            it.copy(
+                selectedPhotoBytes = null,
+                existingPhotoBase64 = null,
+            )
         }
     }
 
@@ -78,6 +107,7 @@ class AddVehicleViewModel(
                         mileage = vehicle.mileage?.toString() ?: "",
                         licensePlate = vehicle.licensePlate ?: "",
                         selectedFuelType = fuelType,
+                        photoBase64 = vehicle.photoBase64,
                     )
                     setState { currentState ->
                         currentState.copy(
@@ -93,6 +123,7 @@ class AddVehicleViewModel(
                             selectedFuelType = snapshot.selectedFuelType,
                             isMakeSelected = true,
                             isFormDirty = false,
+                            existingPhotoBase64 = snapshot.photoBase64,
                         )
                     }
                     loadModelsForMake(vehicle.make)
@@ -274,6 +305,27 @@ class AddVehicleViewModel(
         setState { it.copy(isLoading = true) }
 
         viewModelScope.launch {
+            // Resolve the photo to persist:
+            //   - selectedPhotoBytes != null: user picked a new photo this session — compress now.
+            //   - else: existingPhotoBase64 (may be the original saved value, or null if removed).
+            val photoToSave: String? = if (currentState.selectedPhotoBytes != null) {
+                val encoded = withContext(Dispatchers.Default) {
+                    ImageUtils.compressAndEncodeToBase64(currentState.selectedPhotoBytes)
+                }
+                if (encoded == null) {
+                    setState { it.copy(isLoading = false) }
+                    emitSideEffect(
+                        AddVehicleSideEffect.ShowError(
+                            UiText.StringResource(R.string.add_vehicle_photo_error_compression)
+                        )
+                    )
+                    return@launch
+                }
+                encoded
+            } else {
+                currentState.existingPhotoBase64
+            }
+
             getCurrentUserUseCase(Unit)
                 .onSuccess { user ->
                     if (vehicleId != null) {
@@ -290,6 +342,7 @@ class AddVehicleViewModel(
                                 // Edit screen cannot toggle active; only the garage tile selection does.
                                 // Preserve the flag captured at load so a save here never deactivates.
                                 isActive = currentState.originalIsActive,
+                                photoBase64 = photoToSave,
                             )
                         ).onSuccess {
                             setState { it.copy(isLoading = false, isFormDirty = false) }
@@ -308,6 +361,7 @@ class AddVehicleViewModel(
                                 fuelType = selectedFuelType,
                                 mileage = parsedMileage,
                                 licensePlate = currentState.licensePlate,
+                                photoBase64 = photoToSave,
                             )
                         ).onSuccess {
                             setState { it.copy(isLoading = false, isFormDirty = false) }
@@ -351,20 +405,29 @@ class AddVehicleViewModel(
 
         fun calculateIsFormDirty(state: AddVehicleState): Boolean {
             val snapshot = state.originalSnapshot
+            // Photo dirty rules:
+            //   - A newly picked photo (selectedPhotoBytes != null) is always dirty.
+            //   - In edit mode, comparing existingPhotoBase64 to snapshot.photoBase64 catches
+            //     the "user removed the saved photo" case (existing -> null but original != null).
+            //   - In add mode, no snapshot, so existingPhotoBase64 is always null (we only
+            //     populate it from loadVehicleForEdit) — only selectedPhotoBytes matters.
             return if (snapshot != null) {
                 state.make != snapshot.make ||
                     state.model != snapshot.model ||
                     state.year != snapshot.year ||
                     state.mileage != snapshot.mileage ||
                     state.licensePlate != snapshot.licensePlate ||
-                    state.selectedFuelType != snapshot.selectedFuelType
+                    state.selectedFuelType != snapshot.selectedFuelType ||
+                    state.selectedPhotoBytes != null ||
+                    state.existingPhotoBase64 != snapshot.photoBase64
             } else {
                 state.make.isNotBlank() ||
                     state.model.isNotBlank() ||
                     state.year.isNotBlank() ||
                     state.mileage.isNotBlank() ||
                     state.licensePlate.isNotBlank() ||
-                    state.selectedFuelType != null
+                    state.selectedFuelType != null ||
+                    state.selectedPhotoBytes != null
             }
         }
     }

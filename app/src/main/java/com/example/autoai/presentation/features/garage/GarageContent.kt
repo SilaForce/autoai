@@ -132,6 +132,7 @@ fun GarageContent(
                                     vehicleName = vehicle.title.asString(),
                                     vehiclePlate = vehicle.subtitle.asString(),
                                     isActive = vehicle.isActive,
+                                    photoBase64 = vehicle.photoBase64,
                                     onClick = { onEvent(GarageEvent.OnVehicleSelected(vehicle.id)) },
                                     onLongClick = { onEvent(GarageEvent.OnVehicleLongPressed(vehicle.id)) },
                                 )

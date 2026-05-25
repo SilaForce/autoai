@@ -92,6 +92,13 @@
     <string name="add_vehicle_mileage_placeholder">120000</string>
     <string name="add_vehicle_license_plate_label">Registarska oznaka (opcionalno)</string>
     <string name="add_vehicle_license_plate_placeholder">A12-M-345</string>
+    <string name="add_vehicle_photo_label">Fotografija (opcionalno)</string>
+    <string name="add_vehicle_photo_add">Dodaj fotografiju</string>
+    <string name="add_vehicle_photo_change">Promijeni fotografiju</string>
+    <string name="add_vehicle_photo_remove">Ukloni fotografiju</string>
+    <string name="add_vehicle_photo_source_gallery">Odaberi iz galerije</string>
+    <string name="add_vehicle_photo_source_camera">Slikaj</string>
+    <string name="add_vehicle_photo_error_compression">Nije moguće obraditi fotografiju. Pokušajte drugu sliku.</string>
     <string name="add_vehicle_save_button">Sačuvaj vozilo</string>
     <string name="add_vehicle_success">Vozilo uspješno sačuvano.</string>
     <string name="add_vehicle_error_invalid_year">Unesite ispravnu godinu.</string>

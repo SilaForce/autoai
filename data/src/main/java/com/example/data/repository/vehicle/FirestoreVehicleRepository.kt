@@ -147,12 +147,17 @@ class FirestoreVehicleRepository(
             val knownIds = querySnapshot.documents.map { it.id }
             safeFirebaseCall {
                 firestore.runTransaction { txn ->
-                    for (id in knownIds) {
-                        val ref = vehiclesCollection.document(id)
-                        // txn.get triggers OCC on this doc; we re-read just to mark the
-                        // doc as read by this txn (return value unused).
+                    // Firestore transactions require ALL reads to happen before ANY writes.
+                    // Interleaving them throws IllegalStateException at runtime when the
+                    // collection has more than one doc. So: read all refs first to mark
+                    // them for OCC, then flip isActive on each in a second pass.
+                    val refs = knownIds.map { id -> vehiclesCollection.document(id) }
+                    for (ref in refs) {
+                        // Return value unused; the read just locks the doc for this txn.
                         txn.get(ref)
-                        txn.update(ref, FIELD_IS_ACTIVE, id == vehicleId)
+                    }
+                    for (ref in refs) {
+                        txn.update(ref, FIELD_IS_ACTIVE, ref.id == vehicleId)
                     }
                     null
                 }.await()

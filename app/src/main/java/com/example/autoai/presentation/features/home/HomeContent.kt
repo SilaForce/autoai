@@ -113,6 +113,7 @@ fun HomeContent(
                             } else {
                                 AppStrings.Home.noActiveVehicleSubtitle
                             },
+                            photoBase64 = state.activeVehiclePhotoBase64,
                             onClick = { onEvent(HomeEvent.OnVehicleClicked) },
                         )
 

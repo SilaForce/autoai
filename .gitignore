@@ -12,6 +12,7 @@ build/
 */build/
 
 # Kotlin / Java
+.kotlin/
 *.class
 *.log
 
@@ -21,10 +22,6 @@ Thumbs.db
 
 # Firebase config — never check in; restrict API key by SHA-1 in Cloud Console before going public.
 app/google-services.json
-
-# Personal helpers (not part of the build) — `git rm --cached` if they're already tracked.
-generisi.py
-struktura_i_kod_projekta.md
 
 # Skill eval run outputs (large, regenerable, not part of the skill source)
 .claude/skills/*-workspace/

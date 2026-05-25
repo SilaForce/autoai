@@ -13,5 +13,6 @@ fun Vehicle.toGarageVehicleUi(): GarageVehicleUi {
             ?.let(UiText::DynamicString)
             ?: UiText.StringResource(R.string.garage_no_license_plate),
         isActive = isActive,
+        photoBase64 = photoBase64,
     )
 }

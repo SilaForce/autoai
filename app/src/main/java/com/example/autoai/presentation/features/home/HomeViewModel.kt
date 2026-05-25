@@ -107,6 +107,7 @@ class HomeViewModel(
                     hasActiveVehicle = false,
                     activeVehicleName = "",
                     activeVehiclePlate = "",
+                    activeVehiclePhotoBase64 = null,
                     totalExpenses = EMPTY_EXPENSES_PLACEHOLDER,
                 )
             }
@@ -121,6 +122,7 @@ class HomeViewModel(
                 hasActiveVehicle = true,
                 activeVehicleName = "${active.make} ${active.model}",
                 activeVehiclePlate = active.licensePlate.orEmpty(),
+                activeVehiclePhotoBase64 = active.photoBase64,
             )
         }
 

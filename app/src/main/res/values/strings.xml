@@ -92,6 +92,13 @@
     <string name="add_vehicle_mileage_placeholder">120000</string>
     <string name="add_vehicle_license_plate_label">License plate (optional)</string>
     <string name="add_vehicle_license_plate_placeholder">A12-M-345</string>
+    <string name="add_vehicle_photo_label">Photo (optional)</string>
+    <string name="add_vehicle_photo_add">Add photo</string>
+    <string name="add_vehicle_photo_change">Change photo</string>
+    <string name="add_vehicle_photo_remove">Remove photo</string>
+    <string name="add_vehicle_photo_source_gallery">Choose from gallery</string>
+    <string name="add_vehicle_photo_source_camera">Take photo</string>
+    <string name="add_vehicle_photo_error_compression">Could not process the photo. Please try a different image.</string>
     <string name="add_vehicle_save_button">Save Vehicle</string>
     <string name="add_vehicle_success">Vehicle saved successfully.</string>
     <string name="add_vehicle_error_invalid_year">Please enter a valid year.</string>

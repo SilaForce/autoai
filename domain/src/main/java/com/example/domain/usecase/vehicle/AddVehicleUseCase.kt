@@ -18,6 +18,7 @@ data class AddVehicleParams(
     val mileage: Int? = null,
     val licensePlate: String? = null,
     val isActive: Boolean = false,
+    val photoBase64: String? = null
 )
 
 class AddVehicleUseCase(
@@ -53,6 +54,7 @@ class AddVehicleUseCase(
                 mileage = params.mileage,
                 licensePlate = params.licensePlate?.trim()?.takeIf { it.isNotEmpty() },
                 isActive = params.isActive,
+                photoBase64 = params.photoBase64,
             )
         )
     }

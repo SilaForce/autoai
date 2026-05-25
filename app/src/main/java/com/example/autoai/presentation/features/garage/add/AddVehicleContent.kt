@@ -1,6 +1,12 @@
 package com.example.autoai.presentation.features.garage.add
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,10 +19,15 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.outlined.CameraAlt
+import androidx.compose.material.icons.outlined.DirectionsCar
+import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
@@ -26,34 +37,51 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import coil.compose.AsyncImage
 import com.example.autoai.localization.AppStrings
 import com.example.autoai.presentation.components.AutoAiTextField
 import com.example.autoai.presentation.components.MainButton
 import com.example.autoai.presentation.features.garage.add.components.FuelTypeSelector
 import com.example.autoai.presentation.features.garage.add.components.YearPickerDialog
 import com.example.autoai.presentation.theme.AutoAITheme
+import com.example.autoai.presentation.theme.PureWhite
+import com.example.autoai.presentation.theme.VerdantGreen
+import com.example.autoai.presentation.util.ImageUtils
 import com.example.domain.model.vehicle.FuelType
 import androidx.compose.material3.MaterialTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 import java.time.Year
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,6 +92,63 @@ fun AddVehicleContent(
     onEvent: (AddVehicleEvent) -> Unit,
 ) {
     val focusRequester = remember { FocusRequester() }
+    val context = LocalContext.current
+    val ioScope = rememberCoroutineScope()
+
+    // ── Gallery picker ─────────────────────────────────────────────
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            if (uri != null) {
+                // Read MediaStore bytes off Main — compression happens in the VM on Default.
+                ioScope.launch {
+                    val bytes = withContext(Dispatchers.IO) {
+                        context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                    }
+                    if (bytes != null) onEvent(AddVehicleEvent.OnPhotoSelected(bytes))
+                }
+            }
+        }
+    )
+
+    // ── Camera capture ─────────────────────────────────────────────
+    // Stable URI per screen instance — TakePicture writes here, then we read the bytes back.
+    val cameraImageUri = remember {
+        val cameraDir = File(context.cacheDir, "camera_images").apply { mkdirs() }
+        val imageFile = File(cameraDir, "vehicle_photo.jpg")
+        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", imageFile)
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture(),
+        onResult = { success ->
+            if (success) {
+                ioScope.launch {
+                    val bytes = withContext(Dispatchers.IO) {
+                        context.contentResolver.openInputStream(cameraImageUri)?.use { it.readBytes() }
+                    }
+                    if (bytes != null) onEvent(AddVehicleEvent.OnPhotoSelected(bytes))
+                }
+            }
+        }
+    )
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { granted ->
+            if (granted) cameraLauncher.launch(cameraImageUri)
+        }
+    )
+
+    fun launchCamera() {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            cameraLauncher.launch(cameraImageUri)
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
 
     BackHandler {
         onEvent(AddVehicleEvent.OnBackClicked)
@@ -117,6 +202,16 @@ fun AddVehicleContent(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            // ── Photo (optional) ──────────────────────────────────
+            VehiclePhotoSection(
+                existingPhotoBase64 = state.existingPhotoBase64,
+                selectedPhotoBytes = state.selectedPhotoBytes,
+                onClick = { onEvent(AddVehicleEvent.OnPhotoFieldClicked) },
+                onRemoveClick = { onEvent(AddVehicleEvent.OnRemovePhoto) },
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             // ── Make autocomplete dropdown ────────────────────────
             ExposedDropdownMenuBox(
@@ -308,6 +403,159 @@ fun AddVehicleContent(
                 initialYear = state.year.toIntOrNull() ?: Year.now().value,
             )
         }
+
+        if (state.showPhotoSourceSheet) {
+            val sheetState = rememberModalBottomSheetState()
+            ModalBottomSheet(
+                sheetState = sheetState,
+                onDismissRequest = { onEvent(AddVehicleEvent.OnPhotoSourceSheetDismissed) },
+            ) {
+                Column(modifier = Modifier.padding(bottom = 16.dp)) {
+                    PhotoSourceRow(
+                        icon = Icons.Outlined.PhotoLibrary,
+                        label = AppStrings.AddVehicle.photoSourceGallery,
+                        onClick = {
+                            onEvent(AddVehicleEvent.OnPhotoSourceSheetDismissed)
+                            photoPickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
+                    )
+                    PhotoSourceRow(
+                        icon = Icons.Outlined.CameraAlt,
+                        label = AppStrings.AddVehicle.photoSourceCamera,
+                        onClick = {
+                            onEvent(AddVehicleEvent.OnPhotoSourceSheetDismissed)
+                            launchCamera()
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun VehiclePhotoSection(
+    existingPhotoBase64: String?,
+    selectedPhotoBytes: ByteArray?,
+    onClick: () -> Unit,
+    onRemoveClick: () -> Unit,
+) {
+    // Decode the saved photo once per change (form recomposes on every keystroke, so
+    // re-running Base64.decode every time would be wasteful for a ~30KB string).
+    val decodedExisting = remember(existingPhotoBase64) {
+        existingPhotoBase64?.takeIf { it.isNotBlank() }
+            ?.let { ImageUtils.decodeBase64ToByteArray(it) }
+    }
+    // A freshly picked photo wins over the saved one (matches AvatarSection precedence).
+    val imageModel: Any? = selectedPhotoBytes ?: decodedExisting
+    val hasPhoto = imageModel != null
+
+    Text(
+        text = AppStrings.AddVehicle.photoLabel,
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Medium,
+        color = MaterialTheme.colorScheme.onSurface,
+    )
+    Spacer(modifier = Modifier.height(8.dp))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(96.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFE8F5E9))
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (imageModel != null) {
+                AsyncImage(
+                    model = imageModel,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Outlined.DirectionsCar,
+                    contentDescription = null,
+                    tint = VerdantGreen,
+                    modifier = Modifier.size(40.dp),
+                )
+            }
+
+            // Camera-overlay badge — same visual affordance the avatar uses, so users see
+            // the slot is tappable without needing an explicit "Add photo" button.
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(28.dp)
+                    .align(Alignment.BottomEnd)
+                    .background(VerdantGreen, CircleShape),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.CameraAlt,
+                    contentDescription = null,
+                    tint = PureWhite,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        }
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = if (hasPhoto) AppStrings.AddVehicle.photoChange else AppStrings.AddVehicle.photoAdd,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = VerdantGreen,
+                modifier = Modifier.clickable(onClick = onClick),
+            )
+            if (hasPhoto) {
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(
+                    onClick = onRemoveClick,
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp),
+                ) {
+                    Text(
+                        text = AppStrings.AddVehicle.photoRemove,
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PhotoSourceRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        verticalAlignment = CenterVertically,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface,
+        )
+        Spacer(modifier = Modifier.size(16.dp))
+        Text(
+            text = label,
+            fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
     }
 }
 

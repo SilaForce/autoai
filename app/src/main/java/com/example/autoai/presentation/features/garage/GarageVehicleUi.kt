@@ -9,4 +9,5 @@ data class GarageVehicleUi(
     val title: UiText,
     val subtitle: UiText,
     val isActive: Boolean,
+    val photoBase64: String? = null,
 )

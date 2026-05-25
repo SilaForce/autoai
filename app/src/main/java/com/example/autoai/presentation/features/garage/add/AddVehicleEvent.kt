@@ -19,4 +19,9 @@ sealed interface AddVehicleEvent {
     data class OnMakeSelected(val make: String) : AddVehicleEvent
     data class OnModelDropdownExpandedChange(val expanded: Boolean) : AddVehicleEvent
     data class OnModelSelected(val model: String) : AddVehicleEvent
+
+    data object OnPhotoFieldClicked : AddVehicleEvent
+    data object OnPhotoSourceSheetDismissed : AddVehicleEvent
+    data class OnPhotoSelected(val bytes: ByteArray) : AddVehicleEvent
+    data object OnRemovePhoto : AddVehicleEvent
 }

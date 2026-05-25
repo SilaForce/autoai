@@ -10,4 +10,5 @@ data class Vehicle(
     val mileage: Int? = null,
     val licensePlate: String? = null,
     val isActive: Boolean = false,
+    val photoBase64: String? = null
 )

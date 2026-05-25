@@ -24,6 +24,7 @@ fun VehicleDto.toVehicle(): AppResult<Vehicle> {
             mileage = mileage,
             licensePlate = licensePlate,
             isActive = isActive,
+            photoBase64 = photoBase64,
         )
     )
 }
@@ -39,5 +40,6 @@ fun Vehicle.toVehicleDto(): VehicleDto {
         mileage = mileage,
         licensePlate = licensePlate,
         isActive = isActive,
+        photoBase64 = photoBase64,
     )
 }
