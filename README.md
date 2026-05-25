@@ -8,7 +8,7 @@ An Android app for car owners to track vehicles, costs, reminders, and chat with
 - **Home** — at-a-glance view of the active vehicle, monthly expense total, and the next upcoming reminder.
 - **Costs** — log fuel, service, and other expenses, broken down by category with statistics over time.
 - **Reminders** — schedule maintenance tasks (oil change, inspection, registration) with notifications.
-- **AI Chat** — ask Gemini about your specific car: troubleshooting, when to service something, what a warning light means. Supports image attachments (e.g. snap a dashboard light).
+- **AI Chat** — ask Gemini about your specific car: troubleshooting, when to service something, what a warning light means. The assistant has live context of your active vehicle (make, model, year, mileage, fuel type) so answers are tailored, not generic. It can also read your logged costs and existing reminders to ground its replies, and — when you've enabled **AI assistance for reminders** in Settings — it can create new reminders on your behalf straight from the conversation. Supports image attachments (e.g. snap a dashboard light).
 - **Profile** — edit name, avatar, currency preference; delete account.
 
 Localized in English and Bosnian.
