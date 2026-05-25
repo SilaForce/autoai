@@ -17,4 +17,6 @@ sealed interface ReminderEvent {
     data class OnToggleCompleted(val reminder: ReminderItemUi) : ReminderEvent
     data class OnEditClicked(val reminder: ReminderItemUi) : ReminderEvent
     data class OnDeleteClicked(val reminderId: String) : ReminderEvent
+    data object OnConfirmDeleteReminder : ReminderEvent
+    data object OnDismissDeleteDialog : ReminderEvent
 }

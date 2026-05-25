@@ -1,5 +1,6 @@
 package com.example.data.repository.chat
 
+import android.util.Log
 import com.example.data.BuildConfig
 import com.example.data.datasource.remote.util.safeGenerativeAiCall
 import com.example.domain.model.app.AppResult
@@ -18,11 +19,17 @@ import com.google.genai.types.Part
 import com.google.genai.types.Schema
 import com.google.genai.types.Tool
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class GeminiChatRepository : IAiChatRepository {
 
     companion object {
-        private const val DEFAULT_MODEL = "gemini-2.5-flash-lite"
+        // Source of truth is data/build.gradle.kts → BuildConfig.GEMINI_MODEL (read from
+        // local.properties). Falls back to a known-good model when the BuildConfig field
+        // is blank (misconfigured local.properties).
+        private val DEFAULT_MODEL: String =
+            BuildConfig.GEMINI_MODEL.takeIf { it.isNotBlank() } ?: "gemini-2.5-flash-lite"
         private const val MAX_TOOL_ITERATIONS = 2
         private const val IMAGE_MIME = "image/jpeg"
     }
@@ -40,7 +47,7 @@ class GeminiChatRepository : IAiChatRepository {
     ): AppResult<String> {
         val apiKey = BuildConfig.GEMINI_API_KEY.trim()
         if (apiKey.isBlank()) {
-            println("[GeminiChatRepository] GEMINI_API_KEY is blank.")
+            Log.w("GeminiChatRepository", "GEMINI_API_KEY is blank.")
             return AppResult.Failure(DataError.Network.Unauthorized)
         }
 
@@ -56,41 +63,46 @@ class GeminiChatRepository : IAiChatRepository {
             add(buildUserContent(prompt, images))
         }
 
-        return safeGenerativeAiCall {
-            var response = client.models.generateContent(DEFAULT_MODEL, contents, config)
-            var iterations = 0
-            while (!response.functionCalls().isNullOrEmpty() && iterations < MAX_TOOL_ITERATIONS) {
-                response.candidates().orElse(emptyList())
-                    .firstOrNull()
-                    ?.content()
-                    ?.orElse(null)
-                    ?.let { contents += it }
+        // The Google Gen AI Java SDK's generateContent is synchronous and blocks the calling
+        // thread for the full HTTP round-trip + JSON parsing. Pin it to Dispatchers.IO so the
+        // ViewModel coroutine doesn't freeze the UI.
+        return withContext(Dispatchers.IO) {
+            safeGenerativeAiCall {
+                var response = client.models.generateContent(DEFAULT_MODEL, contents, config)
+                var iterations = 0
+                while (!response.functionCalls().isNullOrEmpty() && iterations < MAX_TOOL_ITERATIONS) {
+                    response.candidates().orElse(emptyList())
+                        .firstOrNull()
+                        ?.content()
+                        ?.orElse(null)
+                        ?.let { contents += it }
 
-                val funcResponseParts = response.functionCalls()!!.map { call ->
-                    val callName = call.name().orElse("")
-                    val callArgs = call.args().orElse(emptyMap())
-                    val tool = tools.firstOrNull { it.name == callName }
-                    val resultText = if (tool == null) {
-                        "Error: tool '$callName' is not available."
-                    } else {
-                        try {
-                            tool.execute(callArgs.mapValues { entry -> entry.value?.toString() })
-                        } catch (t: Throwable) {
-                            if (t is CancellationException) throw t
-                            "Error executing '$callName': ${t.message ?: "unknown failure"}"
+                    val funcResponseParts = response.functionCalls()!!.map { call ->
+                        val callName = call.name().orElse("")
+                        val callArgs = call.args().orElse(emptyMap())
+                        val tool = tools.firstOrNull { it.name == callName }
+                        val resultText = if (tool == null) {
+                            "Error: tool '$callName' is not available."
+                        } else {
+                            try {
+                                tool.execute(callArgs.mapValues { entry -> entry.value?.toString() })
+                            } catch (t: Throwable) {
+                                if (t is CancellationException) throw t
+                                "Error executing '$callName': ${t.message ?: "unknown failure"}"
+                            }
                         }
+                        Part.fromFunctionResponse(callName, mapOf<String, Any>("result" to resultText))
                     }
-                    Part.fromFunctionResponse(callName, mapOf<String, Any>("result" to resultText))
-                }
-                contents += Content.builder()
-                    .role("user")
-                    .parts(funcResponseParts)
-                    .build()
+                    contents += Content.builder()
+                        .role("user")
+                        .parts(funcResponseParts)
+                        .build()
 
-                response = client.models.generateContent(DEFAULT_MODEL, contents, config)
-                iterations++
+                    response = client.models.generateContent(DEFAULT_MODEL, contents, config)
+                    iterations++
+                }
+                response.text() ?: ""
             }
-            response.text() ?: ""
         }
     }
 

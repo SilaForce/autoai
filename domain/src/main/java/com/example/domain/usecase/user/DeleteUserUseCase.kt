@@ -2,15 +2,50 @@ package com.example.domain.usecase.user
 
 import com.example.domain.base.BaseUseCase
 import com.example.domain.model.app.AppResult
+import com.example.domain.model.app.andThen
+import com.example.domain.repository.IAiChatHistoryRepository
+import com.example.domain.repository.IAiChatThreadRepository
 import com.example.domain.repository.IAuthRepository
+import com.example.domain.repository.ICostRepository
+import com.example.domain.repository.IRemindersRepository
+import com.example.domain.repository.IVehicleRepository
 import kotlinx.coroutines.CoroutineDispatcher
 
+/**
+ * Cascade-deletes a user's data across every collection they own, then their Firebase
+ * Auth record. Mirrors the [com.example.domain.usecase.vehicle.DeleteVehicleUseCase]
+ * pattern: children first, parent last — if the auth delete fails after the data cascade,
+ * the user can retry; if a cascade step fails first, the auth record is still intact and
+ * the operation is recoverable.
+ *
+ * Why client-side and not a Cloud Function: the project is on the Firebase Spark plan,
+ * which doesn't support Cloud Functions. The trade-off is that a network drop mid-cascade
+ * can leave half-deleted state — acceptable for a portfolio app with no real users.
+ */
 class DeleteUserUseCase(
-    private val repository: IAuthRepository,
+    private val authRepository: IAuthRepository,
+    private val vehicleRepository: IVehicleRepository,
+    private val costRepository: ICostRepository,
+    private val reminderRepository: IRemindersRepository,
+    private val chatHistoryRepository: IAiChatHistoryRepository,
+    private val chatThreadRepository: IAiChatThreadRepository,
     dispatcher: CoroutineDispatcher,
 ) : BaseUseCase<Unit, Unit>(dispatcher) {
 
     override suspend fun execute(params: Unit): AppResult<Unit> {
-        return repository.deleteUser()
+        // Need the userId BEFORE deleting the auth record — once it's gone, we lose
+        // the ability to query our own collections.
+        return when (val userResult = authRepository.getCurrentUser()) {
+            is AppResult.Failure -> userResult
+            is AppResult.Success -> {
+                val userId = userResult.data.id
+                vehicleRepository.deleteAllForUser(userId)
+                    .andThen { costRepository.deleteAllForUser(userId) }
+                    .andThen { reminderRepository.deleteAllForUser(userId) }
+                    .andThen { chatHistoryRepository.deleteAllForUser(userId) }
+                    .andThen { chatThreadRepository.deleteAllForUser(userId) }
+                    .andThen { authRepository.deleteUser() }
+            }
+        }
     }
 }

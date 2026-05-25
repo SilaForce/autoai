@@ -2,21 +2,19 @@ package com.example.data.datasource.remote.util
 
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.DataError
-import com.google.ai.client.generativeai.type.InvalidAPIKeyException
-import com.google.ai.client.generativeai.type.QuotaExceededException
-import com.google.ai.client.generativeai.type.RequestTimeoutException
-import com.google.ai.client.generativeai.type.SerializationException
-import com.google.ai.client.generativeai.type.ServerException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 class SafeGenerativeAiCallTest {
 
     @Test
-    fun `returns success when generative ai block completes normally`() = runBlocking {
+    fun `returns success when block completes normally`() = runBlocking {
         val result = safeGenerativeAiCall { "ok" }
 
         assertTrue(result is AppResult.Success)
@@ -24,19 +22,33 @@ class SafeGenerativeAiCallTest {
     }
 
     @Test
-    fun `maps invalid api key to unauthorized`() = runBlocking {
-        val result = safeGenerativeAiCall<String> {
-            throw InvalidAPIKeyException("invalid key")
-        }
+    fun `socket timeout maps to network timeout`() = runBlocking {
+        val result = safeGenerativeAiCall<String> { throw SocketTimeoutException("timed out") }
 
         assertTrue(result is AppResult.Failure)
-        assertEquals(DataError.Network.Unauthorized, (result as AppResult.Failure).error)
+        assertEquals(DataError.Network.Timeout, (result as AppResult.Failure).error)
     }
 
     @Test
-    fun `maps exhausted quota to http 429`() = runBlocking {
+    fun `unknown host maps to no internet`() = runBlocking {
+        val result = safeGenerativeAiCall<String> { throw UnknownHostException("no dns") }
+
+        assertTrue(result is AppResult.Failure)
+        assertEquals(DataError.Network.NoInternet, (result as AppResult.Failure).error)
+    }
+
+    @Test
+    fun `ioexception maps to no internet`() = runBlocking {
+        val result = safeGenerativeAiCall<String> { throw IOException("disconnected") }
+
+        assertTrue(result is AppResult.Failure)
+        assertEquals(DataError.Network.NoInternet, (result as AppResult.Failure).error)
+    }
+
+    @Test
+    fun `quota keyword in message maps to rate limit`() = runBlocking {
         val result = safeGenerativeAiCall<String> {
-            throw QuotaExceededException("quota exceeded")
+            throw RuntimeException("Quota exceeded for metric: generate_content_free_tier_requests")
         }
 
         assertTrue(result is AppResult.Failure)
@@ -44,57 +56,26 @@ class SafeGenerativeAiCallTest {
     }
 
     @Test
-    fun `maps timeout to timeout error`() = runBlocking {
+    fun `http 401 in message maps to unauthorized`() = runBlocking {
         val result = safeGenerativeAiCall<String> {
-            throw RequestTimeoutException("too slow")
+            throw RuntimeException("Got status: 401 unauthenticated")
         }
 
         assertTrue(result is AppResult.Failure)
-        assertEquals(DataError.Network.Timeout, (result as AppResult.Failure).error)
+        assertEquals(DataError.Network.Unauthorized, (result as AppResult.Failure).error)
     }
 
     @Test
-    fun `maps serialization problem to serialization error`() = runBlocking {
-        val result = safeGenerativeAiCall<String> {
-            throw SerializationException("bad payload")
-        }
+    fun `unknown exception with no recognized signal maps to unknown`() = runBlocking {
+        val result = safeGenerativeAiCall<String> { throw RuntimeException("nothing useful") }
 
         assertTrue(result is AppResult.Failure)
-        assertEquals(DataError.Network.Serialization, (result as AppResult.Failure).error)
+        assertEquals(DataError.Network.Unknown, (result as AppResult.Failure).error)
     }
 
-    @Test
-    fun `maps server 404 to http 404`() = runBlocking {
-        val result = safeGenerativeAiCall<String> {
-            throw ServerException("""
-                {
-                  "error": {
-                    "code": 404,
-                    "message": "model not found",
-                    "status": "NOT_FOUND"
-                  }
-                }
-            """.trimIndent())
-        }
-
-        assertTrue(result is AppResult.Failure)
-        assertEquals(DataError.Network.Http(404), (result as AppResult.Failure).error)
-    }
-
-    @Test
-    fun `rethrows cancellation exception`() {
-        try {
-            runBlocking {
-                safeGenerativeAiCall<String> {
-                    throw CancellationException("Cancelled")
-                }
-            }
-        } catch (exception: CancellationException) {
-            assertEquals("Cancelled", exception.message)
-            return
-        }
-
-        throw AssertionError("Expected CancellationException to be rethrown")
+    @Test(expected = CancellationException::class)
+    fun `cancellation propagates`() = runBlocking {
+        safeGenerativeAiCall<String> { throw CancellationException("cancelled") }
+        Unit
     }
 }
-

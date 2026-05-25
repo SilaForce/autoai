@@ -1,5 +1,6 @@
 package com.example.data.datasource.remote.util
 
+import android.util.Log
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.DataError
 import com.google.firebase.FirebaseNetworkException
@@ -30,8 +31,10 @@ suspend fun <T> safeFirebaseCall(
         when (e.code) {
             FirebaseFirestoreException.Code.NOT_FOUND -> AppResult.Failure(DataError.Local.NotFound)
             FirebaseFirestoreException.Code.PERMISSION_DENIED -> AppResult.Failure(DataError.Local.PermissionDenied)
+            FirebaseFirestoreException.Code.UNAUTHENTICATED -> AppResult.Failure(DataError.Network.Unauthorized)
             FirebaseFirestoreException.Code.UNAVAILABLE -> AppResult.Failure(DataError.Network.NoInternet)
             FirebaseFirestoreException.Code.DEADLINE_EXCEEDED -> AppResult.Failure(DataError.Network.Timeout)
+            FirebaseFirestoreException.Code.RESOURCE_EXHAUSTED -> AppResult.Failure(DataError.Network.Http(429))
             else -> AppResult.Failure(DataError.Network.ServerError)
         }
     } catch (e: Exception) {
@@ -86,8 +89,9 @@ private fun mapToNetworkError(message: String?): AppResult.Failure {
 }
 
 private fun logGenerativeAiFailure(throwable: Throwable) {
-    println(
-        "[GeminiChatRepository] ${throwable::class.qualifiedName}: ${throwable.message}" +
+    Log.w(
+        "GeminiChatRepository",
+        "${throwable::class.qualifiedName}: ${throwable.message}" +
             (throwable.cause?.let { " | cause=${it::class.qualifiedName}: ${it.message}" } ?: "")
     )
 }

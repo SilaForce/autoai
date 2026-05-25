@@ -18,8 +18,10 @@ class GetVehiclesUseCase(
 ) : BaseUseCase<GetVehiclesParams, List<Vehicle>>(dispatcher) {
 
     override suspend fun execute(params: GetVehiclesParams): AppResult<List<Vehicle>> {
+        // Defense-in-depth: a blank userId means the auth context wasn't resolved.
+        // Don't hit Firestore — return NotFound so the UI can recover gracefully.
         if (!ValidationUtil.isValidVehicleText(params.userId)) {
-            return AppResult.Failure(DataError.Local.Validation.Generic)
+            return AppResult.Failure(DataError.Local.NotFound)
         }
 
         return repository.getVehicles(userId = params.userId.trim())

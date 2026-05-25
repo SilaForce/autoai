@@ -55,5 +55,17 @@ class CheckSessionUseCaseTest {
         override suspend fun getCurrentUser(): AppResult<User> {
             throw NotImplementedError()
         }
+
+        override suspend fun updateUser(user: User): AppResult<User> {
+            throw NotImplementedError()
+        }
+
+        override suspend fun deleteUser(): AppResult<Unit> {
+            throw NotImplementedError()
+        }
+
+        override suspend fun logout(): AppResult<Unit> {
+            throw NotImplementedError()
+        }
     }
 }

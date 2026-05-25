@@ -15,7 +15,7 @@ class GetVehicleByIdUseCase(
 
     override suspend fun execute(params: String): AppResult<Vehicle> {
         if (!ValidationUtil.isValidVehicleText(params)) {
-            return AppResult.Failure(DataError.Local.Validation.Generic)
+            return AppResult.Failure(DataError.Local.NotFound)
         }
         return repository.getVehicleById(params.trim())
     }

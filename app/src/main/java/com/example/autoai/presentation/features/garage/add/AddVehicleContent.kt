@@ -52,6 +52,7 @@ import com.example.autoai.presentation.components.MainButton
 import com.example.autoai.presentation.features.garage.add.components.FuelTypeSelector
 import com.example.autoai.presentation.features.garage.add.components.YearPickerDialog
 import com.example.autoai.presentation.theme.AutoAITheme
+import com.example.domain.model.vehicle.FuelType
 import androidx.compose.material3.MaterialTheme
 import java.time.Year
 
@@ -68,8 +69,8 @@ fun AddVehicleContent(
         onEvent(AddVehicleEvent.OnBackClicked)
     }
 
-    LaunchedEffect(Unit) {
-        if (!state.isEditMode) focusRequester.requestFocus()
+    LaunchedEffect(state.isEditMode, state.isLoading) {
+        if (!state.isEditMode && !state.isLoading) focusRequester.requestFocus()
     }
 
     Box(
@@ -232,8 +233,11 @@ fun AddVehicleContent(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            val fuelTypeOptions = remember(state.selectedFuelType) {
+                FuelType.entries.map { it.toFuelTypeOptionUi(isSelected = it == state.selectedFuelType) }
+            }
             FuelTypeSelector(
-                options = state.fuelTypeOptions,
+                options = fuelTypeOptions,
                 onFuelTypeSelected = { onEvent(AddVehicleEvent.OnFuelTypeSelected(it)) },
             )
 
@@ -318,10 +322,7 @@ private fun AddVehicleContentPreview() {
                 year = "2020",
                 mileage = "120000",
                 licensePlate = "A12-M-345",
-                selectedFuelType = com.example.domain.model.vehicle.FuelType.DIZEL,
-                fuelTypeOptions = com.example.domain.model.vehicle.FuelType.entries.map { fuelType ->
-                    fuelType.toFuelTypeOptionUi(isSelected = fuelType == com.example.domain.model.vehicle.FuelType.DIZEL)
-                },
+                selectedFuelType = FuelType.DIZEL,
             ),
             snackbarHostState = remember { SnackbarHostState() },
             onEvent = {},

@@ -7,6 +7,15 @@
         { "fieldPath": "vehicleId", "order": "ASCENDING" },
         { "fieldPath": "dateMillis", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "vehicles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "make", "order": "ASCENDING" },
+        { "fieldPath": "model", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

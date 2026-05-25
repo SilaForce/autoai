@@ -32,7 +32,6 @@ fun ChatMessageItem(message: ChatMessageUi) {
         verticalAlignment = Alignment.Bottom
     ) {
         if (!isUser) {
-            // AI Ikona (možeš zamijeniti svojim drawable resursom ako imaš specifičnu ikonu robota)
             Box(
                 modifier = Modifier
                     .size(32.dp)
@@ -40,7 +39,7 @@ fun ChatMessageItem(message: ChatMessageUi) {
                     .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
-                Text("🤖", fontSize = 16.sp) // Privremeni emoji dok ne ubaciš ikonu
+                Text("🤖", fontSize = 16.sp)
             }
             Spacer(modifier = Modifier.width(8.dp))
         }
@@ -60,9 +59,9 @@ fun ChatMessageItem(message: ChatMessageUi) {
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
                 if (message.images.isNotEmpty()) {
-                    message.images.forEach { imageBytes ->
+                    message.images.forEach { image ->
                         AsyncImage(
-                            model = imageBytes,
+                            model = image.bytes,
                             contentDescription = null,
                             contentScale = ContentScale.FillWidth,
                             modifier = Modifier

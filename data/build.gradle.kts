@@ -39,6 +39,9 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -73,9 +76,6 @@ dependencies {
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)
-
-    // Coil
-    implementation(libs.coil.compose)
 
     // Kotlinx
     implementation(libs.kotlinx.coroutines.play.services)

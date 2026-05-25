@@ -13,4 +13,5 @@ sealed interface GarageEvent {
     data class OnDeleteVehicleClicked(val vehicleId: String) : GarageEvent
     data object OnConfirmDeleteVehicle : GarageEvent
     data object OnDismissDeleteDialog : GarageEvent
+    data object OnUndoDelete : GarageEvent
 }

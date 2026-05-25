@@ -10,6 +10,7 @@ import com.example.domain.model.app.andThen
 import com.example.domain.model.cost.Cost
 import com.example.domain.repository.ICostRepository
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
 
 class FirestoreCostRepository(
@@ -100,8 +101,10 @@ class FirestoreCostRepository(
         val documentReference = firestore.collection(COSTS_COLLECTION).document(cost.id)
         val costWithId = cost.copy(id = documentReference.id)
         return safeFirebaseCall {
+            // merge() so server-side or future-schema fields aren't nulled out by a full
+            // overwrite. Same fix pattern as FirestoreVehicleRepository.updateVehicle.
             documentReference
-                .set(costWithId.toCostDto())
+                .set(costWithId.toCostDto(), SetOptions.merge())
                 .await()
             costWithId
         }
@@ -113,11 +116,39 @@ class FirestoreCostRepository(
         }
     }
 
+    override suspend fun deleteCostsForVehicle(vehicleId: String): AppResult<Unit> {
+        return deleteWhere(FIELD_VEHICLE_ID, vehicleId)
+    }
+
+    override suspend fun deleteAllForUser(userId: String): AppResult<Unit> {
+        return deleteWhere(FIELD_USER_ID, userId)
+    }
+
+    private suspend fun deleteWhere(field: String, value: String): AppResult<Unit> {
+        return safeFirebaseCall {
+            firestore.collection(COSTS_COLLECTION)
+                .whereEqualTo(field, value)
+                .get()
+                .await()
+        }.andThen { querySnapshot ->
+            safeFirebaseCall {
+                // Firestore WriteBatch caps at 500 ops; chunk for safety.
+                querySnapshot.documents.chunked(BATCH_LIMIT).forEach { chunk ->
+                    val batch = firestore.batch()
+                    chunk.forEach { document -> batch.delete(document.reference) }
+                    batch.commit().await()
+                }
+                Unit
+            }
+        }
+    }
+
     private companion object {
         const val TAG = "FirestoreCostRepository"
         const val COSTS_COLLECTION = "costs"
         const val FIELD_VEHICLE_ID = "vehicleId"
         const val FIELD_USER_ID = "userId"
         const val FIELD_DATE_MILLIS = "dateMillis"
+        const val BATCH_LIMIT = 500
     }
 }

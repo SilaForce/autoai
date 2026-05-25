@@ -54,7 +54,9 @@ class ReminderViewModel(
             is ReminderEvent.OnNavItemSelected -> handleBottomNavigation(event.item)
             is ReminderEvent.OnToggleCompleted -> toggleCompleted(event.reminder)
             is ReminderEvent.OnEditClicked -> openEditSheet(event.reminder)
-            is ReminderEvent.OnDeleteClicked -> deleteReminder(event.reminderId)
+            is ReminderEvent.OnDeleteClicked -> setState { it.copy(pendingDeleteReminderId = event.reminderId) }
+            ReminderEvent.OnDismissDeleteDialog -> setState { it.copy(pendingDeleteReminderId = null) }
+            ReminderEvent.OnConfirmDeleteReminder -> deletePendingReminder()
         }
     }
 
@@ -210,8 +212,10 @@ class ReminderViewModel(
 
     // ─── Delete ───────────────────────────────────────────────────────────────
 
-    private fun deleteReminder(reminderId: String) {
+    private fun deletePendingReminder() {
+        val reminderId = state.value.pendingDeleteReminderId ?: return
         val vehicleId = activeVehicleId ?: return
+        setState { it.copy(pendingDeleteReminderId = null) }
 
         viewModelScope.launch {
             deleteReminderUseCase(DeleteReminderParams(reminderId))

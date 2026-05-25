@@ -7,9 +7,7 @@ import org.koin.androidx.compose.koinViewModel
 fun OnboardingScreen(
     viewModel: OnboardingViewModel = koinViewModel()
 ) {
-    // Pošto u ovom specifičnom slučaju Pager upravlja svojim stanjem,
-    // ViewModelu prosljeđujemo samo referencu na onEvent funkciju.
-
+    // The Pager owns its own state, so the VM only receives the onEvent callback.
     OnboardingContent(
         onEvent = viewModel::onEvent
     )

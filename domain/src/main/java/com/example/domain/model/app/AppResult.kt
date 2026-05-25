@@ -15,13 +15,6 @@ inline fun <T> AppResult<T>.onFailure(action: (DataError) -> Unit): AppResult<T>
     return this
 }
 
-fun <T> AppResult<T>.logError(tag: String = "AutoAIDebug"): AppResult<T> {
-    if (this is AppResult.Failure) {
-        println("[$tag] Error Details: ${this.error}")
-    }
-    return this
-}
-
 inline fun <T, R> AppResult<T>.map(transform: (T) -> R): AppResult<R> {
     return when (this) {
         is AppResult.Success -> AppResult.Success(transform(data))

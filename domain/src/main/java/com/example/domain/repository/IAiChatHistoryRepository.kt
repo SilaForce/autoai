@@ -13,4 +13,6 @@ interface IAiChatHistoryRepository {
     suspend fun saveMessage(message: ChatMessage, userId: String): AppResult<Unit>
 
     suspend fun deleteMessagesForThread(userId: String, threadId: String): AppResult<Unit>
+
+    suspend fun deleteAllForUser(userId: String): AppResult<Unit>
 }

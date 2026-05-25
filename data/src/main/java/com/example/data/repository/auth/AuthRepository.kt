@@ -1,6 +1,10 @@
 package com.example.data.repository.auth
 
 import com.example.data.datasource.remote.util.safeFirebaseCall
+import com.example.data.mapper.toUser
+import com.example.data.mapper.toUserDto
+import com.example.data.mapper.toUserUpdateMap
+import com.example.data.model.user.UserDto
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.DataError
 import com.example.domain.model.app.StartDestination
@@ -29,19 +33,19 @@ class AuthRepository(
         password: String
     ): AppResult<User> {
         return safeFirebaseCall {
-
             val authResult = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
             val firebaseUser = authResult.user ?: throw Exception("Firebase user is null")
 
             val newUser = User(
                 id = firebaseUser.uid,
                 name = name,
-                email = firebaseUser.email ?: email
+                email = firebaseUser.email ?: email,
+                createdAt = System.currentTimeMillis(),
             )
 
-            firestore.collection("users")
+            firestore.collection(USERS_COLLECTION)
                 .document(firebaseUser.uid)
-                .set(newUser)
+                .set(newUser.toUserDto())
                 .await()
 
             newUser
@@ -50,26 +54,10 @@ class AuthRepository(
 
     override suspend fun login(email: String, password: String): AppResult<User> {
         return safeFirebaseCall {
-
             val authResult = firebaseAuth.signInWithEmailAndPassword(email, password).await()
             val firebaseUser = authResult.user ?: throw Exception("Firebase user is null after login")
 
-            val snapshot = firestore.collection("users")
-                .document(firebaseUser.uid)
-                .get()
-                .await()
-
-            User(
-                id = firebaseUser.uid,
-                name = snapshot.getString("name") ?: "",
-                username = snapshot.getString("username") ?: "",
-                phoneNumber = snapshot.getString("phoneNumber") ?: "",
-                email = firebaseUser.email ?: email,
-                profilePictureUrl = snapshot.getString("profilePictureUrl"),
-                isPremium = snapshot.getBoolean("isPremium") ?: false,
-                currency = snapshot.getString("currency") ?: "BAM",
-                createdAt = snapshot.getLong("createdAt") ?: System.currentTimeMillis(),
-            )
+            readUserDoc(firebaseUser.uid, firebaseUser.email ?: email)
         }
     }
 
@@ -78,42 +66,16 @@ class AuthRepository(
             ?: return AppResult.Failure(DataError.Network.Unauthorized)
 
         return safeFirebaseCall {
-            val snapshot = firestore.collection("users")
-                .document(firebaseUser.uid)
-                .get()
-                .await()
-
-            User(
-                id = firebaseUser.uid,
-                name = snapshot.getString("name") ?: "",
-                username = snapshot.getString("username") ?: "",
-                phoneNumber = snapshot.getString("phoneNumber") ?: "",
-                email = firebaseUser.email ?: "",
-                profilePictureUrl = snapshot.getString("profilePictureUrl"),
-                isPremium = snapshot.getBoolean("isPremium") ?: false,
-                currency = snapshot.getString("currency") ?: "BAM",
-                createdAt = snapshot.getLong("createdAt") ?: System.currentTimeMillis(),
-            )
+            readUserDoc(firebaseUser.uid, firebaseUser.email.orEmpty())
         }
     }
 
     override suspend fun updateUser(user: User): AppResult<User> {
         return safeFirebaseCall {
-            val updates = mutableMapOf<String, Any>(
-                "name" to user.name,
-                "username" to user.username,
-                "phoneNumber" to user.phoneNumber,
-            )
-
-            user.profilePictureUrl?.let { url ->
-                updates["profilePictureUrl"] = url
-             }
-
             firestore.collection(USERS_COLLECTION)
                 .document(user.id)
-                .update(updates)
+                .update(user.toUserUpdateMap())
                 .await()
-
             user
         }
     }
@@ -128,6 +90,9 @@ class AuthRepository(
                 .delete()
                 .await()
 
+            // DeleteUserUseCase has already cascaded the user-owned collections by this
+            // point. This is the last step — once the auth record is gone, the client
+            // loses credentials to query its own data.
             firebaseUser.delete().await()
         }
     }
@@ -136,6 +101,19 @@ class AuthRepository(
         return safeFirebaseCall {
             firebaseAuth.signOut()
         }
+    }
+
+    private suspend fun readUserDoc(uid: String, email: String): User {
+        val snapshot = firestore.collection(USERS_COLLECTION)
+            .document(uid)
+            .get()
+            .await()
+
+        val dto = snapshot.toObject(UserDto::class.java)?.let { current ->
+            if (current.id.isBlank()) current.copy(id = uid) else current
+        } ?: UserDto(id = uid)
+
+        return dto.toUser(email = email)
     }
 
     private companion object {

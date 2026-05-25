@@ -6,6 +6,8 @@ import com.example.domain.model.vehicle.FuelType
 import com.example.domain.model.vehicle.Vehicle
 import com.example.domain.repository.IVehicleRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -63,14 +65,14 @@ class VehicleUseCasesTest {
     }
 
     @Test
-    fun `get vehicles returns validation error when user id is blank`() = runBlocking {
+    fun `get vehicles returns not-found when user id is blank`() = runBlocking {
         val repository = FakeVehicleRepository()
         val useCase = GetVehiclesUseCase(repository, Dispatchers.Unconfined)
 
         val result = useCase(GetVehiclesParams(userId = "   "))
 
         assertTrue(result is AppResult.Failure)
-        assertEquals(DataError.Local.Validation.Generic, (result as AppResult.Failure).error)
+        assertEquals(DataError.Local.NotFound, (result as AppResult.Failure).error)
     }
 
     @Test
@@ -85,7 +87,7 @@ class VehicleUseCasesTest {
     }
 
     @Test
-    fun `set active vehicle returns validation error when vehicle id is blank`() = runBlocking {
+    fun `set active vehicle returns not-found when vehicle id is blank`() = runBlocking {
         val repository = FakeVehicleRepository()
         val useCase = SetActiveVehicleUseCase(repository, Dispatchers.Unconfined)
 
@@ -97,7 +99,7 @@ class VehicleUseCasesTest {
         )
 
         assertTrue(result is AppResult.Failure)
-        assertEquals(DataError.Local.Validation.Generic, (result as AppResult.Failure).error)
+        assertEquals(DataError.Local.NotFound, (result as AppResult.Failure).error)
     }
 
     @Test
@@ -137,6 +139,26 @@ class VehicleUseCasesTest {
             lastSetActiveUserId = userId
             lastSetActiveVehicleId = vehicleId
             return AppResult.Success(Unit)
+        }
+
+        override suspend fun getVehicleById(vehicleId: String): AppResult<Vehicle> {
+            throw NotImplementedError()
+        }
+
+        override suspend fun updateVehicle(vehicle: Vehicle): AppResult<Vehicle> {
+            throw NotImplementedError()
+        }
+
+        override suspend fun deleteVehicle(userId: String, vehicleId: String): AppResult<Unit> {
+            throw NotImplementedError()
+        }
+
+        override suspend fun deleteAllForUser(userId: String): AppResult<Unit> {
+            throw NotImplementedError()
+        }
+
+        override fun observeActiveVehicle(userId: String): Flow<AppResult<Vehicle?>> {
+            return flowOf(AppResult.Success(null))
         }
     }
 }

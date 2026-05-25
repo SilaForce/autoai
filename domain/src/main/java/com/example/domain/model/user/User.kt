@@ -1,13 +1,15 @@
 package com.example.domain.model.user
 
 data class User(
-    val id: String,                  // Jedinstveni ID (koji nam kasnije Firebase dodijeli)
-    val email: String,               // Za prijavu i kontakt
-    val name: String,                 // Za personalizaciju (npr. "Zdravo, Amare!")
-    val username: String = "",        // Korisničko ime
-    val phoneNumber: String = "",     // Broj telefona
-    val profilePictureUrl: String? = null, // Opcionalno, ako korisnik doda sliku
-    val isPremium: Boolean = false,  // Jako bitno za AutoAI! (npr. da li ima neograničen pristup AI mehaničaru)
-    val currency: String = "BAM",      // Pošto pratiš troškove, dobro je znati koja je valuta korisnika
-    val createdAt: Long = System.currentTimeMillis() // Datum kreiranja profila
+    val id: String,
+    val email: String,
+    val name: String,
+    val username: String = "",
+    val phoneNumber: String = "",
+    val profilePictureUrl: String? = null,
+    val isPremium: Boolean = false,
+    // ISO 4217 code (BAM/EUR/USD). The display symbol is derived in
+    // presentation via CurrencyFormatter.symbolFor(code).
+    val currency: String = "BAM",
+    val createdAt: Long = System.currentTimeMillis()
 )

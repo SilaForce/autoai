@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
+import androidx.compose.material.icons.outlined.AttachMoney
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Notifications
@@ -38,8 +39,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.autoai.localization.AppStrings
+import com.example.autoai.presentation.features.settings.components.CurrencyPickerDialog
 import com.example.autoai.presentation.features.settings.components.SettingsItemCard
 import com.example.autoai.presentation.theme.VerdantGreen
+import com.example.autoai.presentation.util.CurrencyFormatter
 import com.example.autoai.presentation.theme.WarningOrange
 import com.example.autoai.presentation.theme.WarningOrangeBg
 
@@ -71,7 +74,7 @@ fun SettingsContent(
                 IconButton(onClick = { onEvent(SettingsEvent.OnBackClicked) }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
+                        contentDescription = AppStrings.Common.back,
                         tint = MaterialTheme.colorScheme.onSurface,
                     )
                 }
@@ -132,6 +135,27 @@ fun SettingsContent(
             )
 
             SettingsItemCard(
+                icon = Icons.Outlined.AttachMoney,
+                title = AppStrings.Settings.currencyStr,
+                onClick = { onEvent(SettingsEvent.OnChangeCurrencyClicked) },
+                trailingContent = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "${state.currency} (${CurrencyFormatter.symbolFor(state.currency)})",
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+                        )
+                        Spacer(modifier = Modifier.size(4.dp))
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        )
+                    }
+                }
+            )
+
+            SettingsItemCard(
                 icon = Icons.Outlined.Language,
                 title = AppStrings.Settings.languageStr,
                 onClick = { onEvent(SettingsEvent.OnChangeLanguageClicked) },
@@ -184,5 +208,13 @@ fun SettingsContent(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.TopCenter),
         )
+
+        if (state.isCurrencyDialogOpen) {
+            CurrencyPickerDialog(
+                currentCurrency = state.currency,
+                onDismissRequest = { onEvent(SettingsEvent.OnDismissCurrencyDialog) },
+                onCurrencySelected = { onEvent(SettingsEvent.OnCurrencySelected(it)) },
+            )
+        }
     }
 }

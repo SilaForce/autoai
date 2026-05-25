@@ -45,6 +45,7 @@ class CostsViewModel(
 ) : BaseViewModel<CostsState, CostsEvent, CostsSideEffect>(createInitialState(savedStateHandle)) {
 
     private var currentUserId: String? = null
+    private var currentCurrency: String = "BAM"
     private var activeVehicleId: String? = null
     private var domainCosts: List<Cost> = emptyList()
     private var statsReloadJob: Job? = null
@@ -155,6 +156,8 @@ class CostsViewModel(
                 }
             }
             currentUserId = user.id
+            currentCurrency = user.currency
+            setState { it.copy(currency = user.currency) }
 
             val vehicles = when (val result = getVehiclesUseCase(GetVehiclesParams(user.id))) {
                 is AppResult.Success -> result.data
@@ -188,7 +191,7 @@ class CostsViewModel(
         getCostsHistoryUseCase(GetCostsHistoryParams(vehicleId))
             .onSuccess { costs ->
                 domainCosts = costs
-                historyUi = costs.map { it.toCostItemUi() }
+                historyUi = costs.map { it.toCostItemUi(currentCurrency) }
                 getCostStatisticsForPeriodUseCase(
                     GetCostStatisticsForPeriodParams(
                         costs = costs,
@@ -196,7 +199,7 @@ class CostsViewModel(
                         untilMillis = null,
                     )
                 ).onSuccess { stats ->
-                    statsUi = stats.toCostStatsUi()
+                    statsUi = stats.toCostStatsUi(currentCurrency)
                     statsLoadedForPeriod = period
                 }
             }
@@ -225,7 +228,7 @@ class CostsViewModel(
             )
         )
             .onSuccess { stats ->
-                setState { it.copy(stats = stats.toCostStatsUi()) }
+                setState { it.copy(stats = stats.toCostStatsUi(currentCurrency)) }
                 statsLoadedForPeriod = period
             }
             .onFailure { error -> emitSideEffect(CostsSideEffect.ShowError(error.asUiText())) }

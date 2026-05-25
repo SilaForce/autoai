@@ -53,6 +53,23 @@ class FirestoreChatThreadRepository(
         }
     }
 
+    override suspend fun deleteAllForUser(userId: String): AppResult<Unit> {
+        return safeFirebaseCall {
+            val snapshot = firestore.collection(AI_CHAT_THREADS_COLLECTION)
+                .whereEqualTo(FIELD_USER_ID, userId)
+                .get()
+                .await()
+
+            // Firestore batches max 500 ops; chunk for safety.
+            snapshot.documents.chunked(BATCH_LIMIT).forEach { chunk ->
+                val batch = firestore.batch()
+                chunk.forEach { batch.delete(it.reference) }
+                batch.commit().await()
+            }
+            Unit
+        }
+    }
+
     override suspend fun loadThreads(userId: String): AppResult<List<ChatThread>> {
         return safeFirebaseCall {
             firestore.collection(AI_CHAT_THREADS_COLLECTION)
@@ -93,5 +110,6 @@ class FirestoreChatThreadRepository(
         const val FIELD_USER_ID = "userId"
         const val FIELD_TITLE = "title"
         const val FIELD_UPDATED_AT = "updatedAt"
+        const val BATCH_LIMIT = 500
     }
 }

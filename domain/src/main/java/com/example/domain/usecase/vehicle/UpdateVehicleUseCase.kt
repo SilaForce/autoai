@@ -27,10 +27,11 @@ class UpdateVehicleUseCase(
 ) : BaseUseCase<UpdateVehicleParams, Vehicle>(dispatcher) {
 
     override suspend fun execute(params: UpdateVehicleParams): AppResult<Vehicle> {
+        // Blank vehicleId/userId is a programmer error, not form validation; treat as NotFound.
         if (!ValidationUtil.isValidVehicleText(params.vehicleId) ||
             !ValidationUtil.isValidVehicleText(params.userId)
         ) {
-            return AppResult.Failure(DataError.Local.Validation.Generic)
+            return AppResult.Failure(DataError.Local.NotFound)
         }
         if (!ValidationUtil.isValidVehicleText(params.make) ||
             !ValidationUtil.isValidVehicleText(params.model)

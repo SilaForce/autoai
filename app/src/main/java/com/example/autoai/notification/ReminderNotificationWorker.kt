@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -14,8 +15,10 @@ import androidx.work.WorkerParameters
 import com.example.autoai.R
 import com.example.domain.model.app.AppResult
 import com.example.domain.repository.IAuthRepository
+import com.example.domain.repository.IPreferencesRepository
 import com.example.domain.repository.IRemindersRepository
 import com.example.domain.repository.IVehicleRepository
+import kotlinx.coroutines.flow.first
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.concurrent.TimeUnit
@@ -28,50 +31,48 @@ class ReminderNotificationWorker(
     private val authRepository: IAuthRepository by inject()
     private val remindersRepository: IRemindersRepository by inject()
     private val vehicleRepository: IVehicleRepository by inject()
+    private val preferencesRepository: IPreferencesRepository by inject()
 
     override suspend fun doWork(): Result {
-        println("[ReminderWorker] Worker started")
+        // Respect the user's Settings toggle. Short-circuit before any Firestore reads.
+        if (!preferencesRepository.isNotificationsEnabled.first()) {
+            return Result.success()
+        }
 
         val user = when (val result = authRepository.getCurrentUser()) {
             is AppResult.Success -> result.data
             is AppResult.Failure -> {
-                println("[ReminderWorker] Failed to get user: ${result.error}")
+                Log.w(TAG, "Failed to get user: ${result.error}")
                 return Result.retry()
             }
         }
-        println("[ReminderWorker] User: ${user.id}")
 
         val activeVehicle = when (val result = vehicleRepository.getVehicles(user.id)) {
             is AppResult.Success -> result.data.firstOrNull { it.isActive }
             is AppResult.Failure -> {
-                println("[ReminderWorker] Failed to get vehicles: ${result.error}")
+                Log.w(TAG, "Failed to get vehicles: ${result.error}")
                 return Result.retry()
             }
         }
         if (activeVehicle == null) {
-            println("[ReminderWorker] No active vehicle — skipping notifications")
             return Result.success()
         }
-        println("[ReminderWorker] Active vehicle: ${activeVehicle.id} (${activeVehicle.make} ${activeVehicle.model})")
 
         val reminders = when (val result = remindersRepository.getActiveRemindersForVehicle(activeVehicle.id)) {
             is AppResult.Success -> result.data
             is AppResult.Failure -> {
-                println("[ReminderWorker] Failed to get reminders: ${result.error}")
+                Log.w(TAG, "Failed to get reminders: ${result.error}")
                 return Result.retry()
             }
         }
-        println("[ReminderWorker] Found ${reminders.size} active reminders for active vehicle")
 
         val now = System.currentTimeMillis()
         val threeDaysMillis = TimeUnit.DAYS.toMillis(3)
 
         val dueSoon = reminders.filter { reminder ->
             val daysUntilDue = reminder.dueDateMillis - now
-            println("[ReminderWorker] Reminder '${reminder.title}': daysUntilDue=${daysUntilDue / (1000 * 60 * 60 * 24)}d")
             daysUntilDue in 0..threeDaysMillis
         }
-        println("[ReminderWorker] ${dueSoon.size} reminders due within 3 days")
 
         if (dueSoon.isNotEmpty()) {
             createNotificationChannel()
@@ -117,5 +118,6 @@ class ReminderNotificationWorker(
     companion object {
         const val CHANNEL_ID = "reminder_notifications"
         const val WORK_NAME = "daily_reminder_check"
+        private const val TAG = "ReminderWorker"
     }
 }

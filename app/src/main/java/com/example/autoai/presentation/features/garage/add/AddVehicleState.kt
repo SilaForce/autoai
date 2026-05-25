@@ -1,7 +1,18 @@
 package com.example.autoai.presentation.features.garage.add
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import com.example.domain.model.vehicle.FuelType
+
+@Immutable
+data class AddVehicleSnapshot(
+    val make: String,
+    val model: String,
+    val year: String,
+    val mileage: String,
+    val licensePlate: String,
+    val selectedFuelType: FuelType?,
+)
 
 @Stable
 data class AddVehicleState(
@@ -11,7 +22,6 @@ data class AddVehicleState(
     val mileage: String = "",
     val licensePlate: String = "",
     val selectedFuelType: FuelType? = null,
-    val fuelTypeOptions: List<FuelTypeOptionUi> = emptyList(),
     val isLoading: Boolean = false,
     val isFormDirty: Boolean = false,
     val showDiscardDialog: Boolean = false,
@@ -34,4 +44,8 @@ data class AddVehicleState(
 
     val isEditMode: Boolean = false,
     val originalIsActive: Boolean = false,
+    // Captured field values at edit-load time. Null in add mode; non-null in edit mode.
+    // calculateIsFormDirty compares current field values against this snapshot, so
+    // simply opening an edit form and touching no fields leaves isFormDirty = false.
+    val originalSnapshot: AddVehicleSnapshot? = null,
 )

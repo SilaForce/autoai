@@ -45,5 +45,4 @@ val dataModule = module {
     singleOf(::FirestoreChatThreadRepository) bind IAiChatThreadRepository::class
     singleOf(::PreferencesRepository) bind IPreferencesRepository::class
     singleOf(::NhtsaVehicleMakesRepository) bind IVehicleMakesRepository::class
-    // singleOf(::StorageRepository) bind IStorageRepository::class
 }

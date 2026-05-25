@@ -24,14 +24,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material3.MaterialTheme
 import com.example.autoai.presentation.theme.VerdantGreen
 
-// 1. Data klasa koja drži podatke za jedan slajd
 data class OnboardingPage(
     val icon: ImageVector,
     val title: String,
     val description: String
 )
 
-// 2. Composable komponenta koja iscrtava taj slajd
 @Composable
 fun OnboardingPageContent(
     page: OnboardingPage,
@@ -42,25 +40,23 @@ fun OnboardingPageContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Veliki krug sa ikonicom unutra
         Box(
             modifier = Modifier
-                .size(160.dp) // Veličina cijelog kruga
+                .size(160.dp)
                 .clip(CircleShape)
-                .background(VerdantGreen.copy(alpha = 0.1f)), // Blaga zelena pozadina (10% opacity)
+                .background(VerdantGreen.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = page.icon,
                 contentDescription = null,
-                tint = VerdantGreen, // Jaka zelena za samu ikonicu
-                modifier = Modifier.size(72.dp) // Veličina same ikonice
+                tint = VerdantGreen,
+                modifier = Modifier.size(72.dp)
             )
         }
 
         Spacer(modifier = Modifier.height(48.dp))
 
-        // Naslov
         Text(
             text = page.title,
             fontSize = 28.sp, // Velik i jasan naslov

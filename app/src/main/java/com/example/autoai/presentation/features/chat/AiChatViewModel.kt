@@ -1,10 +1,12 @@
 package com.example.autoai.presentation.features.chat
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.example.autoai.base.BaseViewModel
 import com.example.autoai.navigation.IAppNavigator
 import com.example.autoai.navigation.Route
 import com.example.autoai.presentation.components.BottomNavItem
+import com.example.autoai.presentation.util.ImagePayload
 import com.example.autoai.presentation.util.ImageUtils
 import com.example.autoai.presentation.util.asUiText
 import com.example.domain.model.app.AppResult
@@ -47,7 +49,9 @@ import com.example.domain.usecase.reminder.GetRemindersUseCase
 import com.example.domain.usecase.user.GetCurrentUserUseCase
 import com.example.domain.usecase.vehicle.GetVehiclesParams
 import com.example.domain.usecase.vehicle.GetVehiclesUseCase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -74,10 +78,8 @@ class AiChatViewModel(
 
     private companion object {
         const val AI_CONTEXT_MESSAGES = 30
+        private const val TAG = "AiChatViewModel"
     }
-
-    // Čuvamo čiste Domain modele u ViewModelu za historiju razgovora
-    private val apiChatHistory = mutableListOf<ChatMessage>()
 
     private var systemInstruction =
         "You are an expert auto mechanic. Provide short and precise automotive advice."
@@ -88,30 +90,32 @@ class AiChatViewModel(
 
     private var currentUserId: String? = null
 
+    private var currentUserCurrency: String = "BAM"
+
     private var currentThreadId: String? = null
 
     init {
-        renderUiState()
-
-        viewModelScope.launch { refreshSystemInstruction() }
-        viewModelScope.launch { hydrateHistory() }
-
+        // Single source of user resolution — no more race between hydrateHistory() and
+        // refreshSystemInstruction() both writing currentUserId.
         viewModelScope.launch {
-            preferencesRepository.isAiAutoRemindersEnabled.collect { enabled ->
-                aiAutoReminderEnabled = enabled
+            getCurrentUserUseCase(Unit).onSuccess { user ->
+                currentUserId = user.id
+                currentUserCurrency = user.currency
+                refreshThreadList(user.id)
+                refreshSystemInstruction()
             }
         }
-    }
 
-    private suspend fun hydrateHistory() {
-        getCurrentUserUseCase(Unit).onSuccess { user ->
-            currentUserId = user.id
-            // Always begin with a fresh, empty chat — the user can pick a past thread from the sidebar.
-            refreshThreadList(user.id)
-            apiChatHistory.clear()
-            currentThreadId = null
-            setState { it.copy(currentThreadId = null, currentThreadTitle = null) }
-            renderUiState()
+        // Auto-reminders preference flips → rebuild the system instruction so the AI's
+        // tool availability matches the pref (previously this was written to a private
+        // field that never propagated until the next per-send refresh).
+        viewModelScope.launch {
+            preferencesRepository.isAiAutoRemindersEnabled.collect { enabled ->
+                if (aiAutoReminderEnabled != enabled) {
+                    aiAutoReminderEnabled = enabled
+                    if (currentUserId != null) refreshSystemInstruction()
+                }
+            }
         }
     }
 
@@ -127,14 +131,8 @@ class AiChatViewModel(
         currentThreadId = thread.id
         setState { it.copy(currentThreadId = thread.id, currentThreadTitle = thread.title) }
         loadChatHistoryUseCase(LoadChatHistoryParams(userId, thread.id)).onSuccess { messages ->
-            apiChatHistory.clear()
-            apiChatHistory.addAll(messages)
-            renderUiState()
+            setState { it.copy(messages = messages.map { msg -> msg.toUiModel() }) }
         }
-    }
-
-    private fun renderUiState() {
-        setState { it.copy(messages = apiChatHistory.map { msg -> msg.toUiModel() }) }
     }
 
     override fun onEvent(event: AiChatEvent) {
@@ -143,12 +141,18 @@ class AiChatViewModel(
             AiChatEvent.OnSendMessageClicked -> sendMessage()
             is AiChatEvent.OnNavItemSelected -> handleBottomNavigation(event.item)
             is AiChatEvent.OnImageSelected -> {
-                val compressed = ImageUtils.compressForAi(event.imageBytes) ?: event.imageBytes
-                setState { currentState ->
-                    if (currentState.selectedImages.size < 3) {
-                        currentState.copy(selectedImages = currentState.selectedImages + compressed)
-                    } else {
-                        currentState
+                // Bitmap decode + JPEG encode of a 5MB phone photo can take hundreds of
+                // ms on Main. Push to Default; UI stays interactive.
+                viewModelScope.launch {
+                    val compressed = withContext(Dispatchers.Default) {
+                        ImagePayload(ImageUtils.compressForAi(event.imageBytes) ?: event.imageBytes)
+                    }
+                    setState { currentState ->
+                        if (currentState.selectedImages.size < 3) {
+                            currentState.copy(selectedImages = currentState.selectedImages + compressed)
+                        } else {
+                            currentState
+                        }
                     }
                 }
             }
@@ -181,6 +185,14 @@ class AiChatViewModel(
                 setState { it.copy(pendingDeleteThreadId = null) }
 
             AiChatEvent.OnConfirmDeleteThread -> deletePendingThread()
+
+            AiChatEvent.OnScreenResumed -> {
+                // User may have changed vehicle / costs / reminders in another screen.
+                // Refresh the system instruction so the AI's grounding is current.
+                if (currentUserId != null) {
+                    viewModelScope.launch { refreshSystemInstruction() }
+                }
+            }
         }
     }
 
@@ -216,18 +228,24 @@ class AiChatViewModel(
 
     private fun startNewChat() {
         currentThreadId = null
-        apiChatHistory.clear()
-        setState { it.copy(currentThreadId = null, currentThreadTitle = null) }
-        renderUiState()
+        setState {
+            it.copy(
+                currentThreadId = null,
+                currentThreadTitle = null,
+                messages = emptyList(),
+            )
+        }
     }
 
     private suspend fun refreshSystemInstruction() {
-        getCurrentUserUseCase(Unit).onSuccess { user ->
-            currentUserId = user.id
-            getVehiclesUseCase(GetVehiclesParams(user.id)).onSuccess { vehicles ->
-                val activeVehicle = vehicles.firstOrNull { it.isActive } ?: return@onSuccess
-                activeVehicleId = activeVehicle.id
-                getReminderUseCase(GetRemindersParams(activeVehicle.id)).onSuccess { reminders ->
+        // `currentUserId` is resolved once in init and never re-fetched here. Earlier this
+        // method called getCurrentUserUseCase and wrote currentUserId, racing with the
+        // init's own user fetch. Now there's a single owner.
+        val userId = currentUserId ?: return
+        getVehiclesUseCase(GetVehiclesParams(userId)).onSuccess { vehicles ->
+            val activeVehicle = vehicles.firstOrNull { it.isActive } ?: return@onSuccess
+            activeVehicleId = activeVehicle.id
+            getReminderUseCase(GetRemindersParams(activeVehicle.id)).onSuccess { reminders ->
                     val closestReminder = reminders
                         .filter { !it.isCompleted }
                         .minByOrNull { it.dueDateMillis }
@@ -262,7 +280,7 @@ class AiChatViewModel(
                     getCostStatisticsUseCase(GetCostStatisticsParams(activeVehicle.id)).onSuccess {
                         stats = it
                     }
-                    val costsBlock = buildCostsBlock(costs, stats)
+                    val costsBlock = buildCostsBlock(costs, stats, currentUserCurrency)
 
                     val autoReminderBlock = if (aiAutoReminderEnabled) {
                         """
@@ -316,22 +334,19 @@ class AiChatViewModel(
                             - Respond in the same language the user writes in.
                             - If you are unsure about something, say so honestly rather than guessing.
                         """.trimIndent()
-                }
             }
         }
     }
 
     private fun sendMessage() {
-        val images = state.value.selectedImages
+        val selectedImages = state.value.selectedImages
+        val imageBytes = selectedImages.map { it.bytes }
         val prompt = state.value.inputText.trim()
         if (prompt.isBlank() || state.value.isAiTyping) return
 
         setState { it.copy(inputText = "", isAiTyping = true, selectedImages = emptyList()) }
 
         viewModelScope.launch {
-            refreshSystemInstruction()
-
-            // Lazy thread creation — if no active thread, spin one up now using the prompt as title.
             val uid = currentUserId
             if (uid.isNullOrBlank()) {
                 setState { it.copy(isAiTyping = false) }
@@ -343,21 +358,24 @@ class AiChatViewModel(
                 return@launch
             }
 
+            // Snapshot for the AI call BEFORE adding the new message, capped to the
+            // context window. Derived from state.value.messages — the single source of
+            // truth — not a parallel apiChatHistory list.
+            val previousApiHistory = state.value.messages
+                .map { it.toDomainModel() }
+                .takeLast(AI_CONTEXT_MESSAGES)
+
             val userMessage = ChatMessage(
                 text = prompt,
                 role = MessageRole.USER,
-                images = images,
+                images = imageBytes,
                 threadId = threadId,
             )
-
-            // Snapshot for the AI call BEFORE adding the new message, capped to the context window.
-            val previousApiHistory = apiChatHistory.toList().takeLast(AI_CONTEXT_MESSAGES)
-
-            addMessageToApiAndUi(userMessage)
+            addMessage(userMessage)
 
             saveChatMessageUseCase(SaveChatMessageParams(userMessage, uid))
                 .onFailure { error ->
-                    println("[AiChatViewModel] failed to persist user message: ${error::class.simpleName}")
+                    Log.w(TAG, "failed to persist user message: ${error::class.simpleName}")
                 }
 
             sendMessageUseCase(
@@ -365,7 +383,7 @@ class AiChatViewModel(
                     prompt = prompt,
                     history = previousApiHistory,
                     systemInstruction = systemInstruction,
-                    images = images,
+                    images = imageBytes,
                     tools = buildTools(),
                 )
             ).onSuccess { aiReply ->
@@ -374,12 +392,12 @@ class AiChatViewModel(
                     role = MessageRole.AI,
                     threadId = threadId,
                 )
-                addMessageToApiAndUi(aiMessage)
+                addMessage(aiMessage)
                 setState { it.copy(isAiTyping = false) }
 
                 saveChatMessageUseCase(SaveChatMessageParams(aiMessage, uid))
                     .onFailure { error ->
-                        println("[AiChatViewModel] failed to persist AI message: ${error::class.simpleName}")
+                        Log.w(TAG, "failed to persist AI message: ${error::class.simpleName}")
                     }
 
                 bumpThreadUpdatedAt(uid, threadId)
@@ -405,7 +423,7 @@ class AiChatViewModel(
             createdId = saved.id
             setState { it.copy(currentThreadId = saved.id, currentThreadTitle = saved.title) }
         }.onFailure { error ->
-            println("[AiChatViewModel] failed to create thread: ${error::class.simpleName}")
+            Log.w(TAG, "failed to create thread: ${error::class.simpleName}")
         }
         // Refresh the sidebar so the new thread is visible immediately.
         refreshThreadList(userId)
@@ -425,12 +443,12 @@ class AiChatViewModel(
                 )
             )
         ).onFailure { error ->
-            println("[AiChatViewModel] failed to update thread metadata: ${error::class.simpleName}")
+            Log.w(TAG, "failed to update thread metadata: ${error::class.simpleName}")
         }
         refreshThreadList(userId)
     }
 
-    private fun buildCostsBlock(costs: List<Cost>, stats: CostStatistics?): String {
+    private fun buildCostsBlock(costs: List<Cost>, stats: CostStatistics?, currencyCode: String): String {
         if (costs.isEmpty() || stats == null) {
             return "The user has not logged any costs for this vehicle yet. If they ask cost-related questions, say so honestly."
         }
@@ -464,7 +482,7 @@ class AiChatViewModel(
             }
 
         return """
-            The user's spending summary for this vehicle (amounts in their local currency):
+            The user's spending summary for this vehicle (all amounts are in $currencyCode):
             - Total spent: $total
             $perCategoryStats
 
@@ -701,9 +719,8 @@ class AiChatViewModel(
     private fun money(amount: Double): String = String.format(Locale.getDefault(), "%.2f", amount)
 
 
-    private fun addMessageToApiAndUi(message: ChatMessage) {
-        apiChatHistory.add(message)
-        renderUiState()
+    private fun addMessage(message: ChatMessage) {
+        setState { it.copy(messages = it.messages + message.toUiModel()) }
     }
 
     private fun handleBottomNavigation(item: BottomNavItem) {

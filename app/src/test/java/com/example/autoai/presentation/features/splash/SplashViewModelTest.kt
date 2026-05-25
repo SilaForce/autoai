@@ -5,8 +5,11 @@ import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.StartDestination
 import com.example.domain.model.user.User
 import com.example.domain.repository.IAuthRepository
+import com.example.domain.repository.IPreferencesRepository
 import com.example.domain.usecase.session.CheckSessionUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -21,11 +24,8 @@ class SplashViewModelTest {
 
     @Test
     fun `init resolves home destination when session exists`() = runTest {
-        val viewModel = SplashViewModel(
-            checkSessionUseCase = CheckSessionUseCase(
-                repository = FakeAuthRepository(startDestination = StartDestination.Home),
-                dispatcher = mainDispatcherRule.dispatcher,
-            )
+        val viewModel = createViewModel(
+            authRepository = FakeAuthRepository(startDestination = StartDestination.Home),
         )
 
         val state = viewModel.state.value
@@ -35,18 +35,42 @@ class SplashViewModelTest {
     }
 
     @Test
-    fun `init falls back to auth when session check throws`() = runTest {
-        val viewModel = SplashViewModel(
-            checkSessionUseCase = CheckSessionUseCase(
-                repository = ThrowingAuthRepository(),
-                dispatcher = mainDispatcherRule.dispatcher,
-            )
+    fun `init falls back to auth when session check throws and onboarding incomplete`() = runTest {
+        val viewModel = createViewModel(
+            authRepository = ThrowingAuthRepository(),
+            preferencesRepository = FakePreferencesRepository(onboardingCompleted = false),
         )
 
         val state = viewModel.state.value
 
         assertFalse(state.isLoading)
         assertEquals(StartDestination.Auth, state.startDestination)
+    }
+
+    @Test
+    fun `init routes to Login when no session but onboarding completed`() = runTest {
+        val viewModel = createViewModel(
+            authRepository = FakeAuthRepository(startDestination = StartDestination.Auth),
+            preferencesRepository = FakePreferencesRepository(onboardingCompleted = true),
+        )
+
+        val state = viewModel.state.value
+
+        assertFalse(state.isLoading)
+        assertEquals(StartDestination.Login, state.startDestination)
+    }
+
+    private fun createViewModel(
+        authRepository: IAuthRepository,
+        preferencesRepository: IPreferencesRepository = FakePreferencesRepository(),
+    ): SplashViewModel {
+        return SplashViewModel(
+            checkSessionUseCase = CheckSessionUseCase(
+                repository = authRepository,
+                dispatcher = mainDispatcherRule.dispatcher,
+            ),
+            preferencesRepository = preferencesRepository,
+        )
     }
 
     private class FakeAuthRepository(
@@ -59,17 +83,16 @@ class SplashViewModelTest {
             name: String,
             email: String,
             password: String,
-        ): AppResult<User> {
-            throw NotImplementedError()
-        }
+        ): AppResult<User> = throw NotImplementedError()
 
-        override suspend fun login(email: String, password: String): AppResult<User> {
+        override suspend fun login(email: String, password: String): AppResult<User> =
             throw NotImplementedError()
-        }
 
-        override suspend fun getCurrentUser(): AppResult<User> {
-            throw NotImplementedError()
-        }
+        override suspend fun getCurrentUser(): AppResult<User> = throw NotImplementedError()
+
+        override suspend fun updateUser(user: User): AppResult<User> = throw NotImplementedError()
+        override suspend fun deleteUser(): AppResult<Unit> = throw NotImplementedError()
+        override suspend fun logout(): AppResult<Unit> = throw NotImplementedError()
     }
 
     private class ThrowingAuthRepository : IAuthRepository {
@@ -82,16 +105,28 @@ class SplashViewModelTest {
             name: String,
             email: String,
             password: String,
-        ): AppResult<User> {
-            throw NotImplementedError()
-        }
+        ): AppResult<User> = throw NotImplementedError()
 
-        override suspend fun login(email: String, password: String): AppResult<User> {
+        override suspend fun login(email: String, password: String): AppResult<User> =
             throw NotImplementedError()
-        }
 
-        override suspend fun getCurrentUser(): AppResult<User> {
-            throw NotImplementedError()
-        }
+        override suspend fun getCurrentUser(): AppResult<User> = throw NotImplementedError()
+
+        override suspend fun updateUser(user: User): AppResult<User> = throw NotImplementedError()
+        override suspend fun deleteUser(): AppResult<Unit> = throw NotImplementedError()
+        override suspend fun logout(): AppResult<Unit> = throw NotImplementedError()
+    }
+
+    private class FakePreferencesRepository(
+        private val onboardingCompleted: Boolean = false,
+    ) : IPreferencesRepository {
+        override val isNotificationsEnabled: Flow<Boolean> = flowOf(true)
+        override val isDarkModeEnabled: Flow<Boolean> = flowOf(false)
+        override val isAiAutoRemindersEnabled: Flow<Boolean> = flowOf(false)
+        override val isOnboardingCompleted: Flow<Boolean> = flowOf(onboardingCompleted)
+        override suspend fun setNotificationsEnabled(enabled: Boolean) = Unit
+        override suspend fun setDarkModeEnabled(enabled: Boolean) = Unit
+        override suspend fun setAiAutoRemindersEnabled(enabled: Boolean) = Unit
+        override suspend fun setOnboardingCompleted(completed: Boolean) = Unit
     }
 }

@@ -15,4 +15,7 @@ data class ReminderState (
     val dueDateMillis: Long? = null,
     val noteInput: String = "",
     val isSaving: Boolean = false,
+
+    // Set when the user taps delete on a reminder; null otherwise. Drives the confirmation dialog.
+    val pendingDeleteReminderId: String? = null,
 )

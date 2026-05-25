@@ -22,7 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -41,7 +40,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -60,6 +58,7 @@ import com.example.autoai.localization.AppStrings
 import com.example.autoai.presentation.components.AutoAiTextField
 import com.example.autoai.presentation.components.BottomNavItem
 import com.example.autoai.presentation.components.BottomNavigationBar
+import com.example.autoai.presentation.components.DeleteConfirmationDialog
 import com.example.autoai.presentation.components.MainButton
 import com.example.autoai.presentation.features.costs.components.CategorySelectionRow
 import com.example.autoai.presentation.features.costs.components.CostHistoryCard
@@ -172,23 +171,13 @@ fun CostsContent(
     }
 
     if (state.pendingDeleteCostId != null) {
-        AlertDialog(
-            onDismissRequest = { onEvent(CostsEvent.OnDismissDeleteDialog) },
-            title = { Text(AppStrings.Costs.deleteDialogTitle) },
-            text = { Text(AppStrings.Costs.deleteDialogMessage) },
-            confirmButton = {
-                TextButton(onClick = { onEvent(CostsEvent.OnConfirmDeleteCost) }) {
-                    Text(
-                        text = AppStrings.Costs.deleteConfirm,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { onEvent(CostsEvent.OnDismissDeleteDialog) }) {
-                    Text(AppStrings.Costs.deleteCancel)
-                }
-            },
+        DeleteConfirmationDialog(
+            title = AppStrings.Costs.deleteDialogTitle,
+            message = AppStrings.Costs.deleteDialogMessage,
+            confirmLabel = AppStrings.Costs.deleteConfirm,
+            cancelLabel = AppStrings.Costs.deleteCancel,
+            onConfirm = { onEvent(CostsEvent.OnConfirmDeleteCost) },
+            onDismiss = { onEvent(CostsEvent.OnDismissDeleteDialog) },
         )
     }
 }

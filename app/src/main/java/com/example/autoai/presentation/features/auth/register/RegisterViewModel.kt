@@ -11,7 +11,6 @@ import com.example.domain.model.app.onFailure
 import com.example.domain.model.app.onSuccess
 import com.example.domain.usecase.register.RegisterParams
 import com.example.domain.usecase.register.RegisterUseCase
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class RegisterViewModel (
@@ -49,8 +48,8 @@ class RegisterViewModel (
                 emitSideEffect(RegisterSideEffect.ShowSuccess(
                     UiText.StringResource(AppStrings.Auth.registerSuccessRes)
                 ))
-                delay(1500L)
-                navigateToLogin()   // suspend called directly — same coroutine, guaranteed ordering
+                // Navigate immediately; snackbar paints briefly during the screen transition.
+                navigateToLogin()
             }.onFailure { error ->
                 setState { it.copy(isLoading = false) }
                 emitSideEffect(RegisterSideEffect.ShowError(error.asUiText()))

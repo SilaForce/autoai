@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import com.example.autoai.localization.AppStrings
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -85,7 +86,7 @@ fun ReminderCard(
                 IconButton(onClick = onEditClicked, modifier = Modifier.size(36.dp)) {
                     Icon(
                         imageVector = Icons.Outlined.Edit,
-                        contentDescription = "Edit",
+                        contentDescription = AppStrings.Reminders.editDescription,
                         tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                         modifier = Modifier.size(18.dp)
                     )
@@ -95,7 +96,7 @@ fun ReminderCard(
             IconButton(onClick = onDeleteClicked, modifier = Modifier.size(36.dp)) {
                 Icon(
                     imageVector = Icons.Outlined.Delete,
-                    contentDescription = "Delete",
+                    contentDescription = AppStrings.Reminders.deleteDescription,
                     tint = DangerRed.copy(alpha = 0.6f),
                     modifier = Modifier.size(18.dp)
                 )

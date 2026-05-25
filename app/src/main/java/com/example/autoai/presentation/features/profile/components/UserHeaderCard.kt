@@ -62,7 +62,7 @@ fun UserHeaderCard(
                     if (!profilePictureUrl.isNullOrBlank()) {
                         AsyncImage(
                             model = ImageUtils.decodeBase64ToByteArray(profilePictureUrl),
-                            contentDescription = "Profile Avatar",
+                            contentDescription = AppStrings.Profile.avatarDescription,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
@@ -150,7 +150,6 @@ fun UserHeaderCard(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ── BOTTOM SEKCIJA: Dugme na punu širinu ────────────────────
             OutlinedButton(
                 onClick = onEditClick,
                 modifier = Modifier.fillMaxWidth(),

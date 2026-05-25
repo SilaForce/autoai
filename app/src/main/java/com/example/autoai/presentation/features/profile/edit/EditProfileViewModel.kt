@@ -14,7 +14,9 @@ import com.example.domain.usecase.user.DeleteUserUseCase
 import com.example.domain.usecase.user.GetCurrentUserUseCase
 import com.example.domain.usecase.user.UpdateUserParams
 import com.example.domain.usecase.user.UpdateUserUseCase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class EditProfileViewModel(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
@@ -107,16 +109,18 @@ class EditProfileViewModel(
         viewModelScope.launch {
 
             if (current.selectedProfilePicture != null) {
-                // 1. Kompresujemo sliku i pretvaramo je u String pomoću našeg novog alata
-                val base64Image = ImageUtils.compressAndEncodeToBase64(current.selectedProfilePicture)
+                // Bitmap decode + scale + JPEG encode is CPU-bound; push to Default so
+                // the UI stays responsive while a 5 MB phone photo is being compressed.
+                val base64Image = withContext(Dispatchers.Default) {
+                    ImageUtils.compressAndEncodeToBase64(current.selectedProfilePicture)
+                }
 
-                // 2. Šaljemo taj tekst pravo u postojeći UpdateUserUseCase
                 updateUserUseCase(
                     UpdateUserParams(
                         name = current.fullName,
                         username = current.username,
                         phoneNumber = current.phoneNumber,
-                        profilePictureUrl = base64Image // Ovdje sada ide naš Base64 string!
+                        profilePictureUrl = base64Image
                     )
                 ).onSuccess {
                     setState { it.copy(isSaving = false) }
@@ -156,8 +160,8 @@ class EditProfileViewModel(
                     setState { it.copy(isDeleting = false) }
                     navigator.navigateTo(
                         destination = Route.AuthGraph,
-                        popUpTo = 0,
-                        inclusive = true
+                        popUpTo = Route.Home,
+                        inclusive = true,
                     )
                 }
                 .onFailure { error ->

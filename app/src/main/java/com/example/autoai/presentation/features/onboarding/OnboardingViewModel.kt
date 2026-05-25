@@ -4,11 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.autoai.navigation.IAppNavigator
 import com.example.autoai.navigation.Route
+import com.example.domain.repository.IPreferencesRepository
 import kotlinx.coroutines.launch
 
 class OnboardingViewModel(
-    private val navigator: IAppNavigator
-) : ViewModel() { // Ovdje ne moramo imati kompleksan BaseViewModel jer nemamo stanje
+    private val navigator: IAppNavigator,
+    private val preferencesRepository: IPreferencesRepository,
+) : ViewModel() {
 
     fun onEvent(event: OnboardingEvent) {
         when (event) {
@@ -20,16 +22,15 @@ class OnboardingViewModel(
     }
 
     private fun completeOnboarding() {
-        // Otvaramo coroutine jer će upis u DataStore biti suspend funkcija
         viewModelScope.launch {
-            // 1. Ovdje će ići logika za snimanje u DataStore
-            // completeOnboardingUseCase()
+            // Persist completion so the next cold-start / sign-out routes to Login,
+            // not back through Onboarding.
+            preferencesRepository.setOnboardingCompleted(true)
 
-            // 2. Navigacija na Register (ili AuthGraph ako ga imaš)
             navigator.navigateTo(
                 destination = Route.Register,
                 popUpTo = Route.Onboarding,
-                inclusive = true
+                inclusive = true,
             )
         }
     }

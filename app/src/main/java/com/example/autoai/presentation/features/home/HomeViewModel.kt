@@ -6,6 +6,7 @@ import com.example.autoai.navigation.IAppNavigator
 import com.example.autoai.navigation.Route
 import com.example.autoai.presentation.components.BottomNavItem
 import com.example.autoai.presentation.util.asUiText
+import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.onFailure
 import com.example.domain.model.app.onSuccess
 import com.example.domain.usecase.cost.GetCostStatisticsParams
@@ -13,25 +14,22 @@ import com.example.domain.usecase.cost.GetCostStatisticsUseCase
 import com.example.domain.usecase.reminder.GetRemindersParams
 import com.example.domain.usecase.reminder.GetRemindersUseCase
 import com.example.domain.usecase.user.GetCurrentUserUseCase
-import com.example.domain.usecase.vehicle.GetVehiclesParams
-import com.example.domain.usecase.vehicle.GetVehiclesUseCase
+import com.example.domain.usecase.vehicle.ObserveActiveVehicleUseCase
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 import kotlin.math.floor
 
 class HomeViewModel(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
-    private val getVehiclesUseCase: GetVehiclesUseCase,
+    private val observeActiveVehicleUseCase: ObserveActiveVehicleUseCase,
     private val getCostStatisticsUseCase: GetCostStatisticsUseCase,
     private val getReminderUseCase: GetRemindersUseCase,
     private val navigator: IAppNavigator,
 ) : BaseViewModel<HomeState, HomeEvent, HomeSideEffect>(HomeState()) {
 
-    private var currentUserId: String? = null
-    private var activeVehicleId: String? = null
+    private var lastObservedActiveVehicleId: String? = null
 
     init {
         loadUser()
@@ -39,7 +37,15 @@ class HomeViewModel(
 
     override fun onEvent(event: HomeEvent) {
         when (event) {
-            HomeEvent.OnScreenResumed -> refreshData()
+            HomeEvent.OnScreenResumed -> {
+                // Re-read the user so a currency change made in Settings propagates
+                // to the monthly-cost card. The active-vehicle Flow handles the rest.
+                viewModelScope.launch {
+                    getCurrentUserUseCase(Unit).onSuccess { user ->
+                        setState { it.copy(userName = user.name, currency = user.currency) }
+                    }
+                }
+            }
 
             HomeEvent.OnVehicleClicked -> navigator.navigateTo(Route.Garage)
 
@@ -62,8 +68,6 @@ class HomeViewModel(
         }
     }
 
-    // ─── Loading ─────────────────────────────────────────────────────────────
-
     private fun loadUser() {
         setState { it.copy(isLoading = true) }
 
@@ -74,58 +78,61 @@ class HomeViewModel(
                     emitSideEffect(HomeSideEffect.ShowError(error.asUiText()))
                 }
                 .onSuccess { user ->
-                    currentUserId = user.id
-                    setState { it.copy(userName = user.name) }
-                    loadActiveVehicleAndStats(user.id)
+                    setState { it.copy(userName = user.name, currency = user.currency) }
+                    subscribeToActiveVehicle(user.id)
                 }
         }
     }
 
-    private fun refreshData() {
-        val userId = currentUserId ?: run { loadUser(); return }
+    private fun subscribeToActiveVehicle(userId: String) {
         viewModelScope.launch {
-            loadActiveVehicleAndStats(userId)
+            observeActiveVehicleUseCase(userId).collect { result ->
+                when (result) {
+                    is AppResult.Success -> handleActiveVehicleEmission(result.data)
+                    is AppResult.Failure -> {
+                        setState { it.copy(isLoading = false) }
+                        emitSideEffect(HomeSideEffect.ShowError(result.error.asUiText()))
+                    }
+                }
+            }
         }
     }
 
-    private suspend fun loadActiveVehicleAndStats(userId: String) {
-        getVehiclesUseCase(GetVehiclesParams(userId))
-            .onFailure { error ->
-                setState { it.copy(isLoading = false) }
-                emitSideEffect(HomeSideEffect.ShowError(error.asUiText()))
+    private suspend fun handleActiveVehicleEmission(active: com.example.domain.model.vehicle.Vehicle?) {
+        if (active == null) {
+            lastObservedActiveVehicleId = null
+            setState {
+                it.copy(
+                    isLoading = false,
+                    hasActiveVehicle = false,
+                    activeVehicleName = "",
+                    activeVehiclePlate = "",
+                    totalExpenses = EMPTY_EXPENSES_PLACEHOLDER,
+                )
             }
-            .onSuccess { vehicles ->
-                val active = vehicles.firstOrNull { it.isActive }
+            return
+        }
 
-                if (active == null) {
-                    activeVehicleId = null
-                    setState {
-                        it.copy(
-                            isLoading = false,
-                            hasActiveVehicle = false,
-                            activeVehicleName = "",
-                            activeVehiclePlate = "",
-                            totalExpenses = "0",
-                        )
-                    }
-                    return@onSuccess
-                }
+        val previousId = lastObservedActiveVehicleId
+        lastObservedActiveVehicleId = active.id
 
-                activeVehicleId = active.id
-                setState {
-                    it.copy(
-                        hasActiveVehicle = true,
-                        activeVehicleName = "${active.make} ${active.model}",
-                        activeVehiclePlate = active.licensePlate.orEmpty(),
-                    )
-                }
+        setState {
+            it.copy(
+                hasActiveVehicle = true,
+                activeVehicleName = "${active.make} ${active.model}",
+                activeVehiclePlate = active.licensePlate.orEmpty(),
+            )
+        }
 
-                loadCostStats(active.id)
-                loadReminder(active.id)
-            }
+        // Only refresh derived data when the active vehicle id actually changes.
+        // Other field updates (e.g. mileage) won't trigger redundant cost/reminder fetches.
+        if (active.id != previousId) {
+            loadCostStats(active.id)
+            loadReminder(active.id)
+        }
     }
-    private suspend fun loadReminder (vehicleId: String)
-    {
+
+    private suspend fun loadReminder(vehicleId: String) {
         getReminderUseCase(GetRemindersParams(vehicleId))
             .onFailure { error ->
                 setState { it.copy(isLoading = false) }
@@ -146,28 +153,31 @@ class HomeViewModel(
                             )
                         )
                     }
-
-                }else {
+                } else {
                     setState { it.copy(dueReminderTitle = "Reminder", dueReminderDate = "No upcoming reminders") }
                 }
             }
     }
+
     private suspend fun loadCostStats(vehicleId: String) {
         getCostStatisticsUseCase(GetCostStatisticsParams(vehicleId))
             .onSuccess { stats ->
+                // amountByCategory is keyed by category; an empty map means literally no
+                // entries logged. Total of 0.0 alone is ambiguous (could mean "logged
+                // a 0-amount cost") so the map's emptiness is the right signal.
+                val hasEntries = stats.amountByCategory.isNotEmpty()
                 setState {
                     it.copy(
                         isLoading = false,
-                        totalExpenses = stats.totalAmount.formatAmount(),
+                        totalExpenses = if (hasEntries) stats.totalAmount.formatAmount()
+                                        else EMPTY_EXPENSES_PLACEHOLDER,
                     )
                 }
             }
             .onFailure {
-                setState { it.copy(isLoading = false, totalExpenses = "0") }
+                setState { it.copy(isLoading = false, totalExpenses = EMPTY_EXPENSES_PLACEHOLDER) }
             }
     }
-
-    // ─── Navigation ──────────────────────────────────────────────────────────
 
     private fun handleBottomNavigation(item: BottomNavItem) {
         when (item) {
@@ -187,14 +197,20 @@ class HomeViewModel(
                 setState { it.copy(selectedNavItem = item) }
                 navigator.navigateTo(Route.Reminder)
             }
-            BottomNavItem.AI_CHAT ->{ setState { it.copy(selectedNavItem = item) }
-            navigator.navigateTo(Route.AiChat)}
+            BottomNavItem.AI_CHAT -> {
+                setState { it.copy(selectedNavItem = item) }
+                navigator.navigateTo(Route.AiChat)
+            }
         }
     }
-
-    // ─── Helpers ─────────────────────────────────────────────────────────────
 
     private fun Double.formatAmount(): String =
         if (this == floor(this)) this.toInt().toString()
         else String.format(Locale.getDefault(), "%.2f", this)
+
+    private companion object {
+        // Em-dash placeholder when there's nothing to display. Distinguishes "no costs
+        // logged yet" from "logged 0" — both used to render as "0".
+        const val EMPTY_EXPENSES_PLACEHOLDER = "—"
+    }
 }

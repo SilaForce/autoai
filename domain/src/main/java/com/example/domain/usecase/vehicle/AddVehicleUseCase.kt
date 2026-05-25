@@ -26,8 +26,9 @@ class AddVehicleUseCase(
 ) : BaseUseCase<AddVehicleParams, Vehicle>(dispatcher) {
 
     override suspend fun execute(params: AddVehicleParams): AppResult<Vehicle> {
+        // Blank userId is a programmer/auth-context error, not a form-validation issue.
         if (!ValidationUtil.isValidVehicleText(params.userId)) {
-            return AppResult.Failure(DataError.Local.Validation.Generic)
+            return AppResult.Failure(DataError.Local.NotFound)
         }
         if (!ValidationUtil.isValidVehicleText(params.make) ||
             !ValidationUtil.isValidVehicleText(params.model)

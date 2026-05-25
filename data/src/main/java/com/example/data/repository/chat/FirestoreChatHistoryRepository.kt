@@ -38,13 +38,29 @@ class FirestoreChatHistoryRepository(
                 .get()
                 .await()
 
-            // Firestore batches max 500 ops. Chunk to be safe for long histories.
-            snapshot.documents.chunked(BATCH_SIZE_LIMIT).forEach { chunk ->
-                val batch = firestore.batch()
-                chunk.forEach { batch.delete(it.reference) }
-                batch.commit().await()
-            }
-            Unit
+            deleteSnapshot(snapshot.documents)
+        }
+    }
+
+    override suspend fun deleteAllForUser(userId: String): AppResult<Unit> {
+        return safeFirebaseCall {
+            val snapshot = firestore.collection(AI_CHAT_COLLECTION)
+                .whereEqualTo(FIELD_USER_ID, userId)
+                .get()
+                .await()
+
+            deleteSnapshot(snapshot.documents)
+        }
+    }
+
+    private suspend fun deleteSnapshot(
+        documents: List<com.google.firebase.firestore.DocumentSnapshot>,
+    ) {
+        // Firestore batches max 500 ops. Chunk to be safe for long histories.
+        documents.chunked(BATCH_SIZE_LIMIT).forEach { chunk ->
+            val batch = firestore.batch()
+            chunk.forEach { batch.delete(it.reference) }
+            batch.commit().await()
         }
     }
 

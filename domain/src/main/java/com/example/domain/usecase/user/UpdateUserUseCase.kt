@@ -12,7 +12,8 @@ data class UpdateUserParams(
     val name: String,
     val username: String,
     val phoneNumber: String,
-    val profilePictureUrl: String? = null
+    val profilePictureUrl: String? = null,
+    val currency: String? = null,
 )
 
 class UpdateUserUseCase(
@@ -30,7 +31,8 @@ class UpdateUserUseCase(
                 name = params.name.trim(),
                 username = params.username.trim(),
                 phoneNumber = params.phoneNumber.trim(),
-                profilePictureUrl = params.profilePictureUrl ?: currentUser.profilePictureUrl
+                profilePictureUrl = params.profilePictureUrl ?: currentUser.profilePictureUrl,
+                currency = params.currency ?: currentUser.currency,
             )
             repository.updateUser(updatedUser)
         }

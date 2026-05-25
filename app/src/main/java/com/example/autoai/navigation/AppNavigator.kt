@@ -2,29 +2,27 @@ package com.example.autoai.navigation
 
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+
+/**
+ * Navigation actions are funnelled through a buffered SharedFlow so emitting from a
+ * ViewModel never blocks. No debounce here — fast legitimate navigations to different
+ * screens (e.g. error snackbar followed by `navigateTo(Home)`) used to silently drop the
+ * second action under a single shared debounce. Click-debouncing belongs at the call site
+ * via [com.example.autoai.base.BaseViewModel.withDebounce].
+ *
+ * Buffer is sized to 8 so a brief burst of back-to-back emissions (e.g. snackbar event +
+ * navigation in the same frame) doesn't drop on overflow. Consumer keeps up under normal
+ * lifecycle conditions.
+ */
 class AppNavigator : IAppNavigator {
-    // 1. Dodajemo bafer da navigacija ne blokira ViewModel
-    private val _navigationActions = MutableSharedFlow<NavigationAction>(extraBufferCapacity = 1)
+    private val _navigationActions = MutableSharedFlow<NavigationAction>(extraBufferCapacity = 8)
     override val navigationActions = _navigationActions.asSharedFlow()
 
-    private var lastNavigateTime = 0L
-    private val debounceTime = 500L // 500ms zaštita od duplog klika
-
-    // 2. Skidamo 'suspend' jer koristimo tryEmit
     override fun navigateTo(destination: Any, popUpTo: Any?, inclusive: Boolean) {
-        val currentTime = System.currentTimeMillis()
-        if (currentTime - lastNavigateTime >= debounceTime) {
-            lastNavigateTime = currentTime
-            _navigationActions.tryEmit(NavigationAction.NavigateTo(destination, popUpTo, inclusive))
-        }
+        _navigationActions.tryEmit(NavigationAction.NavigateTo(destination, popUpTo, inclusive))
     }
 
-    // Skidamo 'suspend'
     override fun navigateBack() {
-        val currentTime = System.currentTimeMillis()
-        if (currentTime - lastNavigateTime >= debounceTime) {
-            lastNavigateTime = currentTime
-            _navigationActions.tryEmit(NavigationAction.NavigateBack)
-        }
+        _navigationActions.tryEmit(NavigationAction.NavigateBack)
     }
 }

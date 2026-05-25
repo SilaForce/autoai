@@ -16,7 +16,7 @@ object ValidationUtil {
                 "[A-Za-z]{2,63}$"
     )
 
-    // Ime: samo slova (podržava i naša š,đ,č,ć,ž), razmaci i crtice. 2–100 karaktera.
+    // Name: Unicode letters (\p{L} covers Latin-1, diacritics, Cyrillic, etc.), spaces, hyphens. 2-100 chars.
     private val FULL_NAME_REGEX = Regex("^[\\p{L}][\\p{L} '\\-]{0,98}[\\p{L}]$")
 
     fun isValidEmail(email: String): Boolean {

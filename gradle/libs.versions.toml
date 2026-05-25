@@ -15,6 +15,7 @@ koin = "4.2.1"
 navigationCompose = "2.9.8"
 firebaseBom = "34.13.0"
 kotlinxSerializationJson = "1.11.0"
+kotlinxCoroutines = "1.11.0"
 kotlinxCoroutinesPlayServices = "1.11.0"
 kotlinxCoroutinesTest = "1.11.0"
 googleServices = "4.4.4"
@@ -27,6 +28,7 @@ ktor = "3.5.0"
 [libraries]
 
 # Koin
+koin-core = { group = "io.insert-koin", name = "koin-core", version.ref = "koin" }
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koin" }
 
@@ -42,6 +44,7 @@ ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging", version
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 
 # Kotlinx
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutinesPlayServices" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }

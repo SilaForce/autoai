@@ -5,8 +5,6 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
@@ -23,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.example.autoai.localization.AppStrings
 import com.example.autoai.presentation.components.AutoAiTextField
 import com.example.autoai.presentation.components.BottomNavigationBar
+import com.example.autoai.presentation.components.DeleteConfirmationDialog
 import com.example.autoai.presentation.components.MainButton
 import com.example.autoai.presentation.features.reminder.components.ReminderCard
 import com.example.autoai.presentation.theme.VerdantGreen
@@ -122,23 +121,35 @@ fun ReminderContent(
                         )
                     }
                 } else {
+                    // Was a nested LazyColumn inside this Card. Worked because the outer
+                    // Column had bounded height, but the moment that parent becomes
+                    // scrollable (e.g. someone adds verticalScroll) the LazyColumn with
+                    // infinite max height crashes. Reminders per vehicle are short
+                    // (<~50), so a Column + forEach + outer verticalScroll on the Card's
+                    // content is safer and renders identically. No lazy windowing needed
+                    // for short lists.
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f, fill = false),
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                     ) {
-                        LazyColumn(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            items(
-                                items = state.reminders,
-                                key = { it.id }
-                            ) { item ->
-                                ReminderCard(
-                                    item = item,
-                                    onToggleCompleted = { onEvent(ReminderEvent.OnToggleCompleted(item)) },
-                                    onEditClicked = { onEvent(ReminderEvent.OnEditClicked(item)) },
-                                    onDeleteClicked = { onEvent(ReminderEvent.OnDeleteClicked(item.id)) },
-                                )
+                        Column(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .verticalScroll(rememberScrollState()),
+                        ) {
+                            state.reminders.forEach { item ->
+                                key(item.id) {
+                                    ReminderCard(
+                                        item = item,
+                                        onToggleCompleted = { onEvent(ReminderEvent.OnToggleCompleted(item)) },
+                                        onEditClicked = { onEvent(ReminderEvent.OnEditClicked(item)) },
+                                        onDeleteClicked = { onEvent(ReminderEvent.OnDeleteClicked(item.id)) },
+                                    )
+                                }
                             }
                         }
                     }
@@ -160,6 +171,17 @@ fun ReminderContent(
                 AddReminderSheet(state, onEvent)
             }
         }
+    }
+
+    if (state.pendingDeleteReminderId != null) {
+        DeleteConfirmationDialog(
+            title = AppStrings.Reminders.deleteDialogTitle,
+            message = AppStrings.Reminders.deleteDialogMessage,
+            confirmLabel = AppStrings.Reminders.deleteConfirm,
+            cancelLabel = AppStrings.Reminders.deleteCancel,
+            onConfirm = { onEvent(ReminderEvent.OnConfirmDeleteReminder) },
+            onDismiss = { onEvent(ReminderEvent.OnDismissDeleteDialog) },
+        )
     }
 }
 

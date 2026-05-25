@@ -25,6 +25,11 @@ fun SettingsScreen(
                     message = effect.message.asString(context)
                 )
             }
+            is SettingsSideEffect.ShowMessage -> {
+                snackbarHostState.showSnackbar(
+                    message = effect.message.asString(context)
+                )
+            }
         }
     }
 

@@ -18,10 +18,11 @@ class SetActiveVehicleUseCase(
 ) : BaseUseCase<SetActiveVehicleParams, Unit>(dispatcher) {
 
     override suspend fun execute(params: SetActiveVehicleParams): AppResult<Unit> {
+        // Blank userId/vehicleId is a programmer error, not user-facing validation.
         if (!ValidationUtil.isValidVehicleText(params.userId) ||
             !ValidationUtil.isValidVehicleText(params.vehicleId)
         ) {
-            return AppResult.Failure(DataError.Local.Validation.Generic)
+            return AppResult.Failure(DataError.Local.NotFound)
         }
 
         return repository.setActiveVehicle(

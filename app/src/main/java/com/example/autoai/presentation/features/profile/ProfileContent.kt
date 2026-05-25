@@ -76,7 +76,7 @@ fun ProfileContent(
                     IconButton(onClick = { onEvent(ProfileEvent.OnBackClick) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = AppStrings.Common.back,
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -93,7 +93,7 @@ fun ProfileContent(
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Settings,
-                            contentDescription = "Postavke",
+                            contentDescription = AppStrings.Profile.settingsButtonDescription,
                             tint = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.size(28.dp)
                         )

@@ -14,21 +14,20 @@ import kotlin.math.roundToInt
 object ImageUtils {
 
     /**
-     * Smanjuje rezoluciju slike, kompresuje je u JPEG i pretvara u Base64 String
-     * spreman za snimanje u Firestore.
+     * Downscales, JPEG-compresses, and Base64-encodes an image for Firestore storage.
+     * 400px max dimension is more than enough for an in-app avatar.
      */
     fun compressAndEncodeToBase64(imageBytes: ByteArray): String? {
         return try {
             val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
 
-            // Smanjujemo sliku na 400x400 (sasvim dovoljno za profilnu)
             val ratio = 400.0f / maxOf(bitmap.width, bitmap.height)
             val width = Math.round(bitmap.width * ratio)
             val height = Math.round(bitmap.height * ratio)
             val scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true)
 
             val outputStream = ByteArrayOutputStream()
-            // Kompresija na 70% kvaliteta smanjuje veličinu fajla drastično, bez vidljivog gubitka
+            // 70% JPEG quality cuts file size drastically with no visible loss.
             scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
 
             val compressedBytes = outputStream.toByteArray()
@@ -83,7 +82,7 @@ object ImageUtils {
     }
 
     /**
-     * Pretvara Base64 String iz baze nazad u ByteArray kako bi ga Coil mogao prikazati.
+     * Decodes a Firestore-stored Base64 string back into bytes so Coil can render it.
      */
     fun decodeBase64ToByteArray(base64String: String): ByteArray? {
         return try {

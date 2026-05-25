@@ -23,6 +23,13 @@ fun ChatMessageDto.toChatMessage(): AppResult<ChatMessage> {
             text = text,
             role = parsedRole,
             timestamp = timestamp,
+            // Images are intentionally NOT persisted. The project is on Firebase Spark
+            // (no Cloud Storage), and inlining base64 in Firestore docs hits the 1 MB
+            // doc limit fast — a single 1MB chat photo (after compression) plus thread
+            // history is already in the danger zone. Behavior: a user attaches a photo,
+            // gets an AI reply, then on reopening the thread the image is gone (only the
+            // text remains). This is documented UX, not a bug. Revisit if/when Storage
+            // is enabled — see ChatMessageDto for where to add an imageUrl field.
             images = emptyList(),
             threadId = threadId,
         )

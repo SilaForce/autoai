@@ -8,4 +8,5 @@ interface IAiChatThreadRepository {
     suspend fun createThread(thread: ChatThread): AppResult<ChatThread>
     suspend fun updateThread(thread: ChatThread): AppResult<Unit>
     suspend fun deleteThread(threadId: String): AppResult<Unit>
+    suspend fun deleteAllForUser(userId: String): AppResult<Unit>
 }

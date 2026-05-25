@@ -37,14 +37,13 @@ fun PageIndicator(
         repeat(pageSize) { page ->
             val isSelected = page == currentPage
 
-            // Animacija širine: 24.dp kada je aktivno (pilula), 8.dp kada je neaktivno (krug)
+            // 24.dp when active (pill), 8.dp when inactive (circle)
             val width by animateDpAsState(
                 targetValue = if (isSelected) 24.dp else 8.dp,
                 animationSpec = tween(durationMillis = 300),
                 label = "IndicatorWidthAnimation"
             )
 
-            // Animacija boje
             val color by animateColorAsState(
                 targetValue = if (isSelected) selectedColor else unselectedColor,
                 animationSpec = tween(durationMillis = 300),
@@ -53,10 +52,10 @@ fun PageIndicator(
 
             Box(
                 modifier = Modifier
-                    .padding(horizontal = 4.dp) // Razmak između tačkica
-                    .height(8.dp) // Visina je uvijek ista
-                    .width(width) // Širina se animira
-                    .clip(CircleShape) // CircleShape automatski pravi krug ili pilulu zavisno od omjera širine i visine
+                    .padding(horizontal = 4.dp)
+                    .height(8.dp)
+                    .width(width)
+                    .clip(CircleShape)
                     .background(color)
             )
         }

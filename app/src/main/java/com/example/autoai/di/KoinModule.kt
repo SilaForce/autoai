@@ -1,6 +1,6 @@
 package com.example.autoai.di
 
-import com.example.autoai.dispatcher.DefaultDispatcherProvider
+import com.example.domain.dispatcher.DefaultDispatcherProvider
 import com.example.autoai.navigation.AppNavigator
 import com.example.autoai.navigation.IAppNavigator
 import com.example.autoai.presentation.features.auth.login.LoginViewModel

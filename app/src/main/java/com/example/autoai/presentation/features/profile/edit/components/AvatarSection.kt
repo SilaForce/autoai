@@ -60,15 +60,13 @@ fun AvatarSection(
                     .clip(CircleShape),
             ) {
                 if (imageModel != null) {
-                    // 3. Coil komponenta za učitavanje slike (radi i sa ByteArray i sa String URL-om)
                     AsyncImage(
                         model = imageModel,
-                        contentDescription = "Profile Avatar",
+                        contentDescription = AppStrings.Profile.avatarDescription,
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop // Reže sliku da popuni krug
+                        contentScale = ContentScale.Crop
                     )
                 } else {
-                    // Fallback na staro slovo
                     Text(
                         text = userInitial,
                         fontSize = 34.sp,

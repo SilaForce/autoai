@@ -1,7 +1,7 @@
 package com.example.autoai.presentation.features.chat
 
+import com.example.autoai.presentation.util.ImagePayload
 import com.example.domain.model.chat.ChatMessage
-import com.example.domain.model.chat.MessageRole
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -12,8 +12,21 @@ fun ChatMessage.toUiModel(): ChatMessageUi {
     return ChatMessageUi(
         id = id,
         text = text,
-        isFromUser = role == MessageRole.USER,
+        role = role,
+        timestamp = timestamp,
         formattedTime = timeFormatter().format(Date(timestamp)),
-        images = images
+        threadId = threadId,
+        images = images.map { ImagePayload(it) },
+    )
+}
+
+fun ChatMessageUi.toDomainModel(): ChatMessage {
+    return ChatMessage(
+        id = id,
+        text = text,
+        role = role,
+        timestamp = timestamp,
+        images = images.map { it.bytes },
+        threadId = threadId,
     )
 }

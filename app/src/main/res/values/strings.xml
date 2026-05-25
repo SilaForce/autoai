@@ -57,6 +57,7 @@
     <string name="home_nav_ai_chat">AI Chat</string>
     <string name="home_no_active_vehicle_title">No active vehicle</string>
     <string name="home_no_active_vehicle_subtitle">Choose one in Garage</string>
+    <string name="home_profile_button_description">Profile</string>
 
     <string name="garage_title">Garage</string>
     <string name="garage_subtitle">Choose your active vehicle or add a new one.</string>
@@ -71,6 +72,8 @@
     <string name="garage_vehicle_delete_dialog_message">This vehicle will be permanently removed from your garage.</string>
     <string name="garage_vehicle_delete_confirm">Delete</string>
     <string name="garage_vehicle_delete_cancel">Cancel</string>
+    <string name="garage_vehicle_deleted_snackbar">Vehicle deleted</string>
+    <string name="garage_undo">Undo</string>
 
     <string name="edit_vehicle_title">Edit vehicle</string>
     <string name="edit_vehicle_subtitle">Update your vehicle details.</string>
@@ -171,6 +174,9 @@
     <string name="chat_delete_dialog_message">This conversation will be permanently removed.</string>
     <string name="chat_delete_confirm">Delete</string>
     <string name="chat_delete_cancel">Cancel</string>
+    <string name="chat_remove_image_description">Remove image</string>
+    <string name="chat_pick_image_description">Pick image</string>
+    <string name="chat_take_photo_description">Take photo</string>
 
     <string name="reminders_title">Reminders</string>
     <string name="reminders_empty_title">You have no active reminders.</string>
@@ -185,6 +191,12 @@
     <string name="reminders_save_button">Add reminder</string>
     <string name="reminders_ok">OK</string>
     <string name="reminders_cancel">Cancel</string>
+    <string name="reminders_delete_dialog_title">Delete reminder?</string>
+    <string name="reminders_delete_dialog_message">This reminder will be permanently removed.</string>
+    <string name="reminders_delete_confirm">Delete</string>
+    <string name="reminders_delete_cancel">Cancel</string>
+    <string name="reminders_edit_description">Edit reminder</string>
+    <string name="reminders_delete_description">Delete reminder</string>
 
     <string name="profile_title">Profile</string>
     <string name="profile_edit_button">Edit Profile</string>
@@ -196,6 +208,8 @@
     <string name="profile_plan_free">Free</string>
     <string name="profile_plan_premium">Premium</string>
     <string name="profile_error_content_description">Error icon</string>
+    <string name="profile_settings_button_description">Settings</string>
+    <string name="profile_avatar_description">Profile avatar</string>
 
     <string name="edit_profile_title">Edit Profile</string>
     <string name="edit_profile_change_avatar">Change Profile Picture</string>
@@ -225,6 +239,10 @@
     <string name="settings_privacy_policy">Privacy policy</string>
     <string name="settings_logout">Log out</string>
     <string name="settings_coming_soon">This feature is coming soon.</string>
+    <string name="settings_currency">Currency</string>
+    <string name="settings_currency_dialog_title">Choose currency</string>
+    <string name="settings_currency_dialog_cancel">Cancel</string>
+    <string name="settings_currency_updated">Currency updated</string>
 
     <string name="onboarding_skip">Skip</string>
     <string name="onboarding_next">Next</string>

@@ -15,4 +15,5 @@ sealed interface AiChatEvent {
     data class OnDeleteThreadClicked(val threadId: String) : AiChatEvent
     data object OnConfirmDeleteThread : AiChatEvent
     data object OnDismissDeleteDialog : AiChatEvent
+    data object OnScreenResumed : AiChatEvent
 }

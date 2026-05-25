@@ -7,6 +7,7 @@ import androidx.compose.material.icons.outlined.LocalGasStation
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.TireRepair
 import com.example.autoai.R
+import com.example.autoai.presentation.util.CurrencyFormatter
 import com.example.autoai.presentation.util.UiText
 import com.example.domain.model.cost.Cost
 import com.example.domain.model.cost.CostCategory
@@ -19,7 +20,7 @@ private val DATE_FORMATTER: SimpleDateFormat by lazy {
     SimpleDateFormat("MMM d", Locale.getDefault())
 }
 
-fun Cost.toCostItemUi(): CostItemUi {
+fun Cost.toCostItemUi(currency: String): CostItemUi {
     val trimmedDescription = description?.takeIf { it.isNotBlank() }
     val title: UiText = if (trimmedDescription != null) {
         UiText.DynamicString(trimmedDescription)
@@ -35,12 +36,12 @@ fun Cost.toCostItemUi(): CostItemUi {
         id = id,
         title = title,
         subtitle = subtitle,
-        amount = "${amount.toFormattedAmount()} KM",
+        amount = CurrencyFormatter.format(amount.toFormattedAmount(), currency),
         categoryIcon = category.toIcon(),
     )
 }
 
-fun CostStatistics.toCostStatsUi(): CostStatsUi {
+fun CostStatistics.toCostStatsUi(currency: String): CostStatsUi {
     val total = totalAmount
 
     val breakdowns = amountByCategory.entries
@@ -51,16 +52,16 @@ fun CostStatistics.toCostStatsUi(): CostStatsUi {
             CostStatsByCategoryUi(
                 category = category,
                 categoryName = UiText.StringResource(category.toCategoryStringRes()),
-                amount = "${amount.toFormattedAmount()} KM",
+                amount = CurrencyFormatter.format(amount.toFormattedAmount(), currency),
                 percentage = if (total > 0) ((amount / total) * 100).toInt() else 0,
                 count = count,
-                averagePerEntry = "${avg.toFormattedAmount()} KM",
+                averagePerEntry = CurrencyFormatter.format(avg.toFormattedAmount(), currency),
                 progress = if (total > 0) (amount / total).toFloat().coerceIn(0f, 1f) else 0f,
             )
         }
 
     return CostStatsUi(
-        totalAmount = "${totalAmount.toFormattedAmount()} KM",
+        totalAmount = CurrencyFormatter.format(totalAmount.toFormattedAmount(), currency),
         categoryBreakdowns = breakdowns,
     )
 }

@@ -103,7 +103,6 @@ fun OnboardingContent(
 
             val isLastPage = pagerState.currentPage == PAGE_COUNT - 1
 
-            // Glavno dugme
             MainButton(
                 text = if (isLastPage) AppStrings.Onboarding.getStarted else AppStrings.Onboarding.next,
                 trailingIcon = if (isLastPage) null else Icons.AutoMirrored.Rounded.KeyboardArrowRight,
@@ -111,7 +110,6 @@ fun OnboardingContent(
                     if (isLastPage) {
                         onEvent(OnboardingEvent.OnGetStartedClicked)
                     } else {
-                        // Ako nismo na kraju, sam UI rješava skrolanje do iduće stranice
                         scope.launch {
                             pagerState.animateScrollToPage(pagerState.currentPage + 1)
                         }
@@ -127,7 +125,6 @@ fun OnboardingContent(
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun OnboardingContentPreview() {
-    // Preview radi savršeno jer ne traži ViewModel!
     OnboardingContent(
         onEvent = {}
     )

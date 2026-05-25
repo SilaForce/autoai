@@ -71,18 +71,26 @@ class AddVehicleViewModel(
             getVehicleByIdUseCase(id)
                 .onSuccess { vehicle ->
                     val fuelType = vehicle.fuelType
+                    val snapshot = AddVehicleSnapshot(
+                        make = vehicle.make,
+                        model = vehicle.model,
+                        year = vehicle.year.toString(),
+                        mileage = vehicle.mileage?.toString() ?: "",
+                        licensePlate = vehicle.licensePlate ?: "",
+                        selectedFuelType = fuelType,
+                    )
                     setState { currentState ->
                         currentState.copy(
                             isLoading = false,
                             isEditMode = true,
                             originalIsActive = vehicle.isActive,
-                            make = vehicle.make,
-                            model = vehicle.model,
-                            year = vehicle.year.toString(),
-                            mileage = vehicle.mileage?.toString() ?: "",
-                            licensePlate = vehicle.licensePlate ?: "",
-                            selectedFuelType = fuelType,
-                            fuelTypeOptions = buildFuelTypeOptions(fuelType),
+                            originalSnapshot = snapshot,
+                            make = snapshot.make,
+                            model = snapshot.model,
+                            year = snapshot.year,
+                            mileage = snapshot.mileage,
+                            licensePlate = snapshot.licensePlate,
+                            selectedFuelType = snapshot.selectedFuelType,
                             isMakeSelected = true,
                             isFormDirty = false,
                         )
@@ -200,12 +208,7 @@ class AddVehicleViewModel(
 
     private fun updateFuelType(fuelType: FuelType) {
         savedStateHandle[KEY_FUEL_TYPE] = fuelType.name
-        updateFormState {
-            it.copy(
-                selectedFuelType = fuelType,
-                fuelTypeOptions = buildFuelTypeOptions(selectedFuelType = fuelType),
-            )
-        }
+        updateFormState { it.copy(selectedFuelType = fuelType) }
     }
 
     private fun updateMileage(value: String) {
@@ -284,6 +287,8 @@ class AddVehicleViewModel(
                                 fuelType = selectedFuelType,
                                 mileage = parsedMileage,
                                 licensePlate = currentState.licensePlate,
+                                // Edit screen cannot toggle active; only the garage tile selection does.
+                                // Preserve the flag captured at load so a save here never deactivates.
                                 isActive = currentState.originalIsActive,
                             )
                         ).onSuccess {
@@ -339,25 +344,28 @@ class AddVehicleViewModel(
                 mileage = savedStateHandle[KEY_MILEAGE] ?: "",
                 licensePlate = savedStateHandle[KEY_LICENSE_PLATE] ?: "",
                 selectedFuelType = selectedFuelType,
-                fuelTypeOptions = buildFuelTypeOptions(selectedFuelType),
             )
 
             return initialState.copy(isFormDirty = calculateIsFormDirty(initialState))
         }
 
-        fun buildFuelTypeOptions(selectedFuelType: FuelType?): List<FuelTypeOptionUi> {
-            return FuelType.entries.map { fuelType ->
-                fuelType.toFuelTypeOptionUi(isSelected = fuelType == selectedFuelType)
-            }
-        }
-
         fun calculateIsFormDirty(state: AddVehicleState): Boolean {
-            return state.make.isNotBlank() ||
-                state.model.isNotBlank() ||
-                state.year.isNotBlank() ||
-                state.mileage.isNotBlank() ||
-                state.licensePlate.isNotBlank() ||
-                state.selectedFuelType != null
+            val snapshot = state.originalSnapshot
+            return if (snapshot != null) {
+                state.make != snapshot.make ||
+                    state.model != snapshot.model ||
+                    state.year != snapshot.year ||
+                    state.mileage != snapshot.mileage ||
+                    state.licensePlate != snapshot.licensePlate ||
+                    state.selectedFuelType != snapshot.selectedFuelType
+            } else {
+                state.make.isNotBlank() ||
+                    state.model.isNotBlank() ||
+                    state.year.isNotBlank() ||
+                    state.mileage.isNotBlank() ||
+                    state.licensePlate.isNotBlank() ||
+                    state.selectedFuelType != null
+            }
         }
     }
 

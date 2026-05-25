@@ -8,6 +8,7 @@ data class CostsState(
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val hasNoActiveVehicle: Boolean = false,
+    val currency: String = "BAM",
     val selectedTab: CostsTab = CostsTab.HISTORY,
     val selectedPeriod: StatsPeriod = StatsPeriod.ALL_TIME,
     val history: List<CostItemUi> = emptyList(),

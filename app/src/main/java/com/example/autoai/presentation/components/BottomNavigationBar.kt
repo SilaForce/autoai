@@ -65,9 +65,12 @@ fun BottomNavigationBar(
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = VerdantGreen,
                     selectedTextColor = VerdantGreen,
-                    indicatorColor = Color(0xFFE8F5E9),
-                    unselectedIconColor = Color.Gray,
-                    unselectedTextColor = Color.Gray,
+                    // Light-green hex used to be hard-coded; it clashed with the dark
+                    // surface in dark mode. secondaryContainer renders the right
+                    // emphasis tint per Material's M3 dark/light palette pair.
+                    indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             )
         }

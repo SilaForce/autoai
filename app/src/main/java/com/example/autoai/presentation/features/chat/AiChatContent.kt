@@ -44,6 +44,7 @@ import com.example.autoai.presentation.features.chat.components.ChatSidebarConte
 import com.example.autoai.presentation.theme.AutoAITheme
 import com.example.autoai.presentation.theme.VerdantGreen
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -56,12 +57,19 @@ fun AiChatContent(
     val listState = rememberLazyListState()
     val imeVisible = WindowInsets.isImeVisible
     val context = LocalContext.current
+    val ioScope = rememberCoroutineScope()
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
             if (uri != null) {
-                val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-                if (bytes != null) onEvent(AiChatEvent.OnImageSelected(bytes))
+                // Move the disk read off the Main thread — MediaStore reads on a 5MB
+                // photo can stutter the picker callback. The VM compresses on Default.
+                ioScope.launch {
+                    val bytes = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                    }
+                    if (bytes != null) onEvent(AiChatEvent.OnImageSelected(bytes))
+                }
             }
         }
     )
@@ -77,8 +85,12 @@ fun AiChatContent(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
             if (success) {
-                val bytes = context.contentResolver.openInputStream(cameraImageUri)?.use { it.readBytes() }
-                if (bytes != null) onEvent(AiChatEvent.OnImageSelected(bytes))
+                ioScope.launch {
+                    val bytes = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        context.contentResolver.openInputStream(cameraImageUri)?.use { it.readBytes() }
+                    }
+                    if (bytes != null) onEvent(AiChatEvent.OnImageSelected(bytes))
+                }
             }
         }
     )
@@ -100,9 +112,18 @@ fun AiChatContent(
         }
     }
 
-    LaunchedEffect(state.messages.size) {
-        if (state.messages.isNotEmpty()) {
-            listState.animateScrollToItem(state.messages.size - 1)
+    // On thread switch: jump instantly to the bottom (no animation — user just opened a
+    // different thread, animating from current scroll feels jarring).
+    // On new message in the current thread: animate so the user perceives the arrival.
+    val previousThreadId = remember { mutableStateOf(state.currentThreadId) }
+    LaunchedEffect(state.currentThreadId, state.messages.size) {
+        if (state.messages.isEmpty()) return@LaunchedEffect
+        val target = state.messages.size - 1
+        if (previousThreadId.value != state.currentThreadId) {
+            previousThreadId.value = state.currentThreadId
+            listState.scrollToItem(target)
+        } else {
+            listState.animateScrollToItem(target)
         }
     }
 
@@ -165,7 +186,6 @@ fun AiChatContent(
                     )
                 }
             },
-            snackbarHost = { SnackbarHost(snackbarHostState) }
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -234,10 +254,10 @@ fun AiChatContent(
                                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
-                                state.selectedImages.forEachIndexed { index, imageBytes ->
+                                state.selectedImages.forEachIndexed { index, image ->
                                     Box {
                                         AsyncImage(
-                                            model = imageBytes,
+                                            model = image.bytes,
                                             contentDescription = null,
                                             modifier = Modifier
                                                 .size(72.dp)
@@ -256,7 +276,7 @@ fun AiChatContent(
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.Close,
-                                                contentDescription = "Remove image",
+                                                contentDescription = AppStrings.Chat.removeImageDescription,
                                                 modifier = Modifier.size(16.dp),
                                                 tint = MaterialTheme.colorScheme.onSurface
                                             )
@@ -282,7 +302,7 @@ fun AiChatContent(
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.PhotoLibrary,
-                                    contentDescription = "Pick image",
+                                    contentDescription = AppStrings.Chat.pickImageDescription,
                                     tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
                             }
@@ -291,7 +311,7 @@ fun AiChatContent(
                             IconButton(onClick = { launchCamera() }) {
                                 Icon(
                                     imageVector = Icons.Outlined.CameraAlt,
-                                    contentDescription = "Take photo",
+                                    contentDescription = AppStrings.Chat.takePhotoDescription,
                                     tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
                             }
@@ -378,9 +398,9 @@ private fun AiChatContentPreview() {
         AiChatContent(
             state = AiChatState(
                 messages = listOf(
-                    ChatMessageUi(id = "1", text = "Zdravo! Kako mogu da vam pomognem?", isFromUser = false, formattedTime = "15:16"),
-                    ChatMessageUi(id = "2", text = "Koje su opcije finansiranja dostupne?", isFromUser = true, formattedTime = "15:16"),
-                    ChatMessageUi(id = "3", text = "Imamo nekoliko opcija, uključujući leasing i kredit. Koja vas zanima?", isFromUser = false, formattedTime = "15:17"),
+                    ChatMessageUi(id = "1", text = "Zdravo! Kako mogu da vam pomognem?", role = com.example.domain.model.chat.MessageRole.AI, timestamp = 0L, formattedTime = "15:16", threadId = "preview"),
+                    ChatMessageUi(id = "2", text = "Koje su opcije finansiranja dostupne?", role = com.example.domain.model.chat.MessageRole.USER, timestamp = 0L, formattedTime = "15:16", threadId = "preview"),
+                    ChatMessageUi(id = "3", text = "Imamo nekoliko opcija, uključujući leasing i kredit. Koja vas zanima?", role = com.example.domain.model.chat.MessageRole.AI, timestamp = 0L, formattedTime = "15:17", threadId = "preview"),
                 ),
             ),
             snackbarHostState = remember { SnackbarHostState() },

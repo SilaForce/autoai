@@ -23,6 +23,7 @@ class PreferencesRepository(
         val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
         val DARK_MODE_ENABLED = booleanPreferencesKey("dark_mode_enabled")
         val AI_AUTO_REMINDERS_ENABLED = booleanPreferencesKey("ai_auto_reminders_enabled")
+        val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
     }
 
     override val isNotificationsEnabled: Flow<Boolean> =
@@ -51,4 +52,13 @@ class PreferencesRepository(
         get() = context.dataStore.data
             .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
             .map { it[booleanPreferencesKey("ai_auto_reminders_enabled")] ?: false }
+
+    override val isOnboardingCompleted: Flow<Boolean> =
+        context.dataStore.data
+            .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+            .map { it[PreferencesKeys.ONBOARDING_COMPLETED] ?: false }
+
+    override suspend fun setOnboardingCompleted(completed: Boolean) {
+        context.dataStore.edit { it[PreferencesKeys.ONBOARDING_COMPLETED] = completed }
+    }
 }

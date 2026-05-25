@@ -2,7 +2,6 @@ package com.example.autoai.navigation
 
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -15,6 +14,7 @@ import com.example.autoai.presentation.features.profile.ProfileScreen
 import com.example.autoai.presentation.features.profile.edit.EditProfileScreen
 import com.example.autoai.presentation.features.reminder.ReminderScreen
 import com.example.autoai.presentation.features.settings.SettingsScreen
+import com.example.autoai.presentation.util.ObserveAsEvents
 import org.koin.compose.koinInject
 
 @Composable
@@ -61,17 +61,15 @@ fun AppNavGraph(
         }
     }
 
-    LaunchedEffect(Unit) {
-        navigator.navigationActions.collect { action ->
-            when (action) {
-                is NavigationAction.NavigateTo -> {
-                    navController.navigate(action.destination) {
-                        launchSingleTop = true
-                        action.popUpTo?.let { popUpTo(it) { inclusive = action.inclusive } }
-                    }
+    ObserveAsEvents(navigator.navigationActions) { action ->
+        when (action) {
+            is NavigationAction.NavigateTo -> {
+                navController.navigate(action.destination) {
+                    launchSingleTop = true
+                    action.popUpTo?.let { popUpTo(it) { inclusive = action.inclusive } }
                 }
-                is NavigationAction.NavigateBack -> navController.popBackStack()
             }
+            is NavigationAction.NavigateBack -> navController.popBackStack()
         }
     }
 }

@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.sp
 import com.example.autoai.localization.AppStrings
 import androidx.compose.material3.MaterialTheme
 
-// Definišemo stanja koja toggle može imati
 enum class AuthTab {
     LOGIN, REGISTER
 }
@@ -38,14 +37,12 @@ fun AuthToggle(
     onTabChanged: (AuthTab) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Vanjski sivi kontejner u obliku pilule
     Row(
         modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50))
-            .padding(4.dp) // Razmak između ivice kontejnera i unutrašnjih tabova
+            .padding(4.dp)
     ) {
-        // Tab za Prijavu
         AuthTabItem(
             text = AppStrings.Auth.loginTab,
             isSelected = currentTab == AuthTab.LOGIN,
@@ -53,7 +50,6 @@ fun AuthToggle(
             modifier = Modifier.weight(1f)
         )
 
-        // Tab za Registraciju
         AuthTabItem(
             text = AppStrings.Auth.registerTab,
             isSelected = currentTab == AuthTab.REGISTER,
@@ -70,7 +66,6 @@ private fun AuthTabItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Animacije za boju i sjenku (daju "premium" osjećaj prebacivanja)
     val backgroundColor by animateColorAsState(
         targetValue = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent,
         label = "BgColorAnimation"

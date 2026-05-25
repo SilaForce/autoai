@@ -19,26 +19,24 @@ class FirestoreReminderRepository(
 
     override suspend fun addReminder(reminder: Reminder): AppResult<Reminder> {
         val documentReference = firestore.collection(REMINDERS_COLLECTION).document()
-        // Dajemo mu ID koji je Firestore upravo generisao
         val reminderWithId = reminder.copy(id = documentReference.id)
 
         return safeFirebaseCall {
             documentReference
                 .set(reminderWithId.toReminderDto())
-                .await() // Kotlin coroutine funkcija za čekanje Firebase-a
+                .await()
 
             reminderWithId
         }
     }
 
     override suspend fun getReminders(vehicleId: String): AppResult<List<Reminder>> {
-        // NAPOMENA: Ovaj upit filtrira po jednom polju i sortira po drugom.
-        // Firestore će zahtijevati kompozitni indeks (Composite Index).
+        // whereEqualTo + orderBy on a different field needs a composite index
+        // (configured in firestore.indexes.json). Ascending by due date so the
+        // soonest-due reminders surface at the top.
         return safeFirebaseCall {
             firestore.collection(REMINDERS_COLLECTION)
                 .whereEqualTo(FIELD_VEHICLE_ID, vehicleId)
-                // Ovdje sortiramo ASCENDING (rastuće) jer želimo da nam na vrhu budu
-                // podsjetnici koji najskorije ističu!
                 .orderBy(FIELD_DUE_DATE, Query.Direction.ASCENDING)
                 .get()
                 .await()
@@ -80,6 +78,33 @@ class FirestoreReminderRepository(
         }
     }
 
+    override suspend fun deleteRemindersForVehicle(vehicleId: String): AppResult<Unit> {
+        return deleteWhere(FIELD_VEHICLE_ID, vehicleId)
+    }
+
+    override suspend fun deleteAllForUser(userId: String): AppResult<Unit> {
+        return deleteWhere(FIELD_USER_ID, userId)
+    }
+
+    private suspend fun deleteWhere(field: String, value: String): AppResult<Unit> {
+        return safeFirebaseCall {
+            firestore.collection(REMINDERS_COLLECTION)
+                .whereEqualTo(field, value)
+                .get()
+                .await()
+        }.andThen { querySnapshot ->
+            safeFirebaseCall {
+                // Firestore WriteBatch caps at 500 ops; chunk for safety.
+                querySnapshot.documents.chunked(BATCH_LIMIT).forEach { chunk ->
+                    val batch = firestore.batch()
+                    chunk.forEach { document -> batch.delete(document.reference) }
+                    batch.commit().await()
+                }
+                Unit
+            }
+        }
+    }
+
     override suspend fun getActiveRemindersForVehicle(vehicleId: String): AppResult<List<Reminder>> {
         // Query by vehicleId only — filter isCompleted in memory
         // because old documents may not have the isCompleted field at all,
@@ -116,6 +141,8 @@ class FirestoreReminderRepository(
     private companion object {
         const val REMINDERS_COLLECTION = "reminders"
         const val FIELD_VEHICLE_ID = "vehicleId"
+        const val FIELD_USER_ID = "userId"
         const val FIELD_DUE_DATE = "dueDateMillis"
+        const val BATCH_LIMIT = 500
     }
 }

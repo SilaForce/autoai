@@ -43,7 +43,6 @@ fun RegisterContent(
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
-        // Čim se ekran učita, fokusiraj se na polje za Ime
         focusRequester.requestFocus()
     }
 
@@ -53,9 +52,8 @@ fun RegisterContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .systemBarsPadding()
-            .imePadding() // 3. Magija za izbjegavanje tastature!
+            .imePadding()
     ) {
-        // Glavni sadržaj koji se može skrolati
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -100,7 +98,6 @@ fun RegisterContent(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // 4. Kačimo focusRequester na prvo polje!
             AutoAiTextField(
                 modifier = Modifier.focusRequester(focusRequester),
                 value = state.name,

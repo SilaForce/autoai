@@ -2,7 +2,6 @@ package com.example.autoai
 
 import android.app.Application
 import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.autoai.di.koinModule
@@ -47,11 +46,6 @@ class AutoAiApp : Application() {
         val workRequest = PeriodicWorkRequestBuilder<ReminderNotificationWorker>(
             1, TimeUnit.DAYS
         ).build()
-
-        val testRequest = OneTimeWorkRequestBuilder<ReminderNotificationWorker>()
-            .setInitialDelay(10, TimeUnit.SECONDS)
-            .build()
-        WorkManager.getInstance(this).enqueue(testRequest)
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             ReminderNotificationWorker.WORK_NAME,

@@ -10,11 +10,18 @@ import com.example.domain.model.user.User
 import com.example.domain.model.vehicle.FuelType
 import com.example.domain.model.vehicle.Vehicle
 import com.example.domain.repository.IAuthRepository
+import com.example.domain.repository.IVehicleMakesRepository
 import com.example.domain.repository.IVehicleRepository
 import com.example.domain.usecase.user.GetCurrentUserUseCase
 import com.example.domain.usecase.vehicle.AddVehicleUseCase
+import com.example.domain.usecase.vehicle.GetCarMakesUseCase
+import com.example.domain.usecase.vehicle.GetModelsForMakeUseCase
+import com.example.domain.usecase.vehicle.GetVehicleByIdUseCase
+import com.example.domain.usecase.vehicle.UpdateVehicleUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -34,9 +41,7 @@ class AddVehicleViewModelTest {
 
         viewModel.onEvent(AddVehicleEvent.OnFuelTypeSelected(FuelType.DIZEL))
 
-        val state = viewModel.state.value
-        assertEquals(FuelType.DIZEL, state.selectedFuelType)
-        assertTrue(state.fuelTypeOptions.first { it.fuelType == FuelType.DIZEL }.isSelected)
+        assertEquals(FuelType.DIZEL, viewModel.state.value.selectedFuelType)
     }
 
     @Test
@@ -57,7 +62,7 @@ class AddVehicleViewModelTest {
     }
 
     @Test
-    fun `save with valid form persists vehicle and emits success first`() = runTest {
+    fun `save with valid form persists vehicle and navigates back`() = runTest {
         val repository = FakeVehicleRepository()
         val viewModel = createViewModel(repository)
         val sideEffect = async { viewModel.sideEffects.first() }
@@ -71,10 +76,7 @@ class AddVehicleViewModelTest {
         viewModel.onEvent(AddVehicleEvent.OnSaveClicked)
 
         val result = sideEffect.await()
-        assertEquals(
-            AddVehicleSideEffect.ShowSuccess(UiText.StringResource(R.string.add_vehicle_success)),
-            result,
-        )
+        assertEquals(AddVehicleSideEffect.NavigateBack, result)
         assertEquals("Volkswagen", repository.addedVehicle?.make)
         assertEquals(FuelType.DIZEL, repository.addedVehicle?.fuelType)
         assertEquals(123000, repository.addedVehicle?.mileage)
@@ -94,6 +96,7 @@ class AddVehicleViewModelTest {
     private fun createViewModel(
         repository: FakeVehicleRepository = FakeVehicleRepository(),
     ): AddVehicleViewModel {
+        val makesRepository = FakeMakesRepository()
         return AddVehicleViewModel(
             savedStateHandle = SavedStateHandle(),
             getCurrentUserUseCase = GetCurrentUserUseCase(
@@ -102,6 +105,22 @@ class AddVehicleViewModelTest {
             ),
             addVehicleUseCase = AddVehicleUseCase(
                 repository = repository,
+                dispatcher = mainDispatcherRule.dispatcher,
+            ),
+            updateVehicleUseCase = UpdateVehicleUseCase(
+                repository = repository,
+                dispatcher = mainDispatcherRule.dispatcher,
+            ),
+            getVehicleByIdUseCase = GetVehicleByIdUseCase(
+                repository = repository,
+                dispatcher = mainDispatcherRule.dispatcher,
+            ),
+            getCarMakesUseCase = GetCarMakesUseCase(
+                repository = makesRepository,
+                dispatcher = mainDispatcherRule.dispatcher,
+            ),
+            getModelsForMakeUseCase = GetModelsForMakeUseCase(
+                repository = makesRepository,
                 dispatcher = mainDispatcherRule.dispatcher,
             ),
         )
@@ -114,13 +133,10 @@ class AddVehicleViewModelTest {
             name: String,
             email: String,
             password: String,
-        ): AppResult<User> {
-            throw NotImplementedError()
-        }
+        ): AppResult<User> = throw NotImplementedError()
 
-        override suspend fun login(email: String, password: String): AppResult<User> {
+        override suspend fun login(email: String, password: String): AppResult<User> =
             throw NotImplementedError()
-        }
 
         override suspend fun getCurrentUser(): AppResult<User> {
             return AppResult.Success(
@@ -131,6 +147,10 @@ class AddVehicleViewModelTest {
                 )
             )
         }
+
+        override suspend fun updateUser(user: User): AppResult<User> = throw NotImplementedError()
+        override suspend fun deleteUser(): AppResult<Unit> = throw NotImplementedError()
+        override suspend fun logout(): AppResult<Unit> = throw NotImplementedError()
     }
 
     private class FakeVehicleRepository : IVehicleRepository {
@@ -141,12 +161,32 @@ class AddVehicleViewModelTest {
             return AppResult.Success(vehicle.copy(id = "vehicle-1"))
         }
 
-        override suspend fun getVehicles(userId: String): AppResult<List<Vehicle>> {
+        override suspend fun getVehicles(userId: String): AppResult<List<Vehicle>> =
             throw NotImplementedError()
-        }
 
-        override suspend fun setActiveVehicle(userId: String, vehicleId: String): AppResult<Unit> {
+        override suspend fun getVehicleById(vehicleId: String): AppResult<Vehicle> =
             throw NotImplementedError()
-        }
+
+        override suspend fun updateVehicle(vehicle: Vehicle): AppResult<Vehicle> =
+            AppResult.Success(vehicle)
+
+        override suspend fun deleteVehicle(userId: String, vehicleId: String): AppResult<Unit> =
+            throw NotImplementedError()
+
+        override suspend fun setActiveVehicle(userId: String, vehicleId: String): AppResult<Unit> =
+            throw NotImplementedError()
+
+        override fun observeActiveVehicle(userId: String): Flow<AppResult<Vehicle?>> = emptyFlow()
+
+        override suspend fun deleteAllForUser(userId: String): AppResult<Unit> =
+            throw NotImplementedError()
+    }
+
+    private class FakeMakesRepository : IVehicleMakesRepository {
+        override suspend fun getCarMakes(): AppResult<List<String>> =
+            AppResult.Success(listOf("Volkswagen", "Audi", "BMW"))
+
+        override suspend fun getModelsForMake(make: String): AppResult<List<String>> =
+            AppResult.Success(listOf("Golf", "Polo", "Passat"))
     }
 }

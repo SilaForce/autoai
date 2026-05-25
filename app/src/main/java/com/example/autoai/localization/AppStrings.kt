@@ -210,6 +210,14 @@ object AppStrings {
         @StringRes
         val noActiveVehicleSubtitleRes = R.string.home_no_active_vehicle_subtitle
 
+        @StringRes
+        val profileButtonDescriptionRes = R.string.home_profile_button_description
+
+        val profileButtonDescription: String
+            @Composable
+            @ReadOnlyComposable
+            get() = stringResource(profileButtonDescriptionRes)
+
         val monthlyCostLabel: String
             @Composable
             @ReadOnlyComposable
@@ -341,6 +349,12 @@ object AppStrings {
         @StringRes
         val vehicleDeleteCancelRes = R.string.garage_vehicle_delete_cancel
 
+        @StringRes
+        val vehicleDeletedSnackbarRes = R.string.garage_vehicle_deleted_snackbar
+
+        @StringRes
+        val undoRes = R.string.garage_undo
+
         val vehicleMenuEdit: String
             @Composable
             @ReadOnlyComposable
@@ -370,6 +384,11 @@ object AppStrings {
             @Composable
             @ReadOnlyComposable
             get() = stringResource(vehicleDeleteCancelRes)
+
+        val undo: String
+            @Composable
+            @ReadOnlyComposable
+            get() = stringResource(undoRes)
     }
 
     object AddVehicle {
@@ -580,6 +599,12 @@ object AppStrings {
         @StringRes val saveButtonRes = R.string.reminders_save_button
         @StringRes val okRes = R.string.reminders_ok
         @StringRes val cancelRes = R.string.reminders_cancel
+        @StringRes val deleteDialogTitleRes = R.string.reminders_delete_dialog_title
+        @StringRes val deleteDialogMessageRes = R.string.reminders_delete_dialog_message
+        @StringRes val deleteConfirmRes = R.string.reminders_delete_confirm
+        @StringRes val deleteCancelRes = R.string.reminders_delete_cancel
+        @StringRes val editDescriptionRes = R.string.reminders_edit_description
+        @StringRes val deleteDescriptionRes = R.string.reminders_delete_description
 
         val title: String @Composable @ReadOnlyComposable get() = stringResource(titleRes)
         val emptyTitle: String @Composable @ReadOnlyComposable get() = stringResource(emptyTitleRes)
@@ -594,6 +619,12 @@ object AppStrings {
         val saveButton: String @Composable @ReadOnlyComposable get() = stringResource(saveButtonRes)
         val ok: String @Composable @ReadOnlyComposable get() = stringResource(okRes)
         val cancel: String @Composable @ReadOnlyComposable get() = stringResource(cancelRes)
+        val deleteDialogTitle: String @Composable @ReadOnlyComposable get() = stringResource(deleteDialogTitleRes)
+        val deleteDialogMessage: String @Composable @ReadOnlyComposable get() = stringResource(deleteDialogMessageRes)
+        val deleteConfirm: String @Composable @ReadOnlyComposable get() = stringResource(deleteConfirmRes)
+        val deleteCancel: String @Composable @ReadOnlyComposable get() = stringResource(deleteCancelRes)
+        val editDescription: String @Composable @ReadOnlyComposable get() = stringResource(editDescriptionRes)
+        val deleteDescription: String @Composable @ReadOnlyComposable get() = stringResource(deleteDescriptionRes)
     }
 
     object Settings {
@@ -605,6 +636,10 @@ object AppStrings {
         @StringRes val logout = R.string.settings_logout
         @StringRes val comingSoon = R.string.settings_coming_soon
         @StringRes val aiAutoReminders = R.string.settings_ai_auto_reminders
+        @StringRes val currency = R.string.settings_currency
+        @StringRes val currencyDialogTitle = R.string.settings_currency_dialog_title
+        @StringRes val currencyDialogCancel = R.string.settings_currency_dialog_cancel
+        @StringRes val currencyUpdatedRes = R.string.settings_currency_updated
 
         val titleStr: String @Composable @ReadOnlyComposable get() = stringResource(title)
         val notificationsStr: String @Composable @ReadOnlyComposable get() = stringResource(notifications)
@@ -614,6 +649,9 @@ object AppStrings {
         val logoutStr: String @Composable @ReadOnlyComposable get() = stringResource(logout)
         val comingSoonStr: String @Composable @ReadOnlyComposable get() = stringResource(comingSoon)
         val aiAutoRemindersStr: String @Composable @ReadOnlyComposable get() = stringResource(aiAutoReminders)
+        val currencyStr: String @Composable @ReadOnlyComposable get() = stringResource(currency)
+        val currencyDialogTitleStr: String @Composable @ReadOnlyComposable get() = stringResource(currencyDialogTitle)
+        val currencyDialogCancelStr: String @Composable @ReadOnlyComposable get() = stringResource(currencyDialogCancel)
     }
 
     object Chat {
@@ -622,12 +660,18 @@ object AppStrings {
         @StringRes val placeholderRes = R.string.chat_placeholder
         @StringRes val sendDescriptionRes = R.string.chat_send_description
         @StringRes val emptyStateTitleRes = R.string.chat_empty_state_title
+        @StringRes val removeImageDescriptionRes = R.string.chat_remove_image_description
+        @StringRes val pickImageDescriptionRes = R.string.chat_pick_image_description
+        @StringRes val takePhotoDescriptionRes = R.string.chat_take_photo_description
 
         val title: String @Composable @ReadOnlyComposable get() = stringResource(titleRes)
         val subtitle: String @Composable @ReadOnlyComposable get() = stringResource(subtitleRes)
         val placeholder: String @Composable @ReadOnlyComposable get() = stringResource(placeholderRes)
         val sendDescription: String @Composable @ReadOnlyComposable get() = stringResource(sendDescriptionRes)
         val emptyStateTitle: String @Composable @ReadOnlyComposable get() = stringResource(emptyStateTitleRes)
+        val removeImageDescription: String @Composable @ReadOnlyComposable get() = stringResource(removeImageDescriptionRes)
+        val pickImageDescription: String @Composable @ReadOnlyComposable get() = stringResource(pickImageDescriptionRes)
+        val takePhotoDescription: String @Composable @ReadOnlyComposable get() = stringResource(takePhotoDescriptionRes)
     }
 
     object Costs {
@@ -720,6 +764,8 @@ object AppStrings {
         @StringRes val accountInfoTitleRes = R.string.profile_account_info_title
         @StringRes val memberSinceLabelRes = R.string.profile_member_since_label
         @StringRes val planLabelRes = R.string.profile_plan_label
+        @StringRes val settingsButtonDescriptionRes = R.string.profile_settings_button_description
+        @StringRes val avatarDescriptionRes = R.string.profile_avatar_description
 
         val title: String @Composable @ReadOnlyComposable get() = stringResource(titleRes)
         val editButton: String @Composable @ReadOnlyComposable get() = stringResource(editButtonRes)
@@ -728,6 +774,8 @@ object AppStrings {
         val accountInfoTitle: String @Composable @ReadOnlyComposable get() = stringResource(accountInfoTitleRes)
         val memberSinceLabel: String @Composable @ReadOnlyComposable get() = stringResource(memberSinceLabelRes)
         val planLabel: String @Composable @ReadOnlyComposable get() = stringResource(planLabelRes)
+        val settingsButtonDescription: String @Composable @ReadOnlyComposable get() = stringResource(settingsButtonDescriptionRes)
+        val avatarDescription: String @Composable @ReadOnlyComposable get() = stringResource(avatarDescriptionRes)
     }
 
     object EditProfile {

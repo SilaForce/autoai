@@ -11,7 +11,6 @@ import com.example.domain.model.app.onFailure
 import com.example.domain.model.app.onSuccess
 import com.example.domain.usecase.login.LoginParams
 import com.example.domain.usecase.login.LoginUseCase
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class LoginViewModel(
@@ -44,11 +43,13 @@ class LoginViewModel(
                             UiText.StringResource(AppStrings.Auth.loginSuccessRes)
                         )
                     )
-                    delay(1500L)
+                    // Navigate immediately; the snackbar paints briefly during the screen
+                    // transition. Previously this blocked for 1500ms which would fire nav
+                    // from a non-foreground coroutine if the user backgrounded the app.
                     navigator.navigateTo(
                         destination = Route.Home,
                         popUpTo = Route.AuthGraph,
-                        inclusive = true
+                        inclusive = true,
                     )
                 }
                 .onFailure { error ->

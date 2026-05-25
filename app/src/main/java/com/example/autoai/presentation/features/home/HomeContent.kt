@@ -40,6 +40,7 @@ import com.example.autoai.presentation.components.BottomNavigationBar
 import com.example.autoai.presentation.components.MonthlyCostCard
 import com.example.autoai.presentation.components.VehicleCard
 import com.example.autoai.presentation.theme.AutoAITheme
+import com.example.autoai.presentation.util.CurrencyFormatter
 import androidx.compose.material3.MaterialTheme
 import com.example.autoai.presentation.components.DueReminderCard
 
@@ -89,7 +90,7 @@ fun HomeContent(
                             IconButton(onClick = { onEvent(HomeEvent.OnProfileClicked) }) {
                                 Icon(
                                     imageVector = Icons.Outlined.Person,
-                                    contentDescription = "Profil",
+                                    contentDescription = AppStrings.Home.profileButtonDescription,
                                     tint = MaterialTheme.colorScheme.onSurface,
                                 )
                             }
@@ -121,7 +122,7 @@ fun HomeContent(
                         MonthlyCostCard(
                             label = AppStrings.Home.monthlyCostLabel,
                             amount = state.totalExpenses,
-                            currency = "KM",
+                            currency = CurrencyFormatter.symbolFor(state.currency),
                             onClick = { onEvent(HomeEvent.OnMonthlyCostClicked) }
                         )
 
