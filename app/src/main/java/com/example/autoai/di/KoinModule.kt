@@ -5,7 +5,9 @@ import com.example.autoai.navigation.AppNavigator
 import com.example.autoai.navigation.IAppNavigator
 import com.example.autoai.presentation.features.auth.login.LoginViewModel
 import com.example.autoai.presentation.features.auth.register.RegisterViewModel
+import com.example.autoai.presentation.features.chat.AiChatTools
 import com.example.autoai.presentation.features.chat.AiChatViewModel
+import com.example.autoai.presentation.features.chat.AiSystemInstructionBuilder
 import com.example.autoai.presentation.features.costs.CostsViewModel
 import com.example.autoai.presentation.features.garage.add.AddVehicleViewModel
 import com.example.autoai.presentation.features.garage.GarageViewModel
@@ -26,6 +28,8 @@ val koinModule = module {
 
     singleOf(::DefaultDispatcherProvider) bind DispatcherProvider::class
     singleOf(::AppNavigator) bind IAppNavigator::class
+    singleOf(::AiChatTools)
+    singleOf(::AiSystemInstructionBuilder)
 
     viewModelOf(::OnboardingViewModel)
     viewModelOf(::RegisterViewModel)
