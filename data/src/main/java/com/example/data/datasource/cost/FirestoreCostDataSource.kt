@@ -1,4 +1,4 @@
-package com.example.data.repository.cost
+package com.example.data.datasource.cost
 
 import android.util.Log
 import com.example.data.datasource.remote.util.safeFirebaseCall
@@ -8,14 +8,14 @@ import com.example.data.model.cost.CostDto
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.andThen
 import com.example.domain.model.cost.Cost
-import com.example.domain.repository.ICostRepository
+import com.example.domain.datasource.CostDataSource
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
 
-class FirestoreCostRepository(
+class FirestoreCostDataSource(
     private val firestore: FirebaseFirestore,
-) : ICostRepository {
+) : CostDataSource {
 
     override suspend fun addCost(cost: Cost): AppResult<Cost> {
         val documentReference = firestore.collection(COSTS_COLLECTION).document()
@@ -102,7 +102,7 @@ class FirestoreCostRepository(
         val costWithId = cost.copy(id = documentReference.id)
         return safeFirebaseCall {
             // merge() so server-side or future-schema fields aren't nulled out by a full
-            // overwrite. Same fix pattern as FirestoreVehicleRepository.updateVehicle.
+            // overwrite. Same fix pattern as FirestoreVehicleDataSource.updateVehicle.
             documentReference
                 .set(costWithId.toCostDto(), SetOptions.merge())
                 .await()
@@ -144,7 +144,7 @@ class FirestoreCostRepository(
     }
 
     private companion object {
-        const val TAG = "FirestoreCostRepository"
+        const val TAG = "FirestoreCostDataSource"
         const val COSTS_COLLECTION = "costs"
         const val FIELD_VEHICLE_ID = "vehicleId"
         const val FIELD_USER_ID = "userId"

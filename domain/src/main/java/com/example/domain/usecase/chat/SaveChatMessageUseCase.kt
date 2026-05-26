@@ -4,7 +4,7 @@ import com.example.domain.base.BaseUseCase
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.DataError
 import com.example.domain.model.chat.ChatMessage
-import com.example.domain.repository.IAiChatHistoryRepository
+import com.example.domain.datasource.AiChatHistoryDataSource
 import kotlinx.coroutines.CoroutineDispatcher
 
 data class SaveChatMessageParams(
@@ -13,7 +13,7 @@ data class SaveChatMessageParams(
 )
 
 class SaveChatMessageUseCase(
-    private val repository: IAiChatHistoryRepository,
+    private val repository: AiChatHistoryDataSource,
     dispatcher: CoroutineDispatcher,
 ) : BaseUseCase<SaveChatMessageParams, Unit>(dispatcher) {
 

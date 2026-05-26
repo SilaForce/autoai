@@ -4,7 +4,7 @@ import com.example.domain.base.BaseUseCase
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.DataError
 import com.example.domain.model.chat.ChatThread
-import com.example.domain.repository.IAiChatThreadRepository
+import com.example.domain.datasource.AiChatThreadDataSource
 import kotlinx.coroutines.CoroutineDispatcher
 
 data class UpdateChatThreadParams(
@@ -12,7 +12,7 @@ data class UpdateChatThreadParams(
 )
 
 class UpdateChatThreadUseCase(
-    private val repository: IAiChatThreadRepository,
+    private val repository: AiChatThreadDataSource,
     dispatcher: CoroutineDispatcher,
 ) : BaseUseCase<UpdateChatThreadParams, Unit>(dispatcher) {
 

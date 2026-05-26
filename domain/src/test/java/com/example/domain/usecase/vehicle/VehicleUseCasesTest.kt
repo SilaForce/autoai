@@ -4,7 +4,7 @@ import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.DataError
 import com.example.domain.model.vehicle.FuelType
 import com.example.domain.model.vehicle.Vehicle
-import com.example.domain.repository.IVehicleRepository
+import com.example.domain.datasource.VehicleDataSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -119,7 +119,7 @@ class VehicleUseCasesTest {
         assertEquals("vehicle-7", repository.lastSetActiveVehicleId)
     }
 
-    private class FakeVehicleRepository : IVehicleRepository {
+    private class FakeVehicleRepository : VehicleDataSource {
         var addedVehicle: Vehicle? = null
         var lastGetVehiclesUserId: String? = null
         var lastSetActiveUserId: String? = null

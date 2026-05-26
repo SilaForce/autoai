@@ -3,12 +3,12 @@ package com.example.domain.usecase.user
 import com.example.domain.base.BaseUseCase
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.andThen
-import com.example.domain.repository.IAiChatHistoryRepository
-import com.example.domain.repository.IAiChatThreadRepository
+import com.example.domain.datasource.AiChatHistoryDataSource
+import com.example.domain.datasource.AiChatThreadDataSource
 import com.example.domain.repository.IAuthRepository
-import com.example.domain.repository.ICostRepository
-import com.example.domain.repository.IRemindersRepository
-import com.example.domain.repository.IVehicleRepository
+import com.example.domain.datasource.CostDataSource
+import com.example.domain.datasource.RemindersDataSource
+import com.example.domain.datasource.VehicleDataSource
 import kotlinx.coroutines.CoroutineDispatcher
 
 /**
@@ -24,11 +24,11 @@ import kotlinx.coroutines.CoroutineDispatcher
  */
 class DeleteUserUseCase(
     private val authRepository: IAuthRepository,
-    private val vehicleRepository: IVehicleRepository,
-    private val costRepository: ICostRepository,
-    private val reminderRepository: IRemindersRepository,
-    private val chatHistoryRepository: IAiChatHistoryRepository,
-    private val chatThreadRepository: IAiChatThreadRepository,
+    private val vehicleRepository: VehicleDataSource,
+    private val costRepository: CostDataSource,
+    private val reminderRepository: RemindersDataSource,
+    private val chatHistoryRepository: AiChatHistoryDataSource,
+    private val chatThreadRepository: AiChatThreadDataSource,
     dispatcher: CoroutineDispatcher,
 ) : BaseUseCase<Unit, Unit>(dispatcher) {
 

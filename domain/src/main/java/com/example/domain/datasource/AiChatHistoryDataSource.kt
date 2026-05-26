@@ -1,9 +1,9 @@
-package com.example.domain.repository
+package com.example.domain.datasource
 
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.chat.ChatMessage
 
-interface IAiChatHistoryRepository {
+interface AiChatHistoryDataSource {
     suspend fun loadHistory(
         userId: String,
         threadId: String,

@@ -1,4 +1,4 @@
-package com.example.data.repository.chat
+package com.example.data.datasource.chat
 
 import android.util.Log
 import com.example.data.datasource.remote.util.safeFirebaseCall
@@ -8,14 +8,14 @@ import com.example.data.model.chat.ChatMessageDto
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.andThen
 import com.example.domain.model.chat.ChatMessage
-import com.example.domain.repository.IAiChatHistoryRepository
+import com.example.domain.datasource.AiChatHistoryDataSource
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 
-class FirestoreChatHistoryRepository(
+class FirestoreChatHistoryDataSource(
     private val firestore: FirebaseFirestore,
-) : IAiChatHistoryRepository {
+) : AiChatHistoryDataSource {
 
     override suspend fun saveMessage(message: ChatMessage, userId: String): AppResult<Unit> {
         val documentReference = firestore.collection(AI_CHAT_COLLECTION).document(message.id)

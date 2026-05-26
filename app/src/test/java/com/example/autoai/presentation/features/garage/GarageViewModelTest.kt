@@ -13,9 +13,9 @@ import com.example.domain.model.user.User
 import com.example.domain.model.vehicle.FuelType
 import com.example.domain.model.vehicle.Vehicle
 import com.example.domain.repository.IAuthRepository
-import com.example.domain.repository.ICostRepository
-import com.example.domain.repository.IRemindersRepository
-import com.example.domain.repository.IVehicleRepository
+import com.example.domain.datasource.CostDataSource
+import com.example.domain.datasource.RemindersDataSource
+import com.example.domain.datasource.VehicleDataSource
 import com.example.domain.usecase.user.GetCurrentUserUseCase
 import com.example.domain.usecase.vehicle.DeleteVehicleUseCase
 import com.example.domain.usecase.vehicle.GetVehiclesUseCase
@@ -236,8 +236,8 @@ class GarageViewModelTest {
 
     private fun createViewModel(
         vehicleRepository: FakeVehicleRepository,
-        costRepository: ICostRepository = FakeCostRepository(),
-        reminderRepository: IRemindersRepository = FakeReminderRepository(),
+        costRepository: CostDataSource = FakeCostRepository(),
+        reminderRepository: RemindersDataSource = FakeReminderRepository(),
     ): GarageViewModel {
         return GarageViewModel(
             savedStateHandle = SavedStateHandle(),
@@ -295,7 +295,7 @@ class GarageViewModelTest {
     private class FakeVehicleRepository(
         private val vehicles: MutableList<Vehicle> = mutableListOf(),
         private val deleteResult: AppResult<Unit> = AppResult.Success(Unit),
-    ) : IVehicleRepository {
+    ) : VehicleDataSource {
         var lastSetActiveVehicleId: String? = null
 
         override suspend fun addVehicle(vehicle: Vehicle): AppResult<Vehicle> {
@@ -349,7 +349,7 @@ class GarageViewModelTest {
         }
     }
 
-    private class FakeCostRepository : ICostRepository {
+    private class FakeCostRepository : CostDataSource {
         val deletedForVehicleIds = mutableListOf<String>()
 
         override suspend fun addCost(cost: Cost): AppResult<Cost> = throw NotImplementedError()
@@ -365,7 +365,7 @@ class GarageViewModelTest {
         override suspend fun deleteAllForUser(userId: String): AppResult<Unit> = AppResult.Success(Unit)
     }
 
-    private class FakeReminderRepository : IRemindersRepository {
+    private class FakeReminderRepository : RemindersDataSource {
         val deletedForVehicleIds = mutableListOf<String>()
 
         override suspend fun addReminder(reminder: Reminder): AppResult<Reminder> = throw NotImplementedError()

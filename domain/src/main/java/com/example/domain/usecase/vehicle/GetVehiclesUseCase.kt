@@ -4,7 +4,7 @@ import com.example.domain.base.BaseUseCase
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.DataError
 import com.example.domain.model.vehicle.Vehicle
-import com.example.domain.repository.IVehicleRepository
+import com.example.domain.datasource.VehicleDataSource
 import com.example.domain.util.ValidationUtil
 import kotlinx.coroutines.CoroutineDispatcher
 
@@ -13,7 +13,7 @@ data class GetVehiclesParams(
 )
 
 class GetVehiclesUseCase(
-    private val repository: IVehicleRepository,
+    private val repository: VehicleDataSource,
     dispatcher: CoroutineDispatcher,
 ) : BaseUseCase<GetVehiclesParams, List<Vehicle>>(dispatcher) {
 

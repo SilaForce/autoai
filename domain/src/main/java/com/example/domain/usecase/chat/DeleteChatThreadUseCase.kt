@@ -4,8 +4,8 @@ import com.example.domain.base.BaseUseCase
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.DataError
 import com.example.domain.model.app.andThen
-import com.example.domain.repository.IAiChatHistoryRepository
-import com.example.domain.repository.IAiChatThreadRepository
+import com.example.domain.datasource.AiChatHistoryDataSource
+import com.example.domain.datasource.AiChatThreadDataSource
 import kotlinx.coroutines.CoroutineDispatcher
 
 data class DeleteChatThreadParams(
@@ -14,8 +14,8 @@ data class DeleteChatThreadParams(
 )
 
 class DeleteChatThreadUseCase(
-    private val threadRepository: IAiChatThreadRepository,
-    private val historyRepository: IAiChatHistoryRepository,
+    private val threadRepository: AiChatThreadDataSource,
+    private val historyRepository: AiChatHistoryDataSource,
     dispatcher: CoroutineDispatcher,
 ) : BaseUseCase<DeleteChatThreadParams, Unit>(dispatcher) {
 

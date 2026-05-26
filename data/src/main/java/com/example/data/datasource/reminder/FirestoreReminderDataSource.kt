@@ -1,4 +1,4 @@
-package com.example.data.repository.reminder
+package com.example.data.datasource.reminder
 
 import com.example.data.datasource.remote.util.safeFirebaseCall
 import com.example.data.mapper.toReminder
@@ -8,14 +8,14 @@ import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.DataError
 import com.example.domain.model.app.andThen
 import com.example.domain.model.reminder.Reminder
-import com.example.domain.repository.IRemindersRepository
+import com.example.domain.datasource.RemindersDataSource
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 
-class FirestoreReminderRepository(
+class FirestoreReminderDataSource(
     private val firestore: FirebaseFirestore
-): IRemindersRepository {
+): RemindersDataSource {
 
     override suspend fun addReminder(reminder: Reminder): AppResult<Reminder> {
         val documentReference = firestore.collection(REMINDERS_COLLECTION).document()

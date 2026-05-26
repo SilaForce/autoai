@@ -4,9 +4,9 @@ import com.example.domain.base.BaseUseCase
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.DataError
 import com.example.domain.model.app.andThen
-import com.example.domain.repository.ICostRepository
-import com.example.domain.repository.IRemindersRepository
-import com.example.domain.repository.IVehicleRepository
+import com.example.domain.datasource.CostDataSource
+import com.example.domain.datasource.RemindersDataSource
+import com.example.domain.datasource.VehicleDataSource
 import com.example.domain.util.ValidationUtil
 import kotlinx.coroutines.CoroutineDispatcher
 
@@ -16,9 +16,9 @@ data class DeleteVehicleParams(
 )
 
 class DeleteVehicleUseCase(
-    private val vehicleRepository: IVehicleRepository,
-    private val costRepository: ICostRepository,
-    private val reminderRepository: IRemindersRepository,
+    private val vehicleRepository: VehicleDataSource,
+    private val costRepository: CostDataSource,
+    private val reminderRepository: RemindersDataSource,
     dispatcher: CoroutineDispatcher,
 ) : BaseUseCase<DeleteVehicleParams, Unit>(dispatcher) {
 

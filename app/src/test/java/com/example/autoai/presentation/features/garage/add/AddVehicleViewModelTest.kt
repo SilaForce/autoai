@@ -11,7 +11,7 @@ import com.example.domain.model.vehicle.FuelType
 import com.example.domain.model.vehicle.Vehicle
 import com.example.domain.repository.IAuthRepository
 import com.example.domain.repository.IVehicleMakesRepository
-import com.example.domain.repository.IVehicleRepository
+import com.example.domain.datasource.VehicleDataSource
 import com.example.domain.usecase.user.GetCurrentUserUseCase
 import com.example.domain.usecase.vehicle.AddVehicleUseCase
 import com.example.domain.usecase.vehicle.GetCarMakesUseCase
@@ -153,7 +153,7 @@ class AddVehicleViewModelTest {
         override suspend fun logout(): AppResult<Unit> = throw NotImplementedError()
     }
 
-    private class FakeVehicleRepository : IVehicleRepository {
+    private class FakeVehicleRepository : VehicleDataSource {
         var addedVehicle: Vehicle? = null
 
         override suspend fun addVehicle(vehicle: Vehicle): AppResult<Vehicle> {

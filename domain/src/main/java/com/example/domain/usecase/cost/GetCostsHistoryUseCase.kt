@@ -4,7 +4,7 @@ import com.example.domain.base.BaseUseCase
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.DataError
 import com.example.domain.model.cost.Cost
-import com.example.domain.repository.ICostRepository
+import com.example.domain.datasource.CostDataSource
 import kotlinx.coroutines.CoroutineDispatcher
 
 data class GetCostsHistoryParams(
@@ -12,7 +12,7 @@ data class GetCostsHistoryParams(
 )
 
 class GetCostsHistoryUseCase(
-    private val repository: ICostRepository,
+    private val repository: CostDataSource,
     dispatcher: CoroutineDispatcher,
 ) : BaseUseCase<GetCostsHistoryParams, List<Cost>>(dispatcher) {
 

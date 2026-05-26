@@ -1,10 +1,10 @@
-package com.example.domain.repository
+package com.example.domain.datasource
 
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.vehicle.Vehicle
 import kotlinx.coroutines.flow.Flow
 
-interface IVehicleRepository {
+interface VehicleDataSource {
     suspend fun addVehicle(vehicle: Vehicle): AppResult<Vehicle>
     suspend fun getVehicles(userId: String): AppResult<List<Vehicle>>
     suspend fun getVehicleById(vehicleId: String): AppResult<Vehicle>

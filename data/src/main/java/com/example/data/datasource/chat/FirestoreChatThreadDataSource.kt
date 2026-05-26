@@ -1,4 +1,4 @@
-package com.example.data.repository.chat
+package com.example.data.datasource.chat
 
 import android.util.Log
 import com.example.data.datasource.remote.util.safeFirebaseCall
@@ -8,14 +8,14 @@ import com.example.data.model.chat.ChatThreadDto
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.andThen
 import com.example.domain.model.chat.ChatThread
-import com.example.domain.repository.IAiChatThreadRepository
+import com.example.domain.datasource.AiChatThreadDataSource
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 
-class FirestoreChatThreadRepository(
+class FirestoreChatThreadDataSource(
     private val firestore: FirebaseFirestore,
-) : IAiChatThreadRepository {
+) : AiChatThreadDataSource {
 
     override suspend fun createThread(thread: ChatThread): AppResult<ChatThread> {
         val documentReference = firestore.collection(AI_CHAT_THREADS_COLLECTION).document(thread.id)

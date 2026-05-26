@@ -16,8 +16,8 @@ import com.example.autoai.R
 import com.example.domain.model.app.AppResult
 import com.example.domain.repository.IAuthRepository
 import com.example.domain.repository.IPreferencesRepository
-import com.example.domain.repository.IRemindersRepository
-import com.example.domain.repository.IVehicleRepository
+import com.example.domain.datasource.RemindersDataSource
+import com.example.domain.datasource.VehicleDataSource
 import kotlinx.coroutines.flow.first
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -29,8 +29,8 @@ class ReminderNotificationWorker(
 ) : CoroutineWorker(context, params), KoinComponent {
 
     private val authRepository: IAuthRepository by inject()
-    private val remindersRepository: IRemindersRepository by inject()
-    private val vehicleRepository: IVehicleRepository by inject()
+    private val remindersRepository: RemindersDataSource by inject()
+    private val vehicleRepository: VehicleDataSource by inject()
     private val preferencesRepository: IPreferencesRepository by inject()
 
     override suspend fun doWork(): Result {

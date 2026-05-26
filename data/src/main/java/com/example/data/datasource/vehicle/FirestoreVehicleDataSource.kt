@@ -1,4 +1,4 @@
-package com.example.data.repository.vehicle
+package com.example.data.datasource.vehicle
 
 import com.example.data.datasource.remote.util.safeFirebaseCall
 import com.example.data.mapper.toVehicle
@@ -8,7 +8,7 @@ import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.DataError
 import com.example.domain.model.app.andThen
 import com.example.domain.model.vehicle.Vehicle
-import com.example.domain.repository.IVehicleRepository
+import com.example.domain.datasource.VehicleDataSource
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
@@ -17,9 +17,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
-class FirestoreVehicleRepository(
+class FirestoreVehicleDataSource(
     private val firestore: FirebaseFirestore,
-) : IVehicleRepository {
+) : VehicleDataSource {
 
     override suspend fun addVehicle(vehicle: Vehicle): AppResult<Vehicle> {
         val documentReference = firestore.collection(VEHICLES_COLLECTION).document()

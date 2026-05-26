@@ -1,9 +1,9 @@
-package com.example.domain.repository
+package com.example.domain.datasource
 
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.reminder.Reminder
 
-interface IRemindersRepository {
+interface RemindersDataSource {
     suspend fun addReminder(reminder: Reminder): AppResult<Reminder>
     suspend fun getReminders(vehicleId: String): AppResult<List<Reminder>>
     suspend fun updateReminder(reminder: Reminder): AppResult<Unit>

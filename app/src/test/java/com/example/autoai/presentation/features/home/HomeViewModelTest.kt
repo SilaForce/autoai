@@ -10,9 +10,9 @@ import com.example.domain.model.user.User
 import com.example.domain.model.vehicle.FuelType
 import com.example.domain.model.vehicle.Vehicle
 import com.example.domain.repository.IAuthRepository
-import com.example.domain.repository.ICostRepository
-import com.example.domain.repository.IRemindersRepository
-import com.example.domain.repository.IVehicleRepository
+import com.example.domain.datasource.CostDataSource
+import com.example.domain.datasource.RemindersDataSource
+import com.example.domain.datasource.VehicleDataSource
 import com.example.domain.usecase.cost.GetCostStatisticsUseCase
 import com.example.domain.usecase.reminder.GetRemindersUseCase
 import com.example.domain.usecase.user.GetCurrentUserUseCase
@@ -119,7 +119,7 @@ class HomeViewModelTest {
 
     private class FakeVehicleRepository(
         private val activeVehicle: Vehicle?,
-    ) : IVehicleRepository {
+    ) : VehicleDataSource {
         override suspend fun addVehicle(vehicle: Vehicle): AppResult<Vehicle> =
             throw NotImplementedError()
 
@@ -144,7 +144,7 @@ class HomeViewModelTest {
         override suspend fun deleteAllForUser(userId: String): AppResult<Unit> = AppResult.Success(Unit)
     }
 
-    private class FakeCostRepository : ICostRepository {
+    private class FakeCostRepository : CostDataSource {
         override suspend fun addCost(cost: Cost): AppResult<Cost> = throw NotImplementedError()
         override suspend fun getCosts(vehicleId: String): AppResult<List<Cost>> =
             AppResult.Success(emptyList())
@@ -157,7 +157,7 @@ class HomeViewModelTest {
         override suspend fun deleteAllForUser(userId: String): AppResult<Unit> = AppResult.Success(Unit)
     }
 
-    private class FakeReminderRepository : IRemindersRepository {
+    private class FakeReminderRepository : RemindersDataSource {
         override suspend fun addReminder(reminder: Reminder): AppResult<Reminder> =
             throw NotImplementedError()
         override suspend fun getReminders(vehicleId: String): AppResult<List<Reminder>> =
