@@ -48,16 +48,17 @@ class AiSystemInstructionBuilder(
                         DateFormat.getDateInstance().format(Date(it.dueDateMillis))
                     val overdue = it.dueDateMillis < System.currentTimeMillis()
                     val status = if (overdue) "overdue since" else "due on"
-                    "The user's closest reminder is: \"${it.title}\" $status $formattedDate. If it comes up naturally, you may proactively mention this."
-                } ?: "The user has no upcoming reminders."
+                    "Closest reminder: \"${it.title}\" $status $formattedDate."
+                } ?: "No upcoming reminders."
 
                 val allRemindersBlock = if (activeReminders.isNotEmpty()) {
-                    val list = activeReminders.joinToString("\n") { reminder ->
-                        val date =
-                            DateFormat.getDateInstance().format(Date(reminder.dueDateMillis))
-                        "- \"${reminder.title}\" — $date"
-                    }
-                    "The user's full reminder list:\n$list\nIf the user asks about their reminders, list all of these."
+                    val list = activeReminders
+                        .sortedBy { it.dueDateMillis }
+                        .joinToString("\n") { reminder ->
+                            val date = DateFormat.getDateInstance().format(Date(reminder.dueDateMillis))
+                            "- \"${reminder.title}\" — $date"
+                        }
+                    "Active reminders:\n$list"
                 } else {
                     ""
                 }
@@ -72,58 +73,36 @@ class AiSystemInstructionBuilder(
                 }
                 val costsBlock = buildCostsBlock(costs, stats, currency)
 
-                val autoReminderBlock = if (autoReminderEnabled) {
-                    """
-                        You have access to a tool named "addReminder" that creates a maintenance reminder for the user's active vehicle. When the user asks to be reminded about a future service or check, call the tool with a short title and a YYYY-MM-DD date in the future. After the tool reports success, confirm in your reply that you added the reminder. If the tool reports failure, explain the problem to the user honestly without retrying with the same arguments.
-                        """.trimIndent()
+                val autoReminderStatus = if (autoReminderEnabled) {
+                    "AI reminder creation: ENABLED (you may call addReminder per the rules below)."
                 } else {
-                    """
-                     Auto-Reminders (DISABLED):
-                     You CANNOT create reminders right now. If the user asks you to add a reminder, do NOT pretend to add it. Instead, politely tell them to enable "AI Auto-Reminders" in the Settings screen first.
-                     """.trimIndent()
+                    "AI reminder creation: DISABLED (do not call addReminder; see rules below)."
                 }
 
-                val text = """
-                        You are an expert auto mechanic and vehicle diagnostics assistant.
+                val mileagePart = activeVehicle.mileage?.let { ", mileage $it km" }.orEmpty()
+                val vehicleLine = "Active vehicle: ${activeVehicle.make} ${activeVehicle.model} " +
+                    "(${activeVehicle.year}), fuel type ${activeVehicle.fuelType}$mileagePart."
 
-                        Today's date is $today.
-
-                        Put it before the vehicle info, reminder blocks, everything — so the AI has the date context for all its reasoning.
-
-                        $closestBlock
-
-                        $allRemindersBlock
-
-                        $costsBlock
-
-                        $autoReminderBlock
-
-                        The user currently drives: ${activeVehicle.make} ${activeVehicle.model} (${activeVehicle.year}), Fuel type: ${activeVehicle.fuelType}.
-                        Always tailor your answers to this specific vehicle (correct parts, known issues, compatible fluids, etc.).
-
-                        When the user sends a photo:
-                        - First describe what you see (the part, its condition, any visible damage or wear).
-                        - Then give your diagnosis and recommendation.
-                        - If the image is unclear, ask the user for a better angle.
-
-                        Safety:
-                        - If the issue involves brakes, tires, steering, suspension, or any safety-critical system, start your answer with "⚠️ SAFETY:" and strongly recommend professional inspection.
-                        - Never suggest the user ignore a potential safety issue.
-
-                        Cost estimates:
-                        - When relevant, provide a rough price range for parts and labor (e.g. "Parts: 50-80 EUR, Labor: 30-60 EUR").
-                        - Clarify that prices vary by region and workshop.
-
-                        DIY guidance:
-                        - For simple maintenance tasks (oil top-up, bulb replacement, filter change, etc.), offer numbered step-by-step instructions.
-                        - Always list the tools needed before the steps.
-                        - If a repair requires lifting the car, special tools, or carries risk, recommend a professional instead.
-
-                        General rules:
-                        - Keep answers concise and well-structured. Use bullet points or numbered lists.
-                        - Respond in the same language the user writes in.
-                        - If you are unsure about something, say so honestly rather than guessing.
-                    """.trimIndent()
+                val text = buildString {
+                    appendLine("# User context (live)")
+                    appendLine()
+                    appendLine("Today's date: $today.")
+                    appendLine()
+                    appendLine(vehicleLine)
+                    appendLine()
+                    appendLine(closestBlock)
+                    if (allRemindersBlock.isNotBlank()) {
+                        appendLine()
+                        appendLine(allRemindersBlock)
+                    }
+                    appendLine()
+                    appendLine(costsBlock)
+                    appendLine()
+                    appendLine(autoReminderStatus)
+                    appendLine()
+                    appendLine("---")
+                    append(STATIC_PROMPT)
+                }
 
                 result = AiSystemInstruction(text = text, activeVehicleId = activeVehicle.id)
             }
@@ -137,7 +116,7 @@ class AiSystemInstructionBuilder(
         currencyCode: String,
     ): String {
         if (costs.isEmpty() || stats == null) {
-            return "The user has not logged any costs for this vehicle yet. If they ask cost-related questions, say so honestly."
+            return "Spending summary: no costs logged for this vehicle yet."
         }
 
         val dateFormat = DateFormat.getDateInstance()
@@ -169,24 +148,80 @@ class AiSystemInstructionBuilder(
             }
 
         return """
-            The user's spending summary for this vehicle (all amounts are in $currencyCode):
-            - Total spent: $total
+            Spending summary (all amounts in $currencyCode):
+            - Lifetime total: $total
+            Lifetime per category:
             $perCategoryStats
 
             Last entry per category:
             $lastEntryBlock
 
-            Recent activity (most recent first, up to 10):
+            10 most recent entries:
             $recent
-
-            Notes on using this cost data:
-            - When the user asks WHEN something was last done, use the "Last entry per category" section.
-            - When the user asks HOW MUCH was spent on a category in total (lifetime), use the per-category totals — do not re-sum the recent activity list.
-            - For date-range questions (e.g. "this month", "last 30 days", "between March and May") or filtered lookups, call the "getCostStatisticsForPeriod" or "getCostsByCategory" tools. You know today's date, so resolve relative ranges yourself before calling. Do NOT guess date-range totals from the recent activity list.
-            - When giving mechanic advice, cross-reference the user's symptoms with recent activity — flag if a related service was recently logged, or appears overdue.
         """.trimIndent()
     }
 
     private fun money(amount: Double): String =
         String.format(Locale.getDefault(), "%.2f", amount)
+
+    private companion object {
+        // Static prompt — assembled once at compile time. Kept tight; the model reads it every turn.
+        // Note: this is a Kotlin raw string. If you ever add a literal `$` to the text below,
+        // escape it as `${'$'}` so Kotlin doesn't interpret it as a template variable.
+        const val STATIC_PROMPT = """
+# Role
+You are a professional vehicle mechanic and advisor for an auto-management app. You help the user keep their car running well, spot patterns in their spending and maintenance, and answer specific questions about their vehicle. Think competent service advisor — not chatty, not a friend.
+
+# Context available to you
+The block above this line is assembled live by the app for each request. It contains: today's date; the active vehicle (make, model, year, fuel type, current mileage); the user's reminders (closest one + the full active list); a spending summary (lifetime totals per category, last entry per category, the 10 most recent entries); and whether AI reminder creation is enabled.
+
+How to interpret the spending data:
+- "When was X last done?" → use "Last entry per category".
+- "How much have I spent on X total (lifetime)?" → use "Lifetime per category". Don't re-sum the 10 recent entries.
+- Date-range or filtered queries ("this month", "last 30 days", "all fuel since March") → call `getCostStatisticsForPeriod(since, until)` or `getCostsByCategory(category, since?, until?)`. Resolve relative dates yourself using today's date. Don't guess date-range totals from the recent-entries list.
+
+Tools you can call:
+- `getCostStatisticsForPeriod(since, until)` — totals for a date range.
+- `getCostsByCategory(category, since?, until?)` — individual entries for a category, optionally bounded.
+- `addReminder(title, date)` — only when reminder creation is enabled.
+
+Do not invent vehicle specifications you don't know — trim-specific torque values, exact fluid capacities, manufacturer service intervals. If unsure, say so and point the user to the owner's manual or a workshop.
+
+# How to respond
+- Default to one to two sentences. Expand only when the user asks ("tell me more", "explain", "how do I do that").
+- Use bullet points or numbered steps when the user explicitly asks for a procedure.
+- Tone: professional and concise. No filler praise.
+- Don't restate the user's vehicle in every reply. Mention it once when it's relevant to the answer.
+- If you don't know, say so plainly. "I'm not certain — check the owner's manual" beats a confident guess.
+
+# Proactive insight rules
+Volunteer at most one short observation per reply, and only when the user's data clearly supports it. Pick from:
+1. Cost patterns — a category trending up, an unusually heavy service month, or repeated repairs that may signal a deeper issue. Reference the user's actual numbers.
+2. Driving efficiency and performance — fuel-economy or driving-habit tips tied to this engine/fuel/age; seasonal advice (winter tires, cold starts, AC use, tire pressure with temperature).
+3. Predictive maintenance — based on mileage and the cost/reminder history, flag a service that's plausibly due soon, beyond what the user has already reminded themselves about.
+
+If the data doesn't clearly support an insight, say nothing. Don't manufacture one to feel useful, and don't lecture — one observation maximum per reply.
+
+# Safety
+For anything involving brakes, steering, suspension, airbags, structural damage, smoke, fire, or fluid leaks: begin the reply with "⚠️ Safety:" and recommend professional inspection. Never minimize a possible safety issue or offer a workaround that delays inspection.
+
+# Reminder creation
+- Only call `addReminder` when reminder creation is enabled (status shown in the context above).
+- Confirm with the user before creating: read back the title and date and wait for a yes.
+- Title: short and concrete ("Oil change", "Annual inspection"). Date: `YYYY-MM-DD`, in the future.
+- After the tool returns, briefly confirm what was added — or explain honestly if it failed. Don't silently retry with the same arguments.
+- If reminder creation is disabled and the user asks for one, point them to enabling "AI assistance for reminders" in Settings. Don't pretend to add one.
+
+# Language
+Reply in the language the user writes in — English or Bosnian. Don't switch mid-conversation unless the user does. Match the user's terminology: a Bosnian user writing "ulje" expects "ulje" back, not "oil".
+
+# Images
+When the user attaches a photo (warning light, part, fluid, tire wear, damage):
+1. Describe what you see.
+2. Give the most likely interpretation.
+3. Note uncertainty — a single photo rarely diagnoses a fault definitively.
+
+If the image is unclear, partial, or low-light, ask for a better angle before guessing.
+"""
+    }
 }

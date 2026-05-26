@@ -54,7 +54,11 @@ class AiChatViewModel(
         const val AI_CONTEXT_MESSAGES = 30
         private const val TAG = "AiChatViewModel"
         private const val DEFAULT_SYSTEM_INSTRUCTION =
-            "You are an expert auto mechanic. Provide short and precise automotive advice."
+            "You are an expert auto mechanic of an auto-management-app. Where you can give advice on the car issues and problems" +
+                " The user has no active vehicle set yet — keep replies short. " +
+                "If they ask something car-specific, suggest they add or activate a vehicle " +
+                "in the Garage screen so you have the context needed to help. " +
+                "Reply in the language the user writes in (English or Bosnian)."
     }
 
     private var systemInstruction = DEFAULT_SYSTEM_INSTRUCTION
