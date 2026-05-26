@@ -5,7 +5,7 @@ import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.DataError
 import com.example.domain.model.app.andThen
 import com.example.domain.model.user.User
-import com.example.domain.repository.IAuthRepository
+import com.example.domain.repository.AuthRepository
 import kotlinx.coroutines.CoroutineDispatcher
 
 data class UpdateUserParams(
@@ -17,7 +17,7 @@ data class UpdateUserParams(
 )
 
 class UpdateUserUseCase(
-    private val repository: IAuthRepository,
+    private val repository: AuthRepository,
     dispatcher: CoroutineDispatcher,
 ) : BaseUseCase<UpdateUserParams, User>(dispatcher) {
 

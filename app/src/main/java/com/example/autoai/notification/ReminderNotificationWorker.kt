@@ -14,8 +14,8 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.autoai.R
 import com.example.domain.model.app.AppResult
-import com.example.domain.repository.IAuthRepository
-import com.example.domain.repository.IPreferencesRepository
+import com.example.domain.repository.AuthRepository
+import com.example.domain.datasource.PreferencesDataSource
 import com.example.domain.datasource.RemindersDataSource
 import com.example.domain.datasource.VehicleDataSource
 import kotlinx.coroutines.flow.first
@@ -28,10 +28,10 @@ class ReminderNotificationWorker(
     params: WorkerParameters
 ) : CoroutineWorker(context, params), KoinComponent {
 
-    private val authRepository: IAuthRepository by inject()
+    private val authRepository: AuthRepository by inject()
     private val remindersRepository: RemindersDataSource by inject()
     private val vehicleRepository: VehicleDataSource by inject()
-    private val preferencesRepository: IPreferencesRepository by inject()
+    private val preferencesRepository: PreferencesDataSource by inject()
 
     override suspend fun doWork(): Result {
         // Respect the user's Settings toggle. Short-circuit before any Firestore reads.

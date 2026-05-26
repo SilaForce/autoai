@@ -4,7 +4,7 @@ import com.example.domain.base.BaseUseCase
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.DataError
 import com.example.domain.model.user.User
-import com.example.domain.repository.IAuthRepository
+import com.example.domain.repository.AuthRepository
 import com.example.domain.util.ValidationUtil
 import kotlinx.coroutines.CoroutineDispatcher
 
@@ -14,7 +14,7 @@ data class LoginParams(
 )
 
 class LoginUseCase(
-    private val repository: IAuthRepository,
+    private val repository: AuthRepository,
     dispatcher: CoroutineDispatcher,
 ) : BaseUseCase<LoginParams, User>(dispatcher) {
 

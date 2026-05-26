@@ -4,12 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.autoai.navigation.IAppNavigator
 import com.example.autoai.navigation.Route
-import com.example.domain.repository.IPreferencesRepository
+import com.example.domain.datasource.PreferencesDataSource
 import kotlinx.coroutines.launch
 
 class OnboardingViewModel(
     private val navigator: IAppNavigator,
-    private val preferencesRepository: IPreferencesRepository,
+    private val preferencesRepository: PreferencesDataSource,
 ) : ViewModel() {
 
     fun onEvent(event: OnboardingEvent) {

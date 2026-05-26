@@ -12,7 +12,7 @@ import com.example.domain.model.reminder.Reminder
 import com.example.domain.model.user.User
 import com.example.domain.model.vehicle.FuelType
 import com.example.domain.model.vehicle.Vehicle
-import com.example.domain.repository.IAuthRepository
+import com.example.domain.repository.AuthRepository
 import com.example.domain.datasource.CostDataSource
 import com.example.domain.datasource.RemindersDataSource
 import com.example.domain.datasource.VehicleDataSource
@@ -262,7 +262,7 @@ class GarageViewModelTest {
         )
     }
 
-    private class FakeAuthRepository : IAuthRepository {
+    private class FakeAuthRepository : AuthRepository {
         override suspend fun checkSession(): StartDestination = StartDestination.Home
 
         override suspend fun register(

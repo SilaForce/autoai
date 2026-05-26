@@ -5,7 +5,7 @@ import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.DataError
 import com.example.domain.model.chat.ChatMessage
 import com.example.domain.model.chat.ChatTool
-import com.example.domain.repository.IAiChatRepository
+import com.example.domain.datasource.AiChatDataSource
 import kotlinx.coroutines.CoroutineDispatcher
 
 data class SendMessageParams(
@@ -17,7 +17,7 @@ data class SendMessageParams(
 )
 
 class SendMessageUseCase(
-    private val repository: IAiChatRepository,
+    private val repository: AiChatDataSource,
     dispatcher: CoroutineDispatcher
 ) : BaseUseCase<SendMessageParams, String>(dispatcher) {
 

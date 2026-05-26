@@ -3,7 +3,7 @@ package com.example.domain.usecase.session
 import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.StartDestination
 import com.example.domain.model.user.User
-import com.example.domain.repository.IAuthRepository
+import com.example.domain.repository.AuthRepository
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -36,7 +36,7 @@ class CheckSessionUseCaseTest {
 
     private class FakeAuthRepository(
         private val startDestination: StartDestination,
-    ) : IAuthRepository {
+    ) : AuthRepository {
 
         override suspend fun checkSession(): StartDestination = startDestination
 

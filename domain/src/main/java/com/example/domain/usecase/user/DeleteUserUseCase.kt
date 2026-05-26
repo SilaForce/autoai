@@ -5,7 +5,7 @@ import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.andThen
 import com.example.domain.datasource.AiChatHistoryDataSource
 import com.example.domain.datasource.AiChatThreadDataSource
-import com.example.domain.repository.IAuthRepository
+import com.example.domain.repository.AuthRepository
 import com.example.domain.datasource.CostDataSource
 import com.example.domain.datasource.RemindersDataSource
 import com.example.domain.datasource.VehicleDataSource
@@ -23,7 +23,7 @@ import kotlinx.coroutines.CoroutineDispatcher
  * can leave half-deleted state — acceptable for a portfolio app with no real users.
  */
 class DeleteUserUseCase(
-    private val authRepository: IAuthRepository,
+    private val authRepository: AuthRepository,
     private val vehicleRepository: VehicleDataSource,
     private val costRepository: CostDataSource,
     private val reminderRepository: RemindersDataSource,

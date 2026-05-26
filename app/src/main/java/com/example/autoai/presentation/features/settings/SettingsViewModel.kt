@@ -10,7 +10,7 @@ import com.example.autoai.presentation.util.asUiText
 import com.example.domain.model.app.onFailure
 import com.example.domain.model.app.onSuccess
 import com.example.domain.model.user.User
-import com.example.domain.repository.IPreferencesRepository
+import com.example.domain.datasource.PreferencesDataSource
 import com.example.domain.usecase.user.GetCurrentUserUseCase
 import com.example.domain.usecase.user.LogoutUseCase
 import com.example.domain.usecase.user.UpdateUserParams
@@ -22,7 +22,7 @@ class SettingsViewModel(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val updateUserUseCase: UpdateUserUseCase,
     private val navigator: IAppNavigator,
-    private val preferencesRepository: IPreferencesRepository
+    private val preferencesRepository: PreferencesDataSource
 ): BaseViewModel<SettingsState, SettingsEvent, SettingsSideEffect>(SettingsState()) {
 
     private var currentUser: User? = null

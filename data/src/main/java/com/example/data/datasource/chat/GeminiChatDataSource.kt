@@ -1,4 +1,4 @@
-package com.example.data.repository.chat
+package com.example.data.datasource.chat
 
 import android.util.Log
 import com.example.data.BuildConfig
@@ -10,7 +10,7 @@ import com.example.domain.model.chat.ChatTool
 import com.example.domain.model.chat.ChatToolParam
 import com.example.domain.model.chat.ChatToolParamType
 import com.example.domain.model.chat.MessageRole
-import com.example.domain.repository.IAiChatRepository
+import com.example.domain.datasource.AiChatDataSource
 import com.google.genai.Client
 import com.google.genai.types.Content
 import com.google.genai.types.FunctionDeclaration
@@ -22,7 +22,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class GeminiChatRepository : IAiChatRepository {
+class GeminiChatDataSource : AiChatDataSource {
 
     companion object {
         // Source of truth is data/build.gradle.kts → BuildConfig.GEMINI_MODEL (read from
@@ -47,7 +47,7 @@ class GeminiChatRepository : IAiChatRepository {
     ): AppResult<String> {
         val apiKey = BuildConfig.GEMINI_API_KEY.trim()
         if (apiKey.isBlank()) {
-            Log.w("GeminiChatRepository", "GEMINI_API_KEY is blank.")
+            Log.w("GeminiChatDataSource", "GEMINI_API_KEY is blank.")
             return AppResult.Failure(DataError.Network.Unauthorized)
         }
 

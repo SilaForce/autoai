@@ -3,7 +3,7 @@ package com.example.autoai.presentation.features.splash
 import androidx.lifecycle.viewModelScope
 import com.example.autoai.base.BaseViewModel
 import com.example.domain.model.app.StartDestination
-import com.example.domain.repository.IPreferencesRepository
+import com.example.domain.datasource.PreferencesDataSource
 import com.example.domain.usecase.session.CheckSessionUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
@@ -13,7 +13,7 @@ import kotlinx.coroutines.withTimeout
 
 class SplashViewModel(
     private val checkSessionUseCase: CheckSessionUseCase,
-    private val preferencesRepository: IPreferencesRepository,
+    private val preferencesRepository: PreferencesDataSource,
 ) : BaseViewModel<SplashState, SplashEvent, SplashSideEffect>(
     SplashState()
 ) {

@@ -6,19 +6,19 @@ import com.example.data.datasource.cost.FirestoreCostDataSource
 import com.example.data.datasource.reminder.FirestoreReminderDataSource
 import com.example.data.datasource.remote.util.HttpClientFactory
 import com.example.data.datasource.vehicle.FirestoreVehicleDataSource
-import com.example.data.repository.auth.AuthRepository
-import com.example.data.repository.chat.GeminiChatRepository
-import com.example.data.repository.preferences.PreferencesRepository
-import com.example.data.repository.vehicle.NhtsaVehicleMakesRepository
+import com.example.data.repository.auth.FirebaseAuthRepository
+import com.example.data.datasource.chat.GeminiChatDataSource
+import com.example.data.datasource.preferences.DataStorePreferencesDataSource
+import com.example.data.datasource.vehicle.NhtsaVehicleMakesDataSource
 import com.example.domain.datasource.AiChatHistoryDataSource
-import com.example.domain.repository.IAiChatRepository
+import com.example.domain.datasource.AiChatDataSource
 import com.example.domain.datasource.AiChatThreadDataSource
-import com.example.domain.repository.IAuthRepository
+import com.example.domain.repository.AuthRepository
 import com.example.domain.datasource.CostDataSource
-import com.example.domain.repository.IPreferencesRepository
+import com.example.domain.datasource.PreferencesDataSource
 import com.example.domain.datasource.RemindersDataSource
 import com.example.domain.datasource.VehicleDataSource
-import com.example.domain.repository.IVehicleMakesRepository
+import com.example.domain.datasource.VehicleMakesDataSource
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -36,13 +36,13 @@ val dataModule = module {
 
     single { HttpClientFactory.create() }
 
-    singleOf(::AuthRepository) bind IAuthRepository::class
+    singleOf(::FirebaseAuthRepository) bind AuthRepository::class
     singleOf(::FirestoreVehicleDataSource) bind VehicleDataSource::class
     singleOf(::FirestoreCostDataSource) bind CostDataSource::class
     singleOf(::FirestoreReminderDataSource) bind RemindersDataSource::class
-    singleOf(::GeminiChatRepository) bind IAiChatRepository::class
+    singleOf(::GeminiChatDataSource) bind AiChatDataSource::class
     singleOf(::FirestoreChatHistoryDataSource) bind AiChatHistoryDataSource::class
     singleOf(::FirestoreChatThreadDataSource) bind AiChatThreadDataSource::class
-    singleOf(::PreferencesRepository) bind IPreferencesRepository::class
-    singleOf(::NhtsaVehicleMakesRepository) bind IVehicleMakesRepository::class
+    singleOf(::DataStorePreferencesDataSource) bind PreferencesDataSource::class
+    singleOf(::NhtsaVehicleMakesDataSource) bind VehicleMakesDataSource::class
 }

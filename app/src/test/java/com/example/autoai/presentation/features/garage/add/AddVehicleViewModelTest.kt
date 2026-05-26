@@ -9,8 +9,8 @@ import com.example.domain.model.app.StartDestination
 import com.example.domain.model.user.User
 import com.example.domain.model.vehicle.FuelType
 import com.example.domain.model.vehicle.Vehicle
-import com.example.domain.repository.IAuthRepository
-import com.example.domain.repository.IVehicleMakesRepository
+import com.example.domain.repository.AuthRepository
+import com.example.domain.datasource.VehicleMakesDataSource
 import com.example.domain.datasource.VehicleDataSource
 import com.example.domain.usecase.user.GetCurrentUserUseCase
 import com.example.domain.usecase.vehicle.AddVehicleUseCase
@@ -126,7 +126,7 @@ class AddVehicleViewModelTest {
         )
     }
 
-    private class FakeAuthRepository : IAuthRepository {
+    private class FakeAuthRepository : AuthRepository {
         override suspend fun checkSession(): StartDestination = StartDestination.Home
 
         override suspend fun register(
@@ -182,7 +182,7 @@ class AddVehicleViewModelTest {
             throw NotImplementedError()
     }
 
-    private class FakeMakesRepository : IVehicleMakesRepository {
+    private class FakeMakesRepository : VehicleMakesDataSource {
         override suspend fun getCarMakes(): AppResult<List<String>> =
             AppResult.Success(listOf("Volkswagen", "Audi", "BMW"))
 

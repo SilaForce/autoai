@@ -4,7 +4,7 @@ import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.StartDestination
 import com.example.domain.model.user.User
 
-interface IAuthRepository {
+interface AuthRepository {
     suspend fun checkSession(): StartDestination
     suspend fun register(name: String, email: String, password: String): AppResult<User>
     suspend fun login(email: String, password: String): AppResult<User>

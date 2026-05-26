@@ -23,14 +23,14 @@ import com.example.autoai.navigation.AppNavGraph
 import com.example.autoai.navigation.toRoute
 import com.example.autoai.presentation.features.splash.SplashViewModel
 import com.example.autoai.presentation.theme.AutoAITheme
-import com.example.domain.repository.IPreferencesRepository
+import com.example.domain.datasource.PreferencesDataSource
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
 
     private val splashViewModel: SplashViewModel by viewModel()
-    private val preferencesRepository: IPreferencesRepository by inject()
+    private val preferencesRepository: PreferencesDataSource by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen().setKeepOnScreenCondition {

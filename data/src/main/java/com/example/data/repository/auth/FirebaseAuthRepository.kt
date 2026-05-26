@@ -9,15 +9,15 @@ import com.example.domain.model.app.AppResult
 import com.example.domain.model.app.DataError
 import com.example.domain.model.app.StartDestination
 import com.example.domain.model.user.User
-import com.example.domain.repository.IAuthRepository
+import com.example.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
-class AuthRepository(
+class FirebaseAuthRepository(
     private val firebaseAuth: FirebaseAuth,
     private val firestore: FirebaseFirestore
-): IAuthRepository {
+): AuthRepository {
 
     override suspend fun checkSession(): StartDestination {
         return if (firebaseAuth.currentUser != null) {

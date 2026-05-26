@@ -1,10 +1,10 @@
-package com.example.data.repository.vehicle
+package com.example.data.datasource.vehicle
 
 import com.example.data.datasource.remote.util.safeHttpCall
 import com.example.data.model.vehicle.NhtsaMakesResponseDto
 import com.example.data.model.vehicle.NhtsaModelsResponseDto
 import com.example.domain.model.app.AppResult
-import com.example.domain.repository.IVehicleMakesRepository
+import com.example.domain.datasource.VehicleMakesDataSource
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -13,9 +13,9 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-class NhtsaVehicleMakesRepository(
+class NhtsaVehicleMakesDataSource(
     private val client: HttpClient,
-) : IVehicleMakesRepository {
+) : VehicleMakesDataSource {
 
     // AtomicReference so concurrent reads see a consistent snapshot.
     private val cachedMakes = AtomicReference<List<String>?>(null)

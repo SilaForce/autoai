@@ -90,7 +90,7 @@ private fun mapToNetworkError(message: String?): AppResult.Failure {
 
 private fun logGenerativeAiFailure(throwable: Throwable) {
     Log.w(
-        "GeminiChatRepository",
+        "GeminiChatDataSource",
         "${throwable::class.qualifiedName}: ${throwable.message}" +
             (throwable.cause?.let { " | cause=${it::class.qualifiedName}: ${it.message}" } ?: "")
     )

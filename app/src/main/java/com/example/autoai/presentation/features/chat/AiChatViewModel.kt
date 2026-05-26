@@ -15,7 +15,7 @@ import com.example.domain.model.chat.ChatMessage
 import com.example.domain.model.chat.ChatThread
 import com.example.domain.model.chat.ChatTool
 import com.example.domain.model.chat.MessageRole
-import com.example.domain.repository.IPreferencesRepository
+import com.example.domain.datasource.PreferencesDataSource
 import com.example.domain.usecase.chat.CreateChatThreadParams
 import com.example.domain.usecase.chat.CreateChatThreadUseCase
 import com.example.domain.usecase.chat.DeleteChatThreadParams
@@ -44,7 +44,7 @@ class AiChatViewModel(
     private val createChatThreadUseCase: CreateChatThreadUseCase,
     private val updateChatThreadUseCase: UpdateChatThreadUseCase,
     private val deleteChatThreadUseCase: DeleteChatThreadUseCase,
-    private val preferencesRepository: IPreferencesRepository,
+    private val preferencesRepository: PreferencesDataSource,
     private val systemInstructionBuilder: AiSystemInstructionBuilder,
     private val chatTools: AiChatTools,
     private val navigator: IAppNavigator,

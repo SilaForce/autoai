@@ -35,7 +35,7 @@ fun User.toUserDto(): UserDto {
 }
 
 /**
- * Builds the partial-update map for [com.example.data.repository.auth.AuthRepository.updateUser].
+ * Builds the partial-update map for [com.example.data.repository.auth.FirebaseAuthRepository.updateUser].
  * Server-managed fields ([User.isPremium], [User.createdAt]) are deliberately omitted so a
  * client-side update doesn't overwrite them. `profilePictureUrl` is included only when
  * non-null — passing null would explicitly nuke the field, which isn't what the UI intends

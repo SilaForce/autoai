@@ -1,8 +1,8 @@
-package com.example.domain.repository
+package com.example.domain.datasource
 
 import kotlinx.coroutines.flow.Flow
 
-interface IPreferencesRepository {
+interface PreferencesDataSource {
     val isNotificationsEnabled: Flow<Boolean>
     val isDarkModeEnabled: Flow<Boolean>
     val isAiAutoRemindersEnabled: Flow<Boolean>
