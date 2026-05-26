@@ -22,7 +22,7 @@ class SettingsViewModel(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val updateUserUseCase: UpdateUserUseCase,
     private val navigator: IAppNavigator,
-    private val preferencesRepository: PreferencesDataSource
+    private val preferencesDataSource: PreferencesDataSource
 ): BaseViewModel<SettingsState, SettingsEvent, SettingsSideEffect>(SettingsState()) {
 
     private var currentUser: User? = null
@@ -43,17 +43,17 @@ class SettingsViewModel(
 
     private fun observePreferences() {
         viewModelScope.launch {
-            preferencesRepository.isDarkModeEnabled.collect { enabled ->
+            preferencesDataSource.isDarkModeEnabled.collect { enabled ->
                 setState { it.copy(isDarkModeEnabled = enabled) }
             }
         }
         viewModelScope.launch {
-            preferencesRepository.isNotificationsEnabled.collect { enabled ->
+            preferencesDataSource.isNotificationsEnabled.collect { enabled ->
                 setState { it.copy(notificationsEnabled = enabled) }
             }
         }
         viewModelScope.launch {
-            preferencesRepository.isAiAutoRemindersEnabled.collect { enabled ->
+            preferencesDataSource.isAiAutoRemindersEnabled.collect { enabled ->
                 setState { it.copy(aiAutoRemindersEnabled = enabled) }
             }
         }
@@ -63,19 +63,19 @@ class SettingsViewModel(
         when(event){
             is SettingsEvent.OnToggleDarkMode -> {
                 viewModelScope.launch {
-                    preferencesRepository.setDarkModeEnabled(event.isEnabled)
+                    preferencesDataSource.setDarkModeEnabled(event.isEnabled)
                 }
             }
 
             is SettingsEvent.OnToggleNotifications -> {
                 viewModelScope.launch {
-                    preferencesRepository.setNotificationsEnabled(event.isEnabled)
+                    preferencesDataSource.setNotificationsEnabled(event.isEnabled)
                 }
             }
 
             is SettingsEvent.OnToggleAiAutoReminders -> {
                 viewModelScope.launch {
-                   preferencesRepository.setAiAutoRemindersEnabled(event.isEnabled)
+                   preferencesDataSource.setAiAutoRemindersEnabled(event.isEnabled)
                 }
             }
 

@@ -16,9 +16,9 @@ data class DeleteVehicleParams(
 )
 
 class DeleteVehicleUseCase(
-    private val vehicleRepository: VehicleDataSource,
-    private val costRepository: CostDataSource,
-    private val reminderRepository: RemindersDataSource,
+    private val vehicleDataSource: VehicleDataSource,
+    private val costDataSource: CostDataSource,
+    private val reminderDataSource: RemindersDataSource,
     dispatcher: CoroutineDispatcher,
 ) : BaseUseCase<DeleteVehicleParams, Unit>(dispatcher) {
 
@@ -34,8 +34,8 @@ class DeleteVehicleUseCase(
         // Cascade order: children first, parent last. If parent delete fails after
         // children are gone, the user can retry; if children fail first, the
         // vehicle is still intact and the operation is recoverable.
-        return costRepository.deleteCostsForVehicle(vehicleId)
-            .andThen { reminderRepository.deleteRemindersForVehicle(vehicleId) }
-            .andThen { vehicleRepository.deleteVehicle(userId, vehicleId) }
+        return costDataSource.deleteCostsForVehicle(vehicleId)
+            .andThen { reminderDataSource.deleteRemindersForVehicle(vehicleId) }
+            .andThen { vehicleDataSource.deleteVehicle(userId, vehicleId) }
     }
 }

@@ -44,7 +44,7 @@ class AiChatViewModel(
     private val createChatThreadUseCase: CreateChatThreadUseCase,
     private val updateChatThreadUseCase: UpdateChatThreadUseCase,
     private val deleteChatThreadUseCase: DeleteChatThreadUseCase,
-    private val preferencesRepository: PreferencesDataSource,
+    private val preferencesDataSource: PreferencesDataSource,
     private val systemInstructionBuilder: AiSystemInstructionBuilder,
     private val chatTools: AiChatTools,
     private val navigator: IAppNavigator,
@@ -80,7 +80,7 @@ class AiChatViewModel(
         // tool availability matches the pref (previously this was written to a private
         // field that never propagated until the next per-send refresh).
         viewModelScope.launch {
-            preferencesRepository.isAiAutoRemindersEnabled.collect { enabled ->
+            preferencesDataSource.isAiAutoRemindersEnabled.collect { enabled ->
                 if (aiAutoReminderEnabled != enabled) {
                     aiAutoReminderEnabled = enabled
                     if (currentUserId != null) refreshSystemInstruction()

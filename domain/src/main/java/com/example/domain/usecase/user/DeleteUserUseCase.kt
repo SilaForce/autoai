@@ -24,11 +24,11 @@ import kotlinx.coroutines.CoroutineDispatcher
  */
 class DeleteUserUseCase(
     private val authRepository: AuthRepository,
-    private val vehicleRepository: VehicleDataSource,
-    private val costRepository: CostDataSource,
-    private val reminderRepository: RemindersDataSource,
-    private val chatHistoryRepository: AiChatHistoryDataSource,
-    private val chatThreadRepository: AiChatThreadDataSource,
+    private val vehicleDataSource: VehicleDataSource,
+    private val costDataSource: CostDataSource,
+    private val reminderDataSource: RemindersDataSource,
+    private val chatHistoryDataSource: AiChatHistoryDataSource,
+    private val chatThreadDataSource: AiChatThreadDataSource,
     dispatcher: CoroutineDispatcher,
 ) : BaseUseCase<Unit, Unit>(dispatcher) {
 
@@ -39,11 +39,11 @@ class DeleteUserUseCase(
             is AppResult.Failure -> userResult
             is AppResult.Success -> {
                 val userId = userResult.data.id
-                vehicleRepository.deleteAllForUser(userId)
-                    .andThen { costRepository.deleteAllForUser(userId) }
-                    .andThen { reminderRepository.deleteAllForUser(userId) }
-                    .andThen { chatHistoryRepository.deleteAllForUser(userId) }
-                    .andThen { chatThreadRepository.deleteAllForUser(userId) }
+                vehicleDataSource.deleteAllForUser(userId)
+                    .andThen { costDataSource.deleteAllForUser(userId) }
+                    .andThen { reminderDataSource.deleteAllForUser(userId) }
+                    .andThen { chatHistoryDataSource.deleteAllForUser(userId) }
+                    .andThen { chatThreadDataSource.deleteAllForUser(userId) }
                     .andThen { authRepository.deleteUser() }
             }
         }

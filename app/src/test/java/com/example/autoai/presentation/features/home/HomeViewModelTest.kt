@@ -45,7 +45,7 @@ class HomeViewModelTest {
             licensePlate = "A12-M-345",
             isActive = true,
         )
-        val viewModel = createViewModel(vehicleRepository = FakeVehicleRepository(activeVehicle))
+        val viewModel = createViewModel(vehicleDataSource = FakeVehicleRepository(activeVehicle))
 
         val state = viewModel.state.value
 
@@ -57,7 +57,7 @@ class HomeViewModelTest {
 
     @Test
     fun `keeps empty active vehicle state when no active vehicle exists`() = runTest {
-        val viewModel = createViewModel(vehicleRepository = FakeVehicleRepository(activeVehicle = null))
+        val viewModel = createViewModel(vehicleDataSource = FakeVehicleRepository(activeVehicle = null))
 
         val state = viewModel.state.value
 
@@ -68,7 +68,7 @@ class HomeViewModelTest {
     }
 
     private fun createViewModel(
-        vehicleRepository: FakeVehicleRepository,
+        vehicleDataSource: FakeVehicleRepository,
     ): HomeViewModel {
         return HomeViewModel(
             getCurrentUserUseCase = GetCurrentUserUseCase(
@@ -76,7 +76,7 @@ class HomeViewModelTest {
                 dispatcher = mainDispatcherRule.dispatcher,
             ),
             observeActiveVehicleUseCase = ObserveActiveVehicleUseCase(
-                repository = vehicleRepository,
+                repository = vehicleDataSource,
             ),
             getCostStatisticsUseCase = GetCostStatisticsUseCase(
                 repository = FakeCostRepository(),

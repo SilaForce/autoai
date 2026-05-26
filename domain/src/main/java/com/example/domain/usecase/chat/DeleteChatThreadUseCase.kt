@@ -14,8 +14,8 @@ data class DeleteChatThreadParams(
 )
 
 class DeleteChatThreadUseCase(
-    private val threadRepository: AiChatThreadDataSource,
-    private val historyRepository: AiChatHistoryDataSource,
+    private val threadDataSource: AiChatThreadDataSource,
+    private val historyDataSource: AiChatHistoryDataSource,
     dispatcher: CoroutineDispatcher,
 ) : BaseUseCase<DeleteChatThreadParams, Unit>(dispatcher) {
 
@@ -23,7 +23,7 @@ class DeleteChatThreadUseCase(
         if (params.threadId.isBlank() || params.userId.isBlank()) {
             return AppResult.Failure(DataError.Local.Validation.Generic)
         }
-        return historyRepository.deleteMessagesForThread(params.userId, params.threadId)
-            .andThen { threadRepository.deleteThread(params.threadId) }
+        return historyDataSource.deleteMessagesForThread(params.userId, params.threadId)
+            .andThen { threadDataSource.deleteThread(params.threadId) }
     }
 }

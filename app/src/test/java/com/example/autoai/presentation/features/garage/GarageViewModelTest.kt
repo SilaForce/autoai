@@ -41,13 +41,13 @@ class GarageViewModelTest {
 
     @Test
     fun `init loads vehicles and maps them to ui state`() = runTest {
-        val vehicleRepository = FakeVehicleRepository(
+        val vehicleDataSource = FakeVehicleRepository(
             vehicles = mutableListOf(
                 vehicle(id = "vehicle-1", isActive = true),
             )
         )
 
-        val viewModel = createViewModel(vehicleRepository = vehicleRepository)
+        val viewModel = createViewModel(vehicleDataSource = vehicleDataSource)
         val state = viewModel.state.value
 
         assertFalse(state.isLoading)
@@ -59,19 +59,19 @@ class GarageViewModelTest {
 
     @Test
     fun `selecting vehicle updates active vehicle and reloads list`() = runTest {
-        val vehicleRepository = FakeVehicleRepository(
+        val vehicleDataSource = FakeVehicleRepository(
             vehicles = mutableListOf(
                 vehicle(id = "vehicle-1", isActive = true),
                 vehicle(id = "vehicle-2", make = "Audi", model = "A4", isActive = false),
             )
         )
 
-        val viewModel = createViewModel(vehicleRepository = vehicleRepository)
+        val viewModel = createViewModel(vehicleDataSource = vehicleDataSource)
 
         viewModel.onEvent(GarageEvent.OnVehicleSelected("vehicle-2"))
 
         val state = viewModel.state.value
-        assertEquals("vehicle-2", vehicleRepository.lastSetActiveVehicleId)
+        assertEquals("vehicle-2", vehicleDataSource.lastSetActiveVehicleId)
         assertFalse(state.isUpdatingActiveVehicle)
         assertTrue(state.vehicles.first { it.id == "vehicle-2" }.isActive)
         assertFalse(state.vehicles.first { it.id == "vehicle-1" }.isActive)
@@ -79,32 +79,32 @@ class GarageViewModelTest {
 
     @Test
     fun `selecting already active vehicle does not trigger repository update`() = runTest {
-        val vehicleRepository = FakeVehicleRepository(
+        val vehicleDataSource = FakeVehicleRepository(
             vehicles = mutableListOf(vehicle(id = "vehicle-1", isActive = true))
         )
 
-        val viewModel = createViewModel(vehicleRepository = vehicleRepository)
+        val viewModel = createViewModel(vehicleDataSource = vehicleDataSource)
 
         viewModel.onEvent(GarageEvent.OnVehicleSelected("vehicle-1"))
 
-        assertEquals(null, vehicleRepository.lastSetActiveVehicleId)
+        assertEquals(null, vehicleDataSource.lastSetActiveVehicleId)
     }
 
     @Test
     fun `confirmed delete removes vehicle from list and cascades costs and reminders`() = runTest {
-        val vehicleRepository = FakeVehicleRepository(
+        val vehicleDataSource = FakeVehicleRepository(
             vehicles = mutableListOf(
                 vehicle(id = "vehicle-1", isActive = true),
                 vehicle(id = "vehicle-2", make = "Audi", model = "A4", isActive = false),
             )
         )
-        val costRepository = FakeCostRepository()
-        val reminderRepository = FakeReminderRepository()
+        val costDataSource = FakeCostRepository()
+        val reminderDataSource = FakeReminderRepository()
 
         val viewModel = createViewModel(
-            vehicleRepository = vehicleRepository,
-            costRepository = costRepository,
-            reminderRepository = reminderRepository,
+            vehicleDataSource = vehicleDataSource,
+            costDataSource = costDataSource,
+            reminderDataSource = reminderDataSource,
         )
 
         viewModel.onEvent(GarageEvent.OnDeleteVehicleClicked("vehicle-2"))
@@ -116,7 +116,7 @@ class GarageViewModelTest {
         assertEquals(2, beforeDelay.vehicles.size)
         assertEquals(1, beforeDelay.visibleVehicles.size)
         assertEquals("vehicle-1", beforeDelay.visibleVehicles.first().id)
-        assertTrue(costRepository.deletedForVehicleIds.isEmpty())
+        assertTrue(costDataSource.deletedForVehicleIds.isEmpty())
 
         // Advance past the undo window — cascade fires.
         advanceTimeBy(5_000)
@@ -127,23 +127,23 @@ class GarageViewModelTest {
         assertEquals("vehicle-1", afterDelay.vehicles.first().id)
         assertNull(afterDelay.pendingDeleteId)
         assertEquals(VehicleMenuState.Hidden, afterDelay.menuState)
-        assertEquals(listOf("vehicle-2"), costRepository.deletedForVehicleIds)
-        assertEquals(listOf("vehicle-2"), reminderRepository.deletedForVehicleIds)
+        assertEquals(listOf("vehicle-2"), costDataSource.deletedForVehicleIds)
+        assertEquals(listOf("vehicle-2"), reminderDataSource.deletedForVehicleIds)
     }
 
     @Test
     fun `undo before window expires cancels the delete`() = runTest {
-        val vehicleRepository = FakeVehicleRepository(
+        val vehicleDataSource = FakeVehicleRepository(
             vehicles = mutableListOf(
                 vehicle(id = "vehicle-1", isActive = true),
                 vehicle(id = "vehicle-2", make = "Audi", model = "A4", isActive = false),
             )
         )
-        val costRepository = FakeCostRepository()
+        val costDataSource = FakeCostRepository()
 
         val viewModel = createViewModel(
-            vehicleRepository = vehicleRepository,
-            costRepository = costRepository,
+            vehicleDataSource = vehicleDataSource,
+            costDataSource = costDataSource,
         )
 
         viewModel.onEvent(GarageEvent.OnDeleteVehicleClicked("vehicle-2"))
@@ -157,16 +157,16 @@ class GarageViewModelTest {
         val state = viewModel.state.value
         assertEquals(2, state.vehicles.size)
         assertNull(state.pendingDeleteId)
-        assertTrue(costRepository.deletedForVehicleIds.isEmpty())
+        assertTrue(costDataSource.deletedForVehicleIds.isEmpty())
     }
 
     @Test
     fun `deleting last vehicle does not call setActiveVehicle`() = runTest {
-        val vehicleRepository = FakeVehicleRepository(
+        val vehicleDataSource = FakeVehicleRepository(
             vehicles = mutableListOf(vehicle(id = "vehicle-1", isActive = true))
         )
 
-        val viewModel = createViewModel(vehicleRepository = vehicleRepository)
+        val viewModel = createViewModel(vehicleDataSource = vehicleDataSource)
 
         viewModel.onEvent(GarageEvent.OnDeleteVehicleClicked("vehicle-1"))
         viewModel.onEvent(GarageEvent.OnConfirmDeleteVehicle)
@@ -174,12 +174,12 @@ class GarageViewModelTest {
         runCurrent()
 
         assertTrue(viewModel.state.value.vehicles.isEmpty())
-        assertNull(vehicleRepository.lastSetActiveVehicleId)
+        assertNull(vehicleDataSource.lastSetActiveVehicleId)
     }
 
     @Test
     fun `delete failure leaves vehicles untouched`() = runTest {
-        val vehicleRepository = FakeVehicleRepository(
+        val vehicleDataSource = FakeVehicleRepository(
             vehicles = mutableListOf(
                 vehicle(id = "vehicle-1", isActive = true),
                 vehicle(id = "vehicle-2", make = "Audi", model = "A4", isActive = false),
@@ -187,7 +187,7 @@ class GarageViewModelTest {
             deleteResult = AppResult.Failure(DataError.Local.NotFound),
         )
 
-        val viewModel = createViewModel(vehicleRepository = vehicleRepository)
+        val viewModel = createViewModel(vehicleDataSource = vehicleDataSource)
 
         viewModel.onEvent(GarageEvent.OnDeleteVehicleClicked("vehicle-2"))
         viewModel.onEvent(GarageEvent.OnConfirmDeleteVehicle)
@@ -201,11 +201,11 @@ class GarageViewModelTest {
 
     @Test
     fun `long-press then edit click clears menu`() = runTest {
-        val vehicleRepository = FakeVehicleRepository(
+        val vehicleDataSource = FakeVehicleRepository(
             vehicles = mutableListOf(vehicle(id = "vehicle-1", isActive = true))
         )
 
-        val viewModel = createViewModel(vehicleRepository = vehicleRepository)
+        val viewModel = createViewModel(vehicleDataSource = vehicleDataSource)
 
         viewModel.onEvent(GarageEvent.OnVehicleLongPressed("vehicle-1"))
         assertEquals(VehicleMenuState.ShowingMenu("vehicle-1"), viewModel.state.value.menuState)
@@ -235,9 +235,9 @@ class GarageViewModelTest {
     )
 
     private fun createViewModel(
-        vehicleRepository: FakeVehicleRepository,
-        costRepository: CostDataSource = FakeCostRepository(),
-        reminderRepository: RemindersDataSource = FakeReminderRepository(),
+        vehicleDataSource: FakeVehicleRepository,
+        costDataSource: CostDataSource = FakeCostRepository(),
+        reminderDataSource: RemindersDataSource = FakeReminderRepository(),
     ): GarageViewModel {
         return GarageViewModel(
             savedStateHandle = SavedStateHandle(),
@@ -246,17 +246,17 @@ class GarageViewModelTest {
                 dispatcher = mainDispatcherRule.dispatcher,
             ),
             getVehiclesUseCase = GetVehiclesUseCase(
-                repository = vehicleRepository,
+                repository = vehicleDataSource,
                 dispatcher = mainDispatcherRule.dispatcher,
             ),
             setActiveVehicleUseCase = SetActiveVehicleUseCase(
-                repository = vehicleRepository,
+                repository = vehicleDataSource,
                 dispatcher = mainDispatcherRule.dispatcher,
             ),
             deleteVehicleUseCase = DeleteVehicleUseCase(
-                vehicleRepository = vehicleRepository,
-                costRepository = costRepository,
-                reminderRepository = reminderRepository,
+                vehicleDataSource = vehicleDataSource,
+                costDataSource = costDataSource,
+                reminderDataSource = reminderDataSource,
                 dispatcher = mainDispatcherRule.dispatcher,
             ),
         )

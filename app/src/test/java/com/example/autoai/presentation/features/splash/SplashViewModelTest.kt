@@ -38,7 +38,7 @@ class SplashViewModelTest {
     fun `init falls back to auth when session check throws and onboarding incomplete`() = runTest {
         val viewModel = createViewModel(
             authRepository = ThrowingAuthRepository(),
-            preferencesRepository = FakeDataStorePreferencesDataSource(onboardingCompleted = false),
+            preferencesDataSource = FakeDataStorePreferencesDataSource(onboardingCompleted = false),
         )
 
         val state = viewModel.state.value
@@ -51,7 +51,7 @@ class SplashViewModelTest {
     fun `init routes to Login when no session but onboarding completed`() = runTest {
         val viewModel = createViewModel(
             authRepository = FakeAuthRepository(startDestination = StartDestination.Auth),
-            preferencesRepository = FakeDataStorePreferencesDataSource(onboardingCompleted = true),
+            preferencesDataSource = FakeDataStorePreferencesDataSource(onboardingCompleted = true),
         )
 
         val state = viewModel.state.value
@@ -62,14 +62,14 @@ class SplashViewModelTest {
 
     private fun createViewModel(
         authRepository: AuthRepository,
-        preferencesRepository: PreferencesDataSource = FakeDataStorePreferencesDataSource(),
+        preferencesDataSource: PreferencesDataSource = FakeDataStorePreferencesDataSource(),
     ): SplashViewModel {
         return SplashViewModel(
             checkSessionUseCase = CheckSessionUseCase(
                 repository = authRepository,
                 dispatcher = mainDispatcherRule.dispatcher,
             ),
-            preferencesRepository = preferencesRepository,
+            preferencesDataSource = preferencesDataSource,
         )
     }
 

@@ -30,7 +30,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 class MainActivity : ComponentActivity() {
 
     private val splashViewModel: SplashViewModel by viewModel()
-    private val preferencesRepository: PreferencesDataSource by inject()
+    private val preferencesDataSource: PreferencesDataSource by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen().setKeepOnScreenCondition {
@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val splashState = splashViewModel.state.collectAsStateWithLifecycle()
-            val isDarkMode by preferencesRepository.isDarkModeEnabled
+            val isDarkMode by preferencesDataSource.isDarkModeEnabled
                 .collectAsStateWithLifecycle(initialValue = false)
 
             // POST_NOTIFICATIONS (Android 13+) — declared in manifest but Android won't

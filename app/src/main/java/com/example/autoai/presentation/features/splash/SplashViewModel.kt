@@ -13,7 +13,7 @@ import kotlinx.coroutines.withTimeout
 
 class SplashViewModel(
     private val checkSessionUseCase: CheckSessionUseCase,
-    private val preferencesRepository: PreferencesDataSource,
+    private val preferencesDataSource: PreferencesDataSource,
 ) : BaseViewModel<SplashState, SplashEvent, SplashSideEffect>(
     SplashState()
 ) {
@@ -52,7 +52,7 @@ class SplashViewModel(
                 StartDestination.Home
             } else {
                 val onboarded = try {
-                    preferencesRepository.isOnboardingCompleted.first()
+                    preferencesDataSource.isOnboardingCompleted.first()
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {

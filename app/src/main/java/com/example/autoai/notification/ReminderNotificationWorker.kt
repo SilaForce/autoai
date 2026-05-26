@@ -29,13 +29,13 @@ class ReminderNotificationWorker(
 ) : CoroutineWorker(context, params), KoinComponent {
 
     private val authRepository: AuthRepository by inject()
-    private val remindersRepository: RemindersDataSource by inject()
-    private val vehicleRepository: VehicleDataSource by inject()
-    private val preferencesRepository: PreferencesDataSource by inject()
+    private val remindersDataSource: RemindersDataSource by inject()
+    private val vehicleDataSource: VehicleDataSource by inject()
+    private val preferencesDataSource: PreferencesDataSource by inject()
 
     override suspend fun doWork(): Result {
         // Respect the user's Settings toggle. Short-circuit before any Firestore reads.
-        if (!preferencesRepository.isNotificationsEnabled.first()) {
+        if (!preferencesDataSource.isNotificationsEnabled.first()) {
             return Result.success()
         }
 
@@ -47,7 +47,7 @@ class ReminderNotificationWorker(
             }
         }
 
-        val activeVehicle = when (val result = vehicleRepository.getVehicles(user.id)) {
+        val activeVehicle = when (val result = vehicleDataSource.getVehicles(user.id)) {
             is AppResult.Success -> result.data.firstOrNull { it.isActive }
             is AppResult.Failure -> {
                 Log.w(TAG, "Failed to get vehicles: ${result.error}")
@@ -58,7 +58,7 @@ class ReminderNotificationWorker(
             return Result.success()
         }
 
-        val reminders = when (val result = remindersRepository.getActiveRemindersForVehicle(activeVehicle.id)) {
+        val reminders = when (val result = remindersDataSource.getActiveRemindersForVehicle(activeVehicle.id)) {
             is AppResult.Success -> result.data
             is AppResult.Failure -> {
                 Log.w(TAG, "Failed to get reminders: ${result.error}")

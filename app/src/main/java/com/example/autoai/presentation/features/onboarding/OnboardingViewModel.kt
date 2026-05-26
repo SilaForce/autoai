@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 
 class OnboardingViewModel(
     private val navigator: IAppNavigator,
-    private val preferencesRepository: PreferencesDataSource,
+    private val preferencesDataSource: PreferencesDataSource,
 ) : ViewModel() {
 
     fun onEvent(event: OnboardingEvent) {
@@ -25,7 +25,7 @@ class OnboardingViewModel(
         viewModelScope.launch {
             // Persist completion so the next cold-start / sign-out routes to Login,
             // not back through Onboarding.
-            preferencesRepository.setOnboardingCompleted(true)
+            preferencesDataSource.setOnboardingCompleted(true)
 
             navigator.navigateTo(
                 destination = Route.Register,
