@@ -20,7 +20,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.example.autoai.navigation.AppNavGraph
-import com.example.autoai.navigation.toRoute
+import com.example.autoai.navigation.resolve
 import com.example.autoai.presentation.features.splash.SplashViewModel
 import com.example.autoai.presentation.theme.AutoAITheme
 import com.example.domain.datasource.PreferencesDataSource
@@ -88,9 +88,11 @@ class MainActivity : ComponentActivity() {
                 val startDestination = splashState.value.startDestination
                 if (startDestination != null) {
                     val navController = rememberNavController()
+                    val resolved = startDestination.resolve()
                     AppNavGraph(
                         navController = navController,
-                        startDestination = startDestination.toRoute(),
+                        startDestination = resolved.host,
+                        authStartDestination = resolved.authStart,
                     )
                 } else if (!splashState.value.isLoading) {
                     // Defensive: splash finished but no destination resolved. The

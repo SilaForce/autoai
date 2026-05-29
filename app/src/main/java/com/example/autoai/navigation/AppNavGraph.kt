@@ -21,13 +21,14 @@ import org.koin.compose.koinInject
 fun AppNavGraph(
     navController: NavHostController,
     startDestination: Route,
+    authStartDestination: Route,
     navigator: IAppNavigator = koinInject(),
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
-        authGraph()
+        authGraph(startDestination = authStartDestination)
 
         composable<Route.Home> {
             HomeScreen()
